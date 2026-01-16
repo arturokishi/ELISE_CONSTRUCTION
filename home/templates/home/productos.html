@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Catálogo | ELISE Construction</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root {
+    --primary: #1f2933;
+    --accent: #f59e0b;
+    --light: #f8f9fa;
+    --dark: #111827;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: var(--light);
+    color: var(--dark);
+}
+
+.container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 40px 20px;
+}
+
+h1, h2 {
+    text-align: center;
+}
+
+.subtitle {
+    text-align: center;
+    max-width: 800px;
+    margin: 10px auto 40px;
+    color: #4b5563;
+    font-size: 1.1rem;
+}
+
+.catalog-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 25px;
+}
+
+.product-card {
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.product-card h3 {
+    margin-top: 0;
+    color: var(--primary);
+}
+
+.product-card p {
+    color: #4b5563;
+    font-size: 0.95rem;
+}
+
+.badge {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    border-radius: 20px;
+    margin-bottom: 15px;
+    width: fit-content;
+}
+
+.price-note {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #047857;
+    margin-top: 15px;
+}
+
+.quote-btn {
+    margin-top: 20px;
+    padding: 12px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95rem;
+}
+
+.quote-btn:hover {
+    background: #111827;
+}
+
+.market-message {
+    margin-top: 60px;
+    background: var(--primary);
+    color: white;
+    padding: 40px 20px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.market-message h2 {
+    margin-top: 0;
+}
+
+.market-message p {
+    max-width: 900px;
+    margin: auto;
+    font-size: 1.05rem;
+    line-height: 1.6;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Catálogo de Productos</h1>
+    <p class="subtitle">
+        Abastecemos proyectos de cualquier escala. Nuestros precios mejoran conforme aumenta el volumen,
+        permitiéndote ahorrar más en cada obra.
+    </p>
+
+    <div class="catalog-grid">
+
+        <!-- Pintura -->
+        <div class="product-card">
+            <span class="badge">Alta rotación</span>
+            <h3>Pinturas y Recubrimientos</h3>
+            <p>
+                Pintura interior y exterior, impermeabilizantes, esmaltes y recubrimientos industriales.
+                Marcas confiables para obra y acabado profesional.
+            </p>
+            <div class="price-note">Precios especiales por volumen</div>
+            <button class="quote-btn">Solicitar cotización</button>
+        </div>
+
+        <!-- Cemento -->
+        <div class="product-card">
+            <span class="badge">Esencial de obra</span>
+            <h3>Cemento y Agregados</h3>
+            <p>
+                Cemento gris, blanco, morteros y agregados para obra estructural y civil.
+                Disponibilidad constante para proyectos grandes.
+            </p>
+            <div class="price-note">Descuentos por compra mayorista</div>
+            <button class="quote-btn">Solicitar cotización</button>
+        </div>
+
+        <!-- Andamios -->
+        <div class="product-card">
+            <span class="badge">Uso industrial</span>
+            <h3>Andamios y Estructuras</h3>
+            <p>
+                Andamios certificados, plataformas, sistemas modulares y accesorios de seguridad.
+                Ideales para obra vertical e industrial.
+            </p>
+            <div class="price-note">Cotización según volumen y duración</div>
+            <button class="quote-btn">Solicitar cotización</button>
+        </div>
+
+        <!-- General -->
+        <div class="product-card">
+            <span class="badge">Catálogo amplio</span>
+            <h3>Materiales Generales</h3>
+            <p>
+                Herramientas, tuberías, acero, fijaciones, productos eléctricos y más.
+                Si se usa en construcción, lo conseguimos.
+            </p>
+            <div class="price-note">Mejores precios que el mercado</div>
+            <button class="quote-btn">Solicitar cotización</button>
+        </div>
+
+    </div>
+
+    <div class="market-message">
+        <h2>Precios que superan al mercado</h2>
+        <p>
+            Gracias a nuestro modelo de compra por volumen y alianzas directas con proveedores,
+            ofrecemos precios más competitivos que el mercado tradicional.
+            Cuanto mayor es tu proyecto, mayor es tu ahorro.
+        </p>
+    </div>
+
+</div>
+
+</body>
+</html>
