@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Industrias – Elice Construcción</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #1f2933;
+            line-height: 1.6;
+        }
+
+        /* ---------- NAVBAR ---------- */
+        .navbar {
+            background: #1f2933;
+            padding: 16px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar h1 {
+            color: #f9fafb;
+            font-size: 22px;
+            letter-spacing: 1px;
+        }
+
+        .navbar a {
+            color: #d1d5db;
+            margin-left: 20px;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .navbar a:hover {
+            color: #fbbf24;
+        }
+
+        /* ---------- HERO ---------- */
+        .hero {
+            background: linear-gradient(
+                rgba(31, 41, 55, 0.85),
+                rgba(31, 41, 55, 0.85)
+            ),
+            url("https://images.unsplash.com/photo-1504307651254-35680f356dfd") center/cover;
+            height: 60vh;
+            display: flex;
+            align-items: center;
+            padding: 0 60px;
+        }
+
+        .hero h2 {
+            color: #f9fafb;
+            font-size: 42px;
+            max-width: 700px;
+        }
+
+        /* ---------- INDUSTRIES GRID ---------- */
+        .industries {
+            padding: 80px 60px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 40px;
+            background: #ffffff;
+        }
+
+        .industry-card {
+            background: #f9fafb;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .industry-card h3 {
+            margin-bottom: 15px;
+            color: #1f2933;
+        }
+
+        .industry-card p {
+            color: #4b5563;
+        }
+
+        /* ---------- CTA ---------- */
+        .cta {
+            background: #1f2933;
+            color: #f9fafb;
+            padding: 70px 40px;
+            text-align: center;
+        }
+
+        .cta h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        .cta p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            color: #d1d5db;
+        }
+
+        .cta a {
+            display: inline-block;
+            padding: 16px 34px;
+            background: #fbbf24;
+            color: #1f2933;
+            text-decoration: none;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+
+        .cta a:hover {
+            background: #f59e0b;
+        }
+
+        /* ---------- FOOTER ---------- */
+        footer {
+            background: #111827;
+            color: #9ca3af;
+            padding: 25px;
+            text-align: center;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <h1>Elice Construcción</h1>
+    <div>
+        <a href="{% url 'home:productos' %}">Productos</a>
+        <a href="{% url 'home:industrias' %}">Industrias</a>
+        <a href="{% url 'home:nosotros' %}">Nosotros</a>
+        <a href="{% url 'home:contacto' %}">Contactanos</a>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+    <h2>
+        Soluciones de suministro para industrias que exigen
+        precisión, volumen y confiabilidad
+    </h2>
+</section>
+
+<!-- INDUSTRIES -->
+<section class="industries">
+
+    <div class="industry-card">
+        <h3>Construcción Comercial</h3>
+        <p>
+            Abastecimiento continuo de materiales para desarrollos comerciales,
+            oficinas, centros logísticos y proyectos corporativos.
+        </p>
+    </div>
+
+    <div class="industry-card">
+        <h3>Infraestructura y Obra Pública</h3>
+        <p>
+            Materiales certificados para carreteras, puentes, obras hidráulicas
+            y proyectos gubernamentales de gran escala.
+        </p>
+    </div>
+
+    <div class="industry-card">
+        <h3>Industrial & Manufactura</h3>
+        <p>
+            Suministro técnico para plantas industriales, naves,
+            mantenimiento estructural y expansión operativa.
+        </p>
+    </div>
+
+    <div class="industry-card">
+        <h3>Residencial y Desarrollos</h3>
+        <p>
+            Soluciones eficientes para desarrolladores residenciales,
+            constructoras y proyectos habitacionales.
+        </p>
+    </div>
+
+</section>
+
+<!-- CTA -->
+<section class="cta">
+    <h2>Tu proyecto, nuestra logística</h2>
+    <p>
+        Trabajamos junto a tu equipo para asegurar entregas puntuales,
+        precios competitivos y materiales confiables.
+    </p>
+    <a href="{% url 'home:contacto' %}">Hablar con un asesor</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    © 2026 Elice Construcción. Todos los derechos reservados.
+</footer>
+
+</body>
+</html>

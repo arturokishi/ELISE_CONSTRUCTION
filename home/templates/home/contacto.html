@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Contáctanos – Elice Construcción</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #1f2933;
+            line-height: 1.6;
+        }
+
+        /* ---------- NAVBAR ---------- */
+        .navbar {
+            background: #1f2933;
+            padding: 16px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar h1 {
+            color: #f9fafb;
+            font-size: 22px;
+            letter-spacing: 1px;
+        }
+
+        .navbar a {
+            color: #d1d5db;
+            margin-left: 20px;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .navbar a:hover {
+            color: #fbbf24;
+        }
+
+        /* ---------- HERO ---------- */
+        .hero {
+            background: linear-gradient(
+                rgba(31, 41, 55, 0.85),
+                rgba(31, 41, 55, 0.85)
+            ),
+            url("https://images.unsplash.com/photo-1503387762-592deb58ef4e") center/cover;
+            height: 50vh;
+            display: flex;
+            align-items: center;
+            padding: 0 60px;
+        }
+
+        .hero h2 {
+            color: #f9fafb;
+            font-size: 40px;
+            max-width: 700px;
+        }
+
+        /* ---------- CONTENT ---------- */
+        .content {
+            padding: 80px 60px;
+            max-width: 1100px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 60px;
+        }
+
+        .content h3 {
+            font-size: 26px;
+            margin-bottom: 20px;
+        }
+
+        .content p {
+            font-size: 18px;
+            color: #4b5563;
+            margin-bottom: 25px;
+        }
+
+        /* ---------- FORM ---------- */
+        .form-box {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .form-box input,
+        .form-box textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .form-box textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .form-box button {
+            padding: 14px;
+            width: 100%;
+            background: #fbbf24;
+            border: none;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .form-box button:hover {
+            background: #f59e0b;
+        }
+
+        /* ---------- CONTACT OPTIONS ---------- */
+        .contact-options {
+            margin-top: 40px;
+        }
+
+        .contact-options a {
+            display: block;
+            margin-bottom: 15px;
+            text-decoration: none;
+            font-weight: bold;
+            color: #1f2933;
+        }
+
+        .contact-options a span {
+            color: #16a34a;
+        }
+
+        /* ---------- FOOTER ---------- */
+        footer {
+            background: #111827;
+            color: #9ca3af;
+            padding: 25px;
+            text-align: center;
+            font-size: 14px;
+            margin-top: 80px;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <h1>Elice Construcción</h1>
+    <div>
+        <a href="{% url 'home:productos' %}">Productos</a>
+        <a href="{% url 'home:industrias' %}">Industrias</a>
+        <a href="{% url 'home:nosotros' %}">Nosotros</a>
+        <a href="{% url 'home:contacto' %}">Contáctanos</a>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+    <h2>
+        Hablemos de tu proyecto<br>
+        Estamos listos para ayudarte
+    </h2>
+</section>
+
+<!-- CONTENT -->
+<section class="content">
+
+    <!-- LEFT -->
+    <div>
+        <h3>Contáctanos</h3>
+        <p>
+            Si necesitas una cotización, información sobre productos o apoyo
+            para tu proyecto, nuestro equipo está listo para ayudarte.
+        </p>
+
+        <p>
+            Atendemos desde obras pequeñas hasta desarrollos industriales y
+            de infraestructura.
+        </p>
+
+        <div class="contact-options">
+            <a href="https://wa.me/521XXXXXXXXXX" target="_blank">
+                📱 WhatsApp: <span>Respuesta inmediata</span>
+            </a>
+            <a href="mailto:ventas@eliceconstruccion.com">
+                ✉️ Correo: ventas@eliceconstruccion.com
+            </a>
+        </div>
+    </div>
+
+    <!-- FORM -->
+    <div class="form-box">
+        <h3>Envíanos un mensaje</h3>
+
+        <form method="post">
+            {% csrf_token %}
+            <input type="text" name="name" placeholder="Nombre completo" required>
+            <input type="email" name="email" placeholder="Correo electrónico" required>
+            <input type="tel" name="phone" placeholder="Teléfono" required>
+            <textarea name="message" placeholder="Cuéntanos sobre tu proyecto"></textarea>
+
+            <button type="submit">Enviar mensaje</button>
+        </form>
+    </div>
+
+</section>
+
+<!-- FOOTER -->
+<footer>
+    © 2026 Elice Construcción. Todos los derechos reservados.
+</footer>
+
+</body>
+</html>

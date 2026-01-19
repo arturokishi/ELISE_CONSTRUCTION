@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Nosotros – Elice Construcción</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #1f2933;
+            line-height: 1.6;
+        }
+
+        /* ---------- NAVBAR ---------- */
+        .navbar {
+            background: #1f2933;
+            padding: 16px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar h1 {
+            color: #f9fafb;
+            font-size: 22px;
+            letter-spacing: 1px;
+        }
+
+        .navbar a {
+            color: #d1d5db;
+            margin-left: 20px;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .navbar a:hover {
+            color: #fbbf24;
+        }
+
+        /* ---------- HERO ---------- */
+        .hero {
+            background: linear-gradient(
+                rgba(31, 41, 55, 0.85),
+                rgba(31, 41, 55, 0.85)
+            ),
+            url("https://images.unsplash.com/photo-1541888946425-d81bb19240f5") center/cover;
+            height: 60vh;
+            display: flex;
+            align-items: center;
+            padding: 0 60px;
+        }
+
+        .hero h2 {
+            color: #f9fafb;
+            font-size: 42px;
+            max-width: 750px;
+        }
+
+        /* ---------- CONTENT ---------- */
+        .content {
+            padding: 80px 60px;
+            background: #ffffff;
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        .content h3 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #1f2933;
+        }
+
+        .content p {
+            font-size: 18px;
+            margin-bottom: 25px;
+            color: #4b5563;
+        }
+
+        /* ---------- VALUES ---------- */
+        .values {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-top: 60px;
+        }
+
+        .value-card {
+            background: #f9fafb;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .value-card h4 {
+            margin-bottom: 15px;
+            font-size: 20px;
+            color: #1f2933;
+        }
+
+        .value-card p {
+            color: #4b5563;
+        }
+
+        /* ---------- CTA ---------- */
+        .cta {
+            background: #1f2933;
+            color: #f9fafb;
+            padding: 70px 40px;
+            text-align: center;
+            margin-top: 80px;
+        }
+
+        .cta h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        .cta p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            color: #d1d5db;
+        }
+
+        .cta a {
+            display: inline-block;
+            padding: 16px 34px;
+            background: #fbbf24;
+            color: #1f2933;
+            text-decoration: none;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+
+        .cta a:hover {
+            background: #f59e0b;
+        }
+
+        /* ---------- FOOTER ---------- */
+        footer {
+            background: #111827;
+            color: #9ca3af;
+            padding: 25px;
+            text-align: center;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <h1>Elice Construcción</h1>
+    <div>
+        <a href="{% url 'home:productos' %}">Productos</a>
+        <a href="{% url 'home:industrias' %}">Industrias</a>
+        <a href="{% url 'home:nosotros' %}">Nosotros</a>
+        <a href="{% url 'home:contacto' %}">Contactanos</a>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+    <h2>
+        Construimos confianza acercando materiales
+        accesibles para impulsar el crecimiento de México
+    </h2>
+</section>
+
+<!-- CONTENT -->
+<section class="content">
+
+    <h3>Quiénes somos</h3>
+
+    <p>
+        En <strong>Elice Construcción</strong> creemos que el acceso a materiales
+        de calidad no debería ser una barrera para construir. Nuestro objetivo
+        es ofrecer soluciones de suministro confiables y a precios competitivos
+        tanto para pequeños contratistas como para grandes desarrolladores.
+    </p>
+
+    <p>
+        Trabajamos directamente con fabricantes y proveedores nacionales para
+        optimizar costos, reducir intermediarios y asegurar disponibilidad
+        constante. De esta forma, apoyamos el crecimiento de proyectos de todos
+        los tamaños mientras fortalecemos la cadena productiva dentro de México.
+    </p>
+
+    <p>
+        Más que vender materiales, buscamos ser un aliado estratégico en cada
+        obra, entendiendo los tiempos, presupuestos y retos que enfrenta la
+        industria de la construcción.
+    </p>
+
+    <!-- VALUES -->
+    <div class="values">
+
+        <div class="value-card">
+            <h4>Accesibilidad</h4>
+            <p>
+                Precios justos y esquemas flexibles que permiten a pequeños y
+                grandes constructores competir y crecer.
+            </p>
+        </div>
+
+        <div class="value-card">
+            <h4>Apoyo a la economía mexicana</h4>
+            <p>
+                Priorizamos proveedores nacionales y contribuimos al desarrollo
+                de la industria local.
+            </p>
+        </div>
+
+        <div class="value-card">
+            <h4>Confiabilidad</h4>
+            <p>
+                Materiales certificados, entregas puntuales y compromiso real
+                con cada proyecto.
+            </p>
+        </div>
+
+    </div>
+
+</section>
+
+<!-- CTA -->
+<section class="cta">
+    <h2>Construyamos juntos</h2>
+    <p>
+        Sin importar el tamaño de tu proyecto, estamos listos para ayudarte
+        a hacerlo realidad.
+    </p>
+    <a href="{% url 'home:contacto' %}">Hablar con nosotros</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    © 2026 Elice Construcción. Todos los derechos reservados.
+</footer>
+
+</body>
+</html>
