@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Cotización – Elice Construcción</title>
+
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f5f7fa;
+            margin: 0;
+        }
+
+        .navbar {
+            background: #1f2933;
+            padding: 16px 40px;
+            color: white;
+            font-size: 20px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            padding: 40px;
+        }
+
+        .product, .cart {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .product {
+            margin-bottom: 20px;
+        }
+
+        .price {
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        button {
+            padding: 10px 16px;
+            background: #fbbf24;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background: #f59e0b;
+        }
+
+        .cart h2 {
+            margin-top: 0;
+        }
+
+        .total {
+            font-size: 18px;
+            margin: 15px 0;
+        }
+
+        /* ---------- MODAL ---------- */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .modal-content h3 {
+            margin-top: 0;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .close {
+            background: #e5e7eb;
+        }
+    </style>
+</head>
+
+<body>
+
+<nav class="navbar">
+    Elice Construcción
+</nav>
+
+<div class="container">
+
+    <!-- PRODUCTS -->
+    <div class="products">
+        <div class="product">
+            <h3>Cemento Portland (50kg)</h3>
+            <p>Cemento estructural de alta resistencia para obra pesada.</p>
+            <div class="price">$180 MXN</div>
+            <button onclick="addToCart('Cemento Portland', 180)">Agregar</button>
+        </div>
+
+        <div class="product">
+            <h3>Varilla Corrugada 3/8"</h3>
+            <p>Acero certificado para refuerzo estructural.</p>
+            <div class="price">$145 MXN</div>
+            <button onclick="addToCart('Varilla 3/8', 145)">Agregar</button>
+        </div>
+
+        <div class="product">
+            <h3>Pintura Vinílica Blanca (19L)</h3>
+            <p>Acabado interior/exterior, alto rendimiento.</p>
+            <div class="price">$1,250 MXN</div>
+            <button onclick="addToCart('Pintura Vinílica', 1250)">Agregar</button>
+        </div>
+    </div>
+
+    <!-- CART -->
+    <div class="cart">
+        <h2>Resumen</h2>
+        <ul id="cart-items"></ul>
+
+        <div class="total">
+            Total: $<span id="total">0</span> MXN
+        </div>
+
+        <button onclick="openModal()">Solicitar Cotización</button>
+    </div>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="quoteModal">
+    <div class="modal-content">
+        <h3>Datos de contacto</h3>
+
+        <input type="text" id="name" placeholder="Nombre completo" required>
+        <input type="email" id="email" placeholder="Correo electrónico" required>
+        <input type="tel" id="phone" placeholder="Teléfono" required>
+
+        <div class="modal-actions">
+            <button class="close" onclick="closeModal()">Cancelar</button>
+            <button onclick="submitQuote()">Enviar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let cart = [];
+    let total = 0;
+
+    const cartItems = document.getElementById("cart-items");
+    const totalEl = document.getElementById("total");
+    const modal = document.getElementById("quoteModal");
+
+    function addToCart(name, price) {
+        cart.push({ name, price });
+
+        const li = document.createElement("li");
+        li.textContent = `${name} — $${price.toLocaleString()} MXN`;
+        cartItems.appendChild(li);
+
+        total += price;
+        totalEl.textContent = total.toLocaleString();
+    }
+
+    function openModal() {
+        if (cart.length === 0) {
+            alert("Agrega al menos un producto");
+            return;
+        }
+        modal.style.display = "flex";
+    }
+
+    function closeModal() {
+        modal.style.display = "none";
+    }
+
+    function submitQuote() {
+        const name = document.getElementById("name").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const phone = document.getElementById("phone").value.trim();
+
+        if (!name || !email || !phone) {
+            alert("Completa todos los campos");
+            return;
+        }
+
+        fetch("/api/create-order/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name,
+                email,
+                phone,
+                total,
+                items: cart
+            })
+        })
+        .then(res => res.json())
+        .then(() => {
+            alert("Cotización enviada correctamente");
+            cart = [];
+            cartItems.innerHTML = "";
+            total = 0;
+            totalEl.textContent = "0";
+            closeModal();
+        })
+        .catch(() => {
+            alert("Error al enviar cotización");
+        });
+    }
+</script>
+
+
+
+</body>
+</html>

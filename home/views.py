@@ -26,6 +26,10 @@ def contacto(request):
 def cemento(request):
     return render(request, "home/cemento.html")
 
+def pintura(request):
+    return render(request, "home/pintura.html")
+
+
 
 @csrf_exempt
 def create_order(request):

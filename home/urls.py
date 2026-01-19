@@ -12,6 +12,7 @@ urlpatterns = [
     path("nosotros/", views.nosotros, name="nosotros"),
     path("contacto/", views.contacto, name="contacto"),
     path("api/create-order/", views.create_order, name="create_order"),
+    path("productos/pintura/", views.pintura, name="pintura"),
 
 ]
 
