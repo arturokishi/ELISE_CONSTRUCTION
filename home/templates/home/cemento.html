@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Elice Construcción — Cotizador</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #1f2933;
+        }
+
+        /* ---------- NAVBAR ---------- */
+        .navbar {
+            background: #1f2933;
+            padding: 16px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar h1 {
+            color: #f9fafb;
+            font-size: 22px;
+        }
+
+        /* ---------- PAGE ---------- */
+        .container {
+            max-width: 1200px;
+            margin: 60px auto;
+            padding: 0 40px;
+            display: grid;
+            grid-template-columns: 3fr 1.2fr;
+            gap: 40px;
+        }
+
+        /* ---------- PRODUCTS ---------- */
+        .products {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 30px;
+        }
+
+        .product {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.06);
+        }
+
+        .product h3 {
+            margin-bottom: 10px;
+        }
+
+        .product p {
+            color: #4b5563;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .price {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .product button {
+            width: 100%;
+            padding: 12px;
+            background: #fbbf24;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .product button:hover {
+            background: #f59e0b;
+        }
+
+        /* ---------- CART ---------- */
+        .cart {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.06);
+            height: fit-content;
+        }
+
+        .cart h2 {
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        .cart ul {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+
+        .cart li {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .total {
+            border-top: 1px solid #e5e7eb;
+            padding-top: 15px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .checkout {
+            margin-top: 20px;
+            width: 100%;
+            padding: 14px;
+            background: #1f2933;
+            color: #f9fafb;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+
+        .checkout:hover {
+            background: #111827;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <h1>Elice Construcción</h1>
+    </nav>
+
+    <div class="container">
+
+        <!-- PRODUCTS -->
+        <div class="products">
+            <div class="product">
+                <h3>Cemento Portland (50kg)</h3>
+                <p>Cemento estructural de alta resistencia para obra pesada.</p>
+                <div class="price">$180 MXN</div>
+                <button onclick="addToCart('Cemento Portland', 180)">Agregar</button>
+            </div>
+
+            <div class="product">
+                <h3>Varilla Corrugada 3/8"</h3>
+                <p>Acero certificado para refuerzo estructural.</p>
+                <div class="price">$145 MXN</div>
+                <button onclick="addToCart('Varilla 3/8', 145)">Agregar</button>
+            </div>
+
+            <div class="product">
+                <h3>Pintura Vinílica Blanca (19L)</h3>
+                <p>Acabado interior/exterior, alto rendimiento.</p>
+                <div class="price">$1,250 MXN</div>
+                <button onclick="addToCart('Pintura Vinílica', 1250)">Agregar</button>
+            </div>
+        </div>
+
+        <!-- CART -->
+        <div class="cart">
+            <h2>Resumen</h2>
+            <ul id="cart-items"></ul>
+            <div class="total">
+                Total: $<span id="total">0</span> MXN
+            </div>
+            <button class="checkout">Solicitar Cotización</button>
+        </div>
+
+    </div>
+
+    <script>
+        let total = 0;
+        const cartItems = document.getElementById("cart-items");
+        const totalEl = document.getElementById("total");
+
+        function addToCart(name, price) {
+            const li = document.createElement("li");
+            li.innerHTML = `<span>${name}</span><span>$${price}</span>`;
+            cartItems.appendChild(li);
+
+            total += price;
+            totalEl.textContent = total.toLocaleString();
+        }
+    </script>
+
+</body>
+</html>

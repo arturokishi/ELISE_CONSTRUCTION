@@ -166,12 +166,13 @@
     <nav class="navbar">
         <h1>Elice Construcción</h1>
         <div>
-            <a href="productos">Productos</a>
-            <a href="#">Industrias</a>
-            <a href="#">Nosotros</a>
-            <a href="#">Contactanos</a>
+            <a href="{% url 'home:productos' %}">Productos</a>
+            <a href="{% url 'home:industrias' %}">Industrias</a>
+            <a href="{% url 'home:nosotros' %}">Nosotros</a>
+            <a href="{% url 'home:contacto' %}">Contáctanos</a>
         </div>
     </nav>
+    
 
     <!-- HERO -->
     <section class="hero">
