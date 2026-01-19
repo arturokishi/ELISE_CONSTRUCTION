@@ -1,199 +1,241 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Elice Construcción — Cotizador</title>
+    <title>Cotización – Elice Construcción</title>
 
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, Helvetica, sans-serif;
-        }
-
         body {
-            background-color: #f5f7fa;
-            color: #1f2933;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f5f7fa;
+            margin: 0;
         }
 
-        /* ---------- NAVBAR ---------- */
         .navbar {
             background: #1f2933;
             padding: 16px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            color: white;
+            font-size: 20px;
         }
 
-        .navbar h1 {
-            color: #f9fafb;
-            font-size: 22px;
-        }
-
-        /* ---------- PAGE ---------- */
         .container {
-            max-width: 1200px;
-            margin: 60px auto;
-            padding: 0 40px;
             display: grid;
-            grid-template-columns: 3fr 1.2fr;
-            gap: 40px;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            padding: 40px;
         }
 
-        /* ---------- PRODUCTS ---------- */
-        .products {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 30px;
+        .product, .cart {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
 
         .product {
-            background: white;
-            border-radius: 8px;
-            padding: 25px;
-            box-shadow: 0 6px 14px rgba(0,0,0,0.06);
-        }
-
-        .product h3 {
-            margin-bottom: 10px;
-        }
-
-        .product p {
-            color: #4b5563;
-            font-size: 14px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .price {
-            font-size: 20px;
             font-weight: bold;
-            margin-bottom: 15px;
+            margin: 10px 0;
         }
 
-        .product button {
-            width: 100%;
-            padding: 12px;
+        button {
+            padding: 10px 16px;
             background: #fbbf24;
             border: none;
-            font-weight: bold;
             cursor: pointer;
+            font-weight: bold;
             border-radius: 4px;
         }
 
-        .product button:hover {
+        button:hover {
             background: #f59e0b;
         }
 
-        /* ---------- CART ---------- */
-        .cart {
-            background: #ffffff;
-            border-radius: 8px;
-            padding: 25px;
-            box-shadow: 0 6px 14px rgba(0,0,0,0.06);
-            height: fit-content;
-        }
-
         .cart h2 {
-            margin-bottom: 20px;
-            font-size: 22px;
-        }
-
-        .cart ul {
-            list-style: none;
-            margin-bottom: 20px;
-        }
-
-        .cart li {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            font-size: 14px;
+            margin-top: 0;
         }
 
         .total {
-            border-top: 1px solid #e5e7eb;
-            padding-top: 15px;
             font-size: 18px;
-            font-weight: bold;
+            margin: 15px 0;
         }
 
-        .checkout {
-            margin-top: 20px;
+        /* ---------- MODAL ---------- */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
             width: 100%;
-            padding: 14px;
-            background: #1f2933;
-            color: #f9fafb;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
+            max-width: 400px;
+        }
+
+        .modal-content h3 {
+            margin-top: 0;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
             border-radius: 4px;
         }
 
-        .checkout:hover {
-            background: #111827;
+        .modal-actions {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .close {
+            background: #e5e7eb;
         }
     </style>
 </head>
 
 <body>
 
-    <nav class="navbar">
-        <h1>Elice Construcción</h1>
-    </nav>
+<nav class="navbar">
+    Elice Construcción
+</nav>
 
-    <div class="container">
+<div class="container">
 
-        <!-- PRODUCTS -->
-        <div class="products">
-            <div class="product">
-                <h3>Cemento Portland (50kg)</h3>
-                <p>Cemento estructural de alta resistencia para obra pesada.</p>
-                <div class="price">$180 MXN</div>
-                <button onclick="addToCart('Cemento Portland', 180)">Agregar</button>
-            </div>
-
-            <div class="product">
-                <h3>Varilla Corrugada 3/8"</h3>
-                <p>Acero certificado para refuerzo estructural.</p>
-                <div class="price">$145 MXN</div>
-                <button onclick="addToCart('Varilla 3/8', 145)">Agregar</button>
-            </div>
-
-            <div class="product">
-                <h3>Pintura Vinílica Blanca (19L)</h3>
-                <p>Acabado interior/exterior, alto rendimiento.</p>
-                <div class="price">$1,250 MXN</div>
-                <button onclick="addToCart('Pintura Vinílica', 1250)">Agregar</button>
-            </div>
+    <!-- PRODUCTS -->
+    <div class="products">
+        <div class="product">
+            <h3>Cemento Portland (50kg)</h3>
+            <p>Cemento estructural de alta resistencia para obra pesada.</p>
+            <div class="price">$180 MXN</div>
+            <button onclick="addToCart('Cemento Portland', 180)">Agregar</button>
         </div>
 
-        <!-- CART -->
-        <div class="cart">
-            <h2>Resumen</h2>
-            <ul id="cart-items"></ul>
-            <div class="total">
-                Total: $<span id="total">0</span> MXN
-            </div>
-            <button class="checkout">Solicitar Cotización</button>
+        <div class="product">
+            <h3>Varilla Corrugada 3/8"</h3>
+            <p>Acero certificado para refuerzo estructural.</p>
+            <div class="price">$145 MXN</div>
+            <button onclick="addToCart('Varilla 3/8', 145)">Agregar</button>
         </div>
 
+        <div class="product">
+            <h3>Pintura Vinílica Blanca (19L)</h3>
+            <p>Acabado interior/exterior, alto rendimiento.</p>
+            <div class="price">$1,250 MXN</div>
+            <button onclick="addToCart('Pintura Vinílica', 1250)">Agregar</button>
+        </div>
     </div>
 
-    <script>
-        let total = 0;
-        const cartItems = document.getElementById("cart-items");
-        const totalEl = document.getElementById("total");
+    <!-- CART -->
+    <div class="cart">
+        <h2>Resumen</h2>
+        <ul id="cart-items"></ul>
 
-        function addToCart(name, price) {
-            const li = document.createElement("li");
-            li.innerHTML = `<span>${name}</span><span>$${price}</span>`;
-            cartItems.appendChild(li);
+        <div class="total">
+            Total: $<span id="total">0</span> MXN
+        </div>
 
-            total += price;
-            totalEl.textContent = total.toLocaleString();
+        <button onclick="openModal()">Solicitar Cotización</button>
+    </div>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="quoteModal">
+    <div class="modal-content">
+        <h3>Datos de contacto</h3>
+
+        <input type="text" id="name" placeholder="Nombre completo" required>
+        <input type="email" id="email" placeholder="Correo electrónico" required>
+        <input type="tel" id="phone" placeholder="Teléfono" required>
+
+        <div class="modal-actions">
+            <button class="close" onclick="closeModal()">Cancelar</button>
+            <button onclick="submitQuote()">Enviar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let cart = [];
+    let total = 0;
+
+    const cartItems = document.getElementById("cart-items");
+    const totalEl = document.getElementById("total");
+    const modal = document.getElementById("quoteModal");
+
+    function addToCart(name, price) {
+        cart.push({ name, price });
+
+        const li = document.createElement("li");
+        li.textContent = `${name} — $${price.toLocaleString()} MXN`;
+        cartItems.appendChild(li);
+
+        total += price;
+        totalEl.textContent = total.toLocaleString();
+    }
+
+    function openModal() {
+        if (cart.length === 0) {
+            alert("Agrega al menos un producto");
+            return;
         }
-    </script>
+        modal.style.display = "flex";
+    }
+
+    function closeModal() {
+        modal.style.display = "none";
+    }
+
+    function submitQuote() {
+        const name = document.getElementById("name").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const phone = document.getElementById("phone").value.trim();
+
+        if (!name || !email || !phone) {
+            alert("Completa todos los campos");
+            return;
+        }
+
+        fetch("/api/create-order/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name,
+                email,
+                phone,
+                total,
+                items: cart
+            })
+        })
+        .then(res => res.json())
+        .then(() => {
+            alert("Cotización enviada correctamente");
+            cart = [];
+            cartItems.innerHTML = "";
+            total = 0;
+            totalEl.textContent = "0";
+            closeModal();
+        })
+        .catch(() => {
+            alert("Error al enviar cotización");
+        });
+    }
+</script>
+
+
 
 </body>
 </html>

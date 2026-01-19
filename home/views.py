@@ -1,5 +1,13 @@
 from django.shortcuts import render
 
+
+import json
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .models import Order, OrderItem
+
+
+
 def home(request):
     return render(request, "home/home.html")
 
@@ -18,4 +26,25 @@ def contacto(request):
 def cemento(request):
     return render(request, "home/cemento.html")
 
+
+@csrf_exempt
+def create_order(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+
+        order = Order.objects.create(
+            name=data["name"],
+            email=data["email"],
+            phone=data["phone"],
+            total=data["total"]
+        )
+
+        for item in data["items"]:
+            OrderItem.objects.create(
+                order=order,
+                product_name=item["name"],
+                price=item["price"]
+            )
+
+        return JsonResponse({"success": True})
 
