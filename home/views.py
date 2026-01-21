@@ -29,6 +29,9 @@ def cemento(request):
 def pintura(request):
     return render(request, "home/pintura.html")
 
+def andamios(request):
+    return render(request, "home/andamios.html")
+
 
 
 @csrf_exempt
