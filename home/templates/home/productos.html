@@ -188,7 +188,10 @@ h1, h2 {
                 Si se usa en construcción, lo conseguimos.
             </p>
             <div class="price-note">Mejores precios que el mercado</div>
-            <button class="quote-btn">Solicitar cotización</button>
+            <button class="quote-btn"
+            onclick="window.location.href='{% url 'home:chat' %}'">
+            Solicitar cotización
+            </button>
         </div>
 
     </div>

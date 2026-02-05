@@ -1,0 +1,113 @@
+{% extends "home/base.html" %}
+
+{% block title %}Registro - Elice Construcción{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h2 class="auth-title">Crear Cuenta</h2>
+        
+        {% if messages %}
+        <div class="auth-messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <form method="POST" class="auth-form">
+            {% csrf_token %}
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_username">Usuario *</label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                    <div class="error-text">{{ form.username.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_email">Email *</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                    <div class="error-text">{{ form.email.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_first_name">Nombre *</label>
+                    {{ form.first_name }}
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_last_name">Apellido *</label>
+                    {{ form.last_name }}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="id_role">Tipo de Usuario *</label>
+                {{ form.role }}
+            </div>
+            
+            <div class="form-group">
+                <label for="id_company">Empresa</label>
+                {{ form.company }}
+            </div>
+            
+            <div class="form-group">
+                <label for="id_phone">Teléfono</label>
+                {{ form.phone }}
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_password1">Contraseña *</label>
+                    {{ form.password1 }}
+                    {% if form.password1.errors %}
+                    <div class="error-text">{{ form.password1.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_password2">Confirmar Contraseña *</label>
+                    {{ form.password2 }}
+                    {% if form.password2.errors %}
+                    <div class="error-text">{{ form.password2.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <button type="submit" class="auth-btn">Registrarse</button>
+            </div>
+            
+            <div class="auth-links">
+                <p>¿Ya tienes cuenta? <a href="{% url 'home:login' %}">Inicia sesión aquí</a></p>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.form-row {
+    display: flex;
+    gap: 15px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+.error-text {
+    color: #ef4444;
+    font-size: 14px;
+    margin-top: 5px;
+}
+</style>
+{% endblock %}

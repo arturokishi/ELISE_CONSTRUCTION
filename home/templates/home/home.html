@@ -47,6 +47,46 @@
             color: #fbbf24;
         }
 
+        /* ---------- USER MENU ---------- */
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-greeting {
+            color: #fbbf24;
+            font-weight: 500;
+        }
+
+        .btn-auth {
+            background: #fbbf24;
+            color: #1f2933;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-auth:hover {
+            background: #f59e0b;
+            color: #1f2933;
+        }
+
+        .btn-logout {
+            color: #fca5a5;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-decoration: none;
+            border: 1px solid #fca5a5;
+        }
+
+        .btn-logout:hover {
+            background: rgba(252, 165, 165, 0.1);
+        }
+
         /* ---------- HERO ---------- */
         .hero {
             background: linear-gradient(
@@ -89,6 +129,44 @@
 
         .hero-content button:hover {
             background: #f59e0b;
+        }
+
+        /* ---------- MESSAGES ---------- */
+        .messages-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 40px;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border: 1px solid transparent;
+        }
+
+        .alert-success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border-color: #a7f3d0;
+        }
+
+        .alert-error, .alert-danger {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border-color: #fecaca;
+        }
+
+        .alert-info {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border-color: #bfdbfe;
+        }
+
+        .alert-warning {
+            background-color: #fef3c7;
+            color: #92400e;
+            border-color: #fde68a;
         }
 
         /* ---------- FEATURES ---------- */
@@ -149,6 +227,30 @@
             background: #f59e0b;
         }
 
+        /* ---------- BUTTON GROUP ---------- */
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn-secondary {
+            padding: 14px 28px;
+            background: #374151;
+            color: white;
+            border: none;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
         /* ---------- FOOTER ---------- */
         footer {
             background: #111827;
@@ -164,79 +266,142 @@
 
     <!-- NAVBAR -->
     <nav class="navbar">
-        <h1>Elice Elementos</h1>
-        <div>
+        <h1>Elice Construcción</h1>
+        <div class="user-menu">
+            {% if user.is_authenticated %}
+                <span class="user-greeting">Hola, {{ user.username }}</span>
+                <a href="{% url 'home:profile' %}">Mi Perfil</a>
+                <a href="{% url 'home:chat' %}">Chat</a>
+                <a href="{% url 'home:logout' %}" class="btn-logout">Cerrar Sesión</a>
+            {% else %}
+                <a href="{% url 'home:login' %}" class="btn-auth">Iniciar Sesión</a>
+                <a href="{% url 'home:register' %}">Registrarse</a>
+            {% endif %}
             <a href="{% url 'home:productos' %}">Productos</a>
             <a href="{% url 'home:industrias' %}">Industrias</a>
             <a href="{% url 'home:nosotros' %}">Nosotros</a>
-            <a href="{% url 'home:contacto' %}">Contáctanos</a>
+            <a href="{% url 'home:contacto' %}">Contacto</a>
         </div>
     </nav>
-    
+
+    <!-- MESSAGES -->
+    {% if messages %}
+    <div class="messages-container">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
     <!-- HERO -->
     <section class="hero">
         <div class="hero-content">
-            <h2>Materiales confiables al mejor precio,<br>Entregas flexibles </h2>
+            <h2>Materiales confiables al mejor precio,<br>Entregas flexibles</h2>
             <p>
                 Desde materiales estructurales hasta productos de acabado, abastecemos a contratistas, 
                 desarrolladores y proyectos de infraestructura en toda la región.
                 Trabajamos con proveedores confiables para garantizar calidad constante, 
-                tiempos de entrega eficientes y soluciones adaptadas a las necesidades de cada obra
+                tiempos de entrega eficientes y soluciones adaptadas a las necesidades de cada obra.
             </p>
-            <a href="https://wa.me/5213312818347?text=Hola%20me%20gustaría%20cotizar%20un%20proyecto%20de%20construcción"
-            target="_blank"
-            style="text-decoration:none;">
-             <button>Cotiza tu proyecto hoy!</button>
-            </a>
-
+            
+            {% if user.is_authenticated %}
+                <!-- Logged in users see chat button -->
+                <div class="button-group">
+                    <a href="{% url 'home:chat' %}" style="text-decoration:none;">
+                        <button>Solicitar cotización por chat</button>
+                    </a>
+                    <a href="https://wa.me/5213312818347?text=Hola%20me%20gustaría%20cotizar%20un%20proyecto%20de%20construcción"
+                       target="_blank" class="btn-secondary">
+                        Cotizar por WhatsApp
+                    </a>
+                </div>
+            {% else %}
+                <!-- Not logged in users see login/register options -->
+                <div class="button-group">
+                    <a href="{% url 'home:login' %}?next={% url 'home:chat' %}" style="text-decoration:none;">
+                        <button>Iniciar sesión para cotizar</button>
+                    </a>
+                    <a href="{% url 'home:register' %}" class="btn-secondary">
+                        Crear cuenta gratuita
+                    </a>
+                    <a href="https://wa.me/5213312818347?text=Hola%20me%20gustaría%20cotizar%20un%20proyecto%20de%20construcción"
+                       target="_blank" class="btn-secondary">
+                        WhatsApp directo
+                    </a>
+                </div>
+            {% endif %}
         </div>
     </section>
 
-   <!-- FEATURES -->
-<section class="features">
-    <div class="feature">
-        <h3>Materiales de Calidad Industrial</h3>
-        <p>
-            Acero certificado, concreto, agregados y productos especializados
-            provenientes de fabricantes confiables.
-        </p>
-    </div>
+    <!-- FEATURES -->
+    <section class="features">
+        <div class="feature">
+            <h3>Materiales de Calidad Industrial</h3>
+            <p>
+                Acero certificado, concreto, agregados y productos especializados
+                provenientes de fabricantes confiables.
+            </p>
+        </div>
 
-    <div class="feature">
-        <h3>Logística Rápida y Confiable</h3>
-        <p>
-            Cadenas de suministro optimizadas para garantizar que los materiales
-            lleguen a obra justo cuando los necesitas.
-        </p>
-    </div>
+        <div class="feature">
+            <h3>Logística Rápida y Confiable</h3>
+            <p>
+                Cadenas de suministro optimizadas para garantizar que los materiales
+                lleguen a obra justo cuando los necesitas.
+            </p>
+        </div>
 
-    <div class="feature">
-        <h3>Proyectos Comerciales e Infraestructura</h3>
-        <p>
-            Abastecemos proyectos residenciales, comerciales y de infraestructura
-            a gran escala.
-        </p>
-    </div>
-</section>
+        <div class="feature">
+            <h3>Proyectos Comerciales e Infraestructura</h3>
+            <p>
+                Abastecemos proyectos residenciales, comerciales y de infraestructura
+                a gran escala.
+            </p>
+        </div>
+    </section>
 
-<!-- CTA -->
-<section class="cta">
-    <h2>Construye con Confianza</h2>
-    <p>
-        Trabaja con un proveedor que entiende los tiempos de obra,
-        el control de costos y la calidad.
-    </p>
-    <a href="https://wa.me/5213312818347?text=Hola%20me%20gustaría%20cotizar%20un%20proyecto%20de%20construcción"
-    target="_blank"
-    style="text-decoration:none;">
-     <button>Contactar ventas</button>
-    </a>
-</section>
+    <!-- CTA -->
+    <section class="cta">
+        <h2>Construye con Confianza</h2>
+        <p>
+            Trabaja con un proveedor que entiende los tiempos de obra,
+            el control de costos y la calidad.
+        </p>
+        
+        {% if user.is_authenticated %}
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <a href="{% url 'home:chat' %}" style="text-decoration:none;">
+                    <button>Contactar por chat</button>
+                </a>
+                <a href="https://wa.me/5213312818347?text=Hola%20me%20gustaría%20cotizar%20un%20proyecto%20de%20construcción"
+                   target="_blank" class="btn-secondary">
+                    WhatsApp directo
+                </a>
+            </div>
+        {% else %}
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <a href="{% url 'home:register' %}" style="text-decoration:none;">
+                    <button>Crear cuenta para comenzar</button>
+                </a>
+                <a href="{% url 'home:login' %}" class="btn-secondary">
+                    Iniciar sesión
+                </a>
+                <a href="https://wa.me/5213312818347?text=Hola%20me%20gustaría%20cotizar%20un%20proyecto%20de%20construcción"
+                   target="_blank" class="btn-secondary">
+                    Contactar ventas
+                </a>
+            </div>
+        {% endif %}
+    </section>
 
     <!-- FOOTER -->
     <footer>
-        © 2026 GreenCoal Construction Supply. All rights reserved.
+        © 2026 Elice Construcción. Todos los derechos reservados.
+        {% if user.is_authenticated %}
+            <br><small>Sesión activa como: {{ user.username }}</small>
+        {% endif %}
     </footer>
 
 </body>

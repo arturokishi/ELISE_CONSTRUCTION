@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Elice Construcción{% endblock %}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #1f2933;
+            line-height: 1.6;
+        }
+
+        /* ---------- NAVBAR ---------- */
+        .navbar {
+            background: #1f2933;
+            padding: 16px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar h1 {
+            color: #f9fafb;
+            font-size: 22px;
+            letter-spacing: 1px;
+        }
+
+        .navbar a {
+            color: #d1d5db;
+            margin-left: 20px;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .navbar a:hover {
+            color: #fbbf24;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-greeting {
+            color: #fbbf24;
+            font-weight: 500;
+        }
+
+        .btn-login {
+            background: #fbbf24;
+            color: #1f2933;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .btn-login:hover {
+            background: #f59e0b;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <h1>Elice Construcción</h1>
+        <div class="user-menu">
+            {% if user.is_authenticated %}
+                <span class="user-greeting">Hola, {{ user.username }}</span>
+                <a href="{% url 'home:profile' %}">Mi Perfil</a>
+                <a href="{% url 'home:chat' %}">Chat</a>
+                <a href="{% url 'home:logout' %}" style="color: #fca5a5;">Cerrar Sesión</a>
+            {% else %}
+                <a href="{% url 'home:login' %}" class="btn-login">Iniciar Sesión</a>
+                <a href="{% url 'home:register' %}">Registrarse</a>
+            {% endif %}
+            <a href="{% url 'home:home' %}">Inicio</a>
+            <a href="{% url 'home:productos' %}">Productos</a>
+            <a href="{% url 'home:contacto' %}">Contacto</a>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- FOOTER -->
+    <footer style="
+        background: #111827;
+        color: #9ca3af;
+        padding: 25px;
+        text-align: center;
+        font-size: 14px;
+        margin-top: 50px;
+    ">
+        © 2026 Elice Construcción. Todos los derechos reservados.
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
