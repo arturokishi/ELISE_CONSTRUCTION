@@ -10,10 +10,23 @@ class OrderItemInline(admin.TabularInline):
     extra = 0
 
 
+
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "email", "phone", "total", "created_at")
+    list_display = (
+        "id",
+        "user",
+        "user_email",
+        "phone",
+        "total",
+        "created_at",
+    )
     inlines = [OrderItemInline]
+
+    def user_email(self, obj):
+        return obj.user.email
+    user_email.short_description = "Email"
+
 
 
 # Inline admin for UserProfile
@@ -54,3 +67,12 @@ class MessageAdmin(admin.ModelAdmin):
     
     def content_preview(self, obj):
         return obj.content[:50] + '...' if len(obj.content) > 50 else obj.content
+    
+
+def open_chat(self, obj):
+    if obj.conversation:
+        return format_html(
+            '<a href="/chat/{}/">Abrir chat</a>',
+            obj.conversation.id
+        )
+    return "-"

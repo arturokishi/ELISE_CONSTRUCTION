@@ -6,7 +6,10 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import Order, OrderItem
 
+from django.shortcuts import redirect, get_object_or_404
 
+
+from .models import Conversation
 
 from django.contrib.auth.models import User
 from django.http import JsonResponse
@@ -51,8 +54,7 @@ def pintura(request):
 def andamios(request):
     return render(request, "home/andamios.html")
 
-def chat(request):
-    return render(request, "home/chat.html")
+
 
 
 
@@ -85,28 +87,20 @@ def create_order(request):
 
 @login_required
 def chat(request):
-    """Main chat page"""
-    # Get all users except current user
-    all_users = User.objects.exclude(id=request.user.id)
-    
-    # Get or create user profile
-    profile, created = UserProfile.objects.get_or_create(
-        user=request.user,
-        defaults={'role': 'client', 'avatar_color': '#fbbf24'}
-    )
-    
-    # Get conversations for current user
-    conversations = Conversation.objects.filter(
-        participants=request.user,
-        is_active=True
-    ).prefetch_related('participants', 'messages')
-    
-    context = {
-        'all_users': all_users,
-        'conversations': conversations,
-        'user_profile': profile,
-    }
-    return render(request, "home/chat.html", context)
+    conversations = request.user.conversations.all().order_by("-updated_at")
+    selected_conversation_id = request.GET.get("conversation")
+
+    selected_conversation = None
+    if selected_conversation_id:
+        selected_conversation = conversations.filter(
+            id=selected_conversation_id
+        ).first()
+
+    return render(request, "home/chat.html", {
+        "conversations": conversations,
+        "selected_conversation": selected_conversation,
+    })
+
 
 @login_required
 def get_conversation(request, user_id):
@@ -339,3 +333,64 @@ def password_change(request):
     
     return render(request, 'home/password_change.html', {'form': form})
 
+
+
+
+
+@login_required
+def chat_with_user(request, username):
+    other_user = get_object_or_404(User, username=username)
+
+    conversation = (
+        Conversation.objects
+        .filter(participants=request.user)
+        .filter(participants=other_user)
+        .first()
+    )
+
+    if not conversation:
+        conversation = Conversation.objects.create()
+        conversation.participants.add(request.user, other_user)
+
+    # ✅ Pass conversation ID
+    return redirect(f"/chat/?conversation={conversation.id}")
+
+
+@login_required
+def get_conversation_by_id(request, conversation_id):
+    conversation = get_object_or_404(
+        Conversation,
+        id=conversation_id,
+        participants=request.user
+    )
+
+    other_user = conversation.participants.exclude(id=request.user.id).first()
+
+    messages = conversation.messages.all().order_by("timestamp")
+
+    messages_data = [
+        {
+            "id": msg.id,
+            "sender": msg.sender.username,
+            "sender_id": msg.sender.id,
+            "content": msg.content,
+            "timestamp": msg.timestamp.strftime("%I:%M %p • %b %d"),
+            "is_sent": msg.sender == request.user,
+        }
+        for msg in messages
+    ]
+
+    profile = UserProfile.objects.filter(user=other_user).first()
+
+    return JsonResponse({
+        "conversation_id": conversation.id,
+        "other_user": {
+            "id": other_user.id,
+            "username": other_user.username,
+            "first_name": other_user.first_name,
+            "last_name": other_user.last_name,
+            "role": profile.role if profile else "client",
+            "company": profile.company if profile else "",
+        },
+        "messages": messages_data,
+    })

@@ -33,6 +33,14 @@ urlpatterns = [
     path("chat/conversation/<int:user_id>/", views.get_conversation, name="get_conversation"),
     path("chat/send/", views.send_message, name="send_message"),
     path("chat/users/", views.get_users, name="get_users"),
+    path("chat/with/<str:username>/", views.chat_with_user, name="chat_with_user"),
+    path(
+    "chat/conversation/by-id/<int:conversation_id>/",
+    views.get_conversation_by_id,
+    name="get_conversation_by_id",
+),
+
+
 ]
 
 

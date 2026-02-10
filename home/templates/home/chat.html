@@ -466,12 +466,21 @@
     <input type="file" id="fileInput" style="display: none;">
 
     <script>
-        // Global variables
+        /* ===============================
+           GLOBALS & HELPERS
+        ================================ */
         let currentChatUser = null;
         let currentConversationId = null;
         const csrftoken = document.querySelector('[name=csrf-token]').content;
         
-        // DOM Elements
+        function getQueryParam(name) {
+            const params = new URLSearchParams(window.location.search);
+            return params.get(name);
+        }
+        
+        /* ===============================
+           DOM ELEMENTS
+        ================================ */
         const usersList = document.getElementById('usersList');
         const messagesContainer = document.getElementById('messagesContainer');
         const messageInput = document.getElementById('messageInput');
@@ -482,300 +491,239 @@
         const currentUserName = document.getElementById('currentUserName');
         const currentUserInfo = document.getElementById('currentUserInfo');
         const currentUserAvatar = document.getElementById('currentUserAvatar');
+        const params = new URLSearchParams(window.location.search);
+    const conversationId = params.get("conversation");
 
-        // Load users from Django
+    if (conversationId) {
+        fetch(`/chat/conversation/by-id/${conversationId}/`)
+            .then(res => res.json())
+            .then(data => {
+            currentChatUser = data.other_user;
+            currentConversationId = data.conversation_id;
+
+            updateChatHeader(data.other_user);
+            displayMessages(data.messages);
+            messageInputContainer.style.display = "flex";
+        })
+        .catch(err => console.error("Conversation load error:", err));
+}
+
+        
+        /* ===============================
+           LOAD USERS
+        ================================ */
         async function loadUsers() {
             try {
                 const response = await fetch('/chat/users/');
                 const data = await response.json();
-                
-                if (data.users && data.users.length > 0) {
+        
+                if (data.users?.length) {
                     displayUsers(data.users);
                 } else {
-                    usersList.innerHTML = `
-                        <div style="text-align: center; padding: 20px; color: #9ca3af;">
-                            No hay otros usuarios registrados.
-                        </div>
-                    `;
+                    usersList.innerHTML = `<div style="padding:20px;color:#9ca3af;text-align:center">
+                        No hay otros usuarios registrados
+                    </div>`;
                 }
             } catch (error) {
-                console.error('Error loading users:', error);
-                usersList.innerHTML = `
-                    <div style="text-align: center; padding: 20px; color: #ef4444;">
-                        Error cargando usuarios. Recarga la página.
-                    </div>
-                `;
+                console.error(error);
+                usersList.innerHTML = `<div style="padding:20px;color:#ef4444;text-align:center">
+                    Error cargando usuarios
+                </div>`;
             }
         }
-
-        // Display users in sidebar
+        
+        /* ===============================
+           DISPLAY USERS
+        ================================ */
         function displayUsers(users) {
             usersList.innerHTML = '';
-            
-            // Group users by role
-            const clients = users.filter(u => u.role === 'client');
-            const suppliers = users.filter(u => u.role === 'supplier');
-            const admins = users.filter(u => u.role === 'admin');
-            
-            if (clients.length > 0) {
-                usersList.innerHTML += '<h3>Clientes</h3>';
-                clients.forEach(user => {
-                    usersList.innerHTML += createUserItem(user);
-                });
-            }
-            
-            if (suppliers.length > 0) {
-                usersList.innerHTML += '<h3>Proveedores</h3>';
-                suppliers.forEach(user => {
-                    usersList.innerHTML += createUserItem(user);
-                });
-            }
-            
-            if (admins.length > 0) {
-                usersList.innerHTML += '<h3>Administradores</h3>';
-                admins.forEach(user => {
-                    usersList.innerHTML += createUserItem(user);
-                });
-            }
-            
-            // Add click events to user items
+        
+            const groups = {
+                client: 'Clientes',
+                supplier: 'Proveedores',
+                admin: 'Administradores'
+            };
+        
+            Object.keys(groups).forEach(role => {
+                const list = users.filter(u => u.role === role);
+                if (!list.length) return;
+        
+                usersList.innerHTML += `<h3>${groups[role]}</h3>`;
+                list.forEach(u => usersList.innerHTML += createUserItem(u));
+            });
+        
             document.querySelectorAll('.user-item').forEach(item => {
-                item.addEventListener('click', () => {
-                    const userId = item.dataset.userId;
-                    selectUser(userId);
-                    
-                    // Update active state
+                item.onclick = () => {
+                    selectUser(item.dataset.userId);
                     document.querySelectorAll('.user-item').forEach(i => i.classList.remove('active'));
                     item.classList.add('active');
-                });
+                };
             });
         }
-
-        // Create user list item HTML
+        
         function createUserItem(user) {
-            const displayName = user.first_name && user.last_name 
+            const name = user.first_name && user.last_name
                 ? `${user.first_name} ${user.last_name}`
                 : user.username;
-            
-            const roleMap = {
-                'client': 'Cliente',
-                'supplier': 'Proveedor',
-                'admin': 'Administrador'
-            };
-            
+        
             return `
                 <div class="user-item" data-user-id="${user.id}">
-                    <div class="user-avatar" style="background-color: ${user.avatar_color}">
-                        ${displayName.charAt(0).toUpperCase()}
+                    <div class="user-avatar" style="background:${user.avatar_color}">
+                        ${name.charAt(0).toUpperCase()}
                     </div>
                     <div class="user-info">
-                        <div class="user-name">
-                            ${displayName}
-                            <span class="status-indicator status-online"></span>
-                        </div>
-                        <div class="user-role">${roleMap[user.role] || user.role}</div>
+                        <div class="user-name">${name}<span class="status-indicator status-online"></span></div>
+                        <div class="user-role">${user.role}</div>
                         ${user.company ? `<div class="user-role">${user.company}</div>` : ''}
-                        ${user.last_message ? `<div class="last-message">${user.last_message}</div>` : ''}
                     </div>
                 </div>
             `;
         }
-
-        // Select a user and load conversation
+        
+        /* ===============================
+           SELECT USER (SIDEBAR CLICK)
+        ================================ */
         async function selectUser(userId) {
-            try {
-                const response = await fetch(`/chat/conversation/${userId}/`);
-                const data = await response.json();
-                
-                if (data.success !== undefined && !data.success) {
-                    throw new Error(data.error || 'Error loading conversation');
-                }
-                
-                currentChatUser = data.other_user;
-                currentConversationId = data.conversation_id;
-                
-                // Update header
-                updateChatHeader(data.other_user);
-                
-                // Display messages
-                displayMessages(data.messages);
-                
-                // Show message input
-                messageInputContainer.style.display = 'flex';
-                messageInput.focus();
-                
-                // Enable action buttons
-                document.getElementById('callBtn').disabled = false;
-                document.getElementById('videoBtn').disabled = false;
-                
-            } catch (error) {
-                console.error('Error selecting user:', error);
-                alert('Error al cargar la conversación');
-            }
+            const res = await fetch(`/chat/conversation/${userId}/`);
+            const data = await res.json();
+        
+            currentChatUser = data.other_user;
+            currentConversationId = data.conversation_id;
+        
+            updateChatHeader(data.other_user);
+            displayMessages(data.messages);
+        
+            messageInputContainer.style.display = 'flex';
         }
-
-        // Update chat header with user info
+        
+        /* ===============================
+           SELECT BY CONVERSATION ID (AUTO)
+        ================================ */
+        async function selectConversationById(conversationId) {
+            const res = await fetch(`/chat/conversation/by-id/${conversationId}/`);
+            const data = await res.json();
+        
+            if (!data.success) return;
+        
+            currentChatUser = data.other_user;
+            currentConversationId = conversationId;
+        
+            updateChatHeader(data.other_user);
+            displayMessages(data.messages);
+            messageInputContainer.style.display = 'flex';
+        
+            document.querySelectorAll('.user-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.userId == data.other_user.id);
+            });
+        }
+        
+        /* ===============================
+           HEADER & MESSAGES
+        ================================ */
         function updateChatHeader(user) {
-            const displayName = user.first_name && user.last_name 
+            const name = user.first_name && user.last_name
                 ? `${user.first_name} ${user.last_name}`
                 : user.username;
-            
-            currentUserName.textContent = displayName;
-            currentUserAvatar.textContent = displayName.charAt(0).toUpperCase();
-            currentUserAvatar.style.backgroundColor = '#fbbf24';
-            
-            const roleMap = {
-                'client': 'Cliente',
-                'supplier': 'Proveedor',
-                'admin': 'Administrador'
-            };
-            
-            currentUserInfo.innerHTML = `
-                ${roleMap[user.role] || user.role}
-                ${user.company ? ` • ${user.company}` : ''}
-                • <span class="status-online">En línea</span>
-            `;
+        
+            currentUserName.textContent = name;
+            currentUserAvatar.textContent = name[0].toUpperCase();
+            currentUserInfo.innerHTML = `${user.role} ${user.company ? '• ' + user.company : ''}`;
         }
-
-        // Display messages in chat
+        
         function displayMessages(messages) {
             messagesContainer.innerHTML = '';
-            
-            if (messages.length === 0) {
-                messagesContainer.innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: #9ca3af;">
-                        <div style="font-size: 24px; margin-bottom: 10px;">💬</div>
-                        <h3>Comienza la conversación</h3>
-                        <p>Envía un mensaje para iniciar el chat</p>
-                    </div>
-                `;
+        
+            if (!messages.length) {
+                messagesContainer.innerHTML = `<div style="padding:40px;text-align:center;color:#9ca3af">
+                    Comienza la conversación
+                </div>`;
                 return;
             }
-            
-            messages.forEach(message => {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `message ${message.is_sent ? 'sent' : 'received'}`;
-                
-                messageDiv.innerHTML = `
-                    <div class="message-content">${escapeHtml(message.content)}</div>
-                    <div class="message-time">${message.timestamp}</div>
+        
+            messages.forEach(m => {
+                const div = document.createElement('div');
+                div.className = `message ${m.is_sent ? 'sent' : 'received'}`;
+                div.innerHTML = `
+                    <div class="message-content">${escapeHtml(m.content)}</div>
+                    <div class="message-time">${m.timestamp}</div>
                 `;
-                
-                messagesContainer.appendChild(messageDiv);
+                messagesContainer.appendChild(div);
             });
-            
-            scrollToBottom();
-        }
-
-        // Send a message
-        async function sendMessage() {
-            const content = messageInput.value.trim();
-            if (!content || !currentChatUser) return;
-            
-            try {
-                const response = await fetch('/chat/send/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrftoken,
-                    },
-                    body: JSON.stringify({
-                        user_id: currentChatUser.id,
-                        content: content,
-                    }),
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    // Add message to UI immediately
-                    const messageDiv = document.createElement('div');
-                    messageDiv.className = 'message sent';
-                    messageDiv.innerHTML = `
-                        <div class="message-content">${escapeHtml(content)}</div>
-                        <div class="message-time">${data.timestamp}</div>
-                    `;
-                    
-                    messagesContainer.appendChild(messageDiv);
-                    messageInput.value = '';
-                    scrollToBottom();
-                    
-                    // Refresh user list to update last message
-                    loadUsers();
-                } else {
-                    alert('Error al enviar el mensaje');
-                }
-            } catch (error) {
-                console.error('Error sending message:', error);
-                alert('Error de conexión');
-            }
-        }
-
-        // Helper function to escape HTML
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Scroll to bottom of messages
-        function scrollToBottom() {
+        
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
-
-        // Handle Enter key press
-        function handleKeyPress(event) {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
-                sendMessage();
-            }
+        
+        /* ===============================
+           SEND MESSAGE
+        ================================ */
+        async function sendMessage() {
+            const content = messageInput.value.trim();
+            if (!content) return;
+        
+            const res = await fetch('/chat/send/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({
+                    user_id: currentChatUser.id,
+                    content
+                })
+            });
+        
+            const data = await res.json();
+            if (!data.success) return;
+        
+            messageInput.value = '';
+            selectUser(currentChatUser.id);
         }
-
-        // Handle file upload
-        fileBtn.addEventListener('click', () => {
-            fileInput.click();
-        });
-
-        fileInput.addEventListener('change', async function(e) {
-            const file = e.target.files[0];
-            if (!file || !currentChatUser) return;
-            
-            // In a real app, you'd upload the file to the server
-            // For now, we'll just send a message about the file
-            const fileMessage = `📎 Archivo: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
-            messageInput.value = fileMessage;
+        
+        /* ===============================
+           UTILS
+        ================================ */
+        function escapeHtml(text) {
+            const d = document.createElement('div');
+            d.textContent = text;
+            return d.innerHTML;
+        }
+        
+        /* ===============================
+           EVENTS
+        ================================ */
+        sendBtn.onclick = sendMessage;
+        messageInput.onkeypress = e => {
+            if (e.key === 'Enter') sendMessage();
+        };
+        
+        fileBtn.onclick = () => fileInput.click();
+        
+        fileInput.onchange = e => {
+            if (!e.target.files[0]) return;
+            messageInput.value = `📎 Archivo: ${e.target.files[0].name}`;
             sendMessage();
-            
-            // Reset file input
-            fileInput.value = '';
-        });
-
-        // Event listeners
-        sendBtn.addEventListener('click', sendMessage);
-        messageInput.addEventListener('focus', scrollToBottom);
-
-        // Initialize
+        };
+        
+        /* ===============================
+           INIT
+        ================================ */
         document.addEventListener('DOMContentLoaded', () => {
             loadUsers();
-            
-            // Auto-refresh conversations every 10 seconds
-            setInterval(() => {
-                if (currentChatUser) {
-                    selectUser(currentChatUser.id);
-                }
-            }, 10000);
+        
+            const conversationId = getQueryParam('conversation');
+            if (conversationId) {
+                selectConversationById(conversationId);
+            }
         });
-
-        // Simulate online status updates
-        setInterval(() => {
-            const indicators = document.querySelectorAll('.status-indicator');
-            indicators.forEach(indicator => {
-                if (Math.random() > 0.9) {
-                    indicator.classList.toggle('status-online');
-                    indicator.classList.toggle('status-offline');
-                }
-            });
-        }, 15000);
-    </script>
+        </script>
+        
 </body>
 </html>
+
+{% if selected_conversation %}
+    {% for message in selected_conversation.messages.all %}
+        <!-- render message -->
+    {% endfor %}
+{% else %}
+    <p>Selecciona una conversación</p>
+{% endif %}
