@@ -106,95 +106,120 @@ def chat(request):
 def get_conversation(request, user_id):
     """Get or create conversation with another user"""
     other_user = get_object_or_404(User, id=user_id)
-    
+
     # Find existing conversation
     conversation = Conversation.objects.filter(
         participants=request.user
     ).filter(
         participants=other_user
     ).first()
-    
-    # Create new conversation if doesn't exist
+
+    # Create new conversation if it doesn't exist
     if not conversation:
         conversation = Conversation.objects.create()
         conversation.participants.add(request.user, other_user)
         conversation.save()
-    
+
+        # Auto-greeting from Elice bot (ONLY once)
+        if other_user.username == "elicebot":
+            Message.objects.create(
+                conversation=conversation,
+                sender=other_user,
+                content="Hola 👋 Soy Elice, el asistente de Recal. ¿En qué puedo ayudarte hoy?",
+                timestamp=timezone.now()
+            )
+
     # Get messages
-    messages = conversation.messages.all().order_by('timestamp')
-    
+    messages = conversation.messages.all().order_by("timestamp")
+
     # Mark messages as read
-    conversation.messages.filter(sender=other_user, is_read=False).update(is_read=True)
-    
+    conversation.messages.filter(
+        sender=other_user,
+        is_read=False
+    ).update(is_read=True)
+
     messages_data = []
     for msg in messages:
         messages_data.append({
-            'id': msg.id,
-            'sender': msg.sender.username,
-            'sender_id': msg.sender.id,
-            'content': msg.content,
-            'file_name': msg.file_name,
-            'timestamp': msg.timestamp.strftime('%I:%M %p • %b %d'),
-            'is_sent': msg.sender.id == request.user.id,
+            "id": msg.id,
+            "sender": msg.sender.username,
+            "sender_id": msg.sender.id,
+            "content": msg.content,
+            "file_name": msg.file_name,
+            "timestamp": msg.timestamp.strftime("%I:%M %p • %b %d"),
+            "is_sent": msg.sender.id == request.user.id,
         })
-    
+
     other_profile = UserProfile.objects.filter(user=other_user).first()
-    
+
     return JsonResponse({
-        'conversation_id': conversation.id,
-        'other_user': {
-            'id': other_user.id,
-            'username': other_user.username,
-            'first_name': other_user.first_name,
-            'last_name': other_user.last_name,
-            'role': other_profile.role if other_profile else 'client',
-            'company': other_profile.company if other_profile else '',
+        "conversation_id": conversation.id,
+        "other_user": {
+            "id": other_user.id,
+            "username": other_user.username,
+            "first_name": other_user.first_name,
+            "last_name": other_user.last_name,
+            "role": other_profile.role if other_profile else "client",
+            "company": other_profile.company if other_profile else "",
         },
-        'messages': messages_data,
+        "messages": messages_data,
     })
+
 
 @login_required
 def send_message(request):
     """Send a new message"""
-    if request.method == 'POST':
+    if request.method == "POST":
         data = json.loads(request.body)
-        user_id = data.get('user_id')
-        content = data.get('content')
-        
+        user_id = data.get("user_id")
+        content = data.get("content")
+
         if not user_id or not content:
-            return JsonResponse({'error': 'Missing data'}, status=400)
-        
+            return JsonResponse({"error": "Missing data"}, status=400)
+
         other_user = get_object_or_404(User, id=user_id)
-        
+
         # Get or create conversation
         conversation = Conversation.objects.filter(
             participants=request.user
         ).filter(
             participants=other_user
         ).first()
-        
+
         if not conversation:
             conversation = Conversation.objects.create()
             conversation.participants.add(request.user, other_user)
-        
-        # Create message
+
+        # Create user message
         message = Message.objects.create(
             conversation=conversation,
             sender=request.user,
             content=content,
             timestamp=timezone.now()
         )
-        
+
+        # Bot auto-reply
+        if other_user.username == "elicebot":
+            bot_reply = elicebot_reply(content)
+
+            Message.objects.create(
+                conversation=conversation,
+                sender=other_user,
+                content=bot_reply,
+                timestamp=timezone.now()
+            )
+
         conversation.updated_at = timezone.now()
         conversation.save()
-        
+
         return JsonResponse({
-            'success': True,
-            'message_id': message.id,
-            'timestamp': message.timestamp.strftime('%I:%M %p • %b %d'),
+            "success": True,
+            "message_id": message.id,
+            "timestamp": message.timestamp.strftime("%I:%M %p • %b %d"),
         })
-    
-    return JsonResponse({'error': 'Invalid method'}, status=405)
+
+    return JsonResponse({"error": "Invalid method"}, status=405)
+
 
 @login_required
 def get_users(request):
@@ -394,3 +419,40 @@ def get_conversation_by_id(request, conversation_id):
         },
         "messages": messages_data,
     })
+
+
+def elicebot_reply(user_message):
+    text = user_message.lower()
+
+    if any(word in text for word in ["hi", "hello", "hola"]):
+        return (
+            "Hola 👋 Soy Elice, el asistente de Recal.\n\n"
+            "Puedo ayudarte con cotizaciones, información de productos "
+            "o ponerte en contacto con el equipo."
+        )
+
+    if any(word in text for word in ["quote", "cotización", "precio", "price"]):
+        return (
+            "Perfecto 📄\n\n"
+            "Para preparar tu cotización necesito:\n"
+            "• Producto o servicio\n"
+            "• Cantidad\n"
+            "• Empresa (opcional)\n\n"
+            "Puedes escribirlo aquí mismo."
+        )
+
+    if any(word in text for word in ["email", "correo", "contact"]):
+        return (
+            "Genial 👍\n\n"
+            "Un asesor humano revisará tu solicitud y "
+            "te contactará por correo lo antes posible."
+        )
+
+    return (
+        "Gracias por tu mensaje 😊\n\n"
+        "Puedo ayudarte con:\n"
+        "• Cotizaciones\n"
+        "• Información general\n"
+        "• Contactar a un asesor\n\n"
+        "¿Qué necesitas?"
+    )
