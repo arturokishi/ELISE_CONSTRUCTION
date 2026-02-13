@@ -297,17 +297,10 @@ def register(request):
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
         if form.is_valid():
-            user = form.save()
+            user = form.save()  # Only save User
+            # <-- REMOVE UserProfile.objects.create(...) here
             
-            # Create UserProfile
-            UserProfile.objects.create(
-                user=user,
-                role=form.cleaned_data.get('role', 'client'),
-                company=form.cleaned_data.get('company', ''),
-                phone=form.cleaned_data.get('phone', '')
-            )
-            
-            # Auto login after registration
+            # Optionally, log in the user automatically
             login(request, user)
             messages.success(request, f'¡Cuenta creada para {user.username}!')
             return redirect('home:home')
@@ -315,6 +308,7 @@ def register(request):
         form = UserRegisterForm()
     
     return render(request, 'home/register.html', {'form': form})
+
 
 @login_required
 def profile(request):
@@ -360,25 +354,59 @@ def password_change(request):
 
 
 
-
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.contrib.auth.models import User
+from .models import UserProfile, Conversation
 
 @login_required
 def chat_with_user(request, username):
-    other_user = get_object_or_404(User, username=username)
+    """
+    Handles redirect to chat with another user.
+    - Clients cannot chat directly with suppliers; must go through Elice bot first.
+    - Ensures UserProfile exists for both users.
+    """
+    # Get the target user
+    target_user = get_object_or_404(User, username=username)
 
+    # Ensure both users have a profile
+    profile, created = UserProfile.objects.get_or_create(
+        user=request.user,
+        defaults={'role': 'client'}
+    )
+    target_profile, created = UserProfile.objects.get_or_create(
+        user=target_user,
+        defaults={'role': 'client'}
+    )
+
+    # 🚫 Block direct client → supplier chat
+    if profile.role == "client" and target_profile.role == "supplier":
+        messages.error(
+            request,
+            "Debes solicitar una cotización primero a través de Elice."
+        )
+        # Redirect to bot chat instead
+        return redirect('home:chat_with_user', username="elicebot")
+
+    # Get or create conversation
     conversation = (
         Conversation.objects
         .filter(participants=request.user)
-        .filter(participants=other_user)
+        .filter(participants=target_user)
         .first()
     )
 
     if not conversation:
         conversation = Conversation.objects.create()
-        conversation.participants.add(request.user, other_user)
+        conversation.participants.add(request.user, target_user)
+        conversation.save()
 
-    # ✅ Pass conversation ID
+    # ✅ Redirect to the chat page with conversation
     return redirect(f"/chat/?conversation={conversation.id}")
+
+
+
 
 
 @login_required
@@ -422,37 +450,57 @@ def get_conversation_by_id(request, conversation_id):
 
 
 def elicebot_reply(user_message):
-    text = user_message.lower()
+    """
+    Simple rule-based chatbot for Elice.
+    Returns responses based on keywords and phrases.
+    """
 
-    if any(word in text for word in ["hi", "hello", "hola"]):
+    text = user_message.lower().strip()
+
+    # --- Greetings ---
+    if any(word in text for word in ["hi", "hello", "hola", "buenos días", "buenas tardes"]):
         return (
-            "Hola 👋 Soy Elice, el asistente de Recal.\n\n"
+            "Hola 👋 Soy Elice, el asistente de Elice Construcción.\n\n"
             "Puedo ayudarte con cotizaciones, información de productos "
-            "o ponerte en contacto con el equipo."
+            "o ponerte en contacto con nuestro equipo."
         )
 
-    if any(word in text for word in ["quote", "cotización", "precio", "price"]):
+    # --- Asking for quotes / prices ---
+    if any(word in text for word in ["quote", "cotización", "precio", "price", "valor", "cost"]):
         return (
             "Perfecto 📄\n\n"
             "Para preparar tu cotización necesito:\n"
             "• Producto o servicio\n"
             "• Cantidad\n"
             "• Empresa (opcional)\n\n"
-            "Puedes escribirlo aquí mismo."
+            "Puedes escribirlo aquí mismo y te ayudaré."
         )
 
-    if any(word in text for word in ["email", "correo", "contact"]):
+    # --- Contact / email ---
+    if any(word in text for word in ["email", "correo", "contact", "contacto", "asistente"]):
         return (
             "Genial 👍\n\n"
             "Un asesor humano revisará tu solicitud y "
             "te contactará por correo lo antes posible."
         )
 
+    # --- Thanks / appreciation ---
+    if any(word in text for word in ["thanks", "gracias", "thank you", "ok", "vale"]):
+        return "¡De nada! 😊 ¿Quieres que te ayude con otra cosa?"
+
+    # --- Small talk or fallback ---
+    if any(word in text for word in ["how are you", "qué tal", "cómo estás"]):
+        return "Estoy bien, gracias por preguntar 😊. ¿En qué puedo ayudarte hoy?"
+
+    # --- Default fallback ---
     return (
         "Gracias por tu mensaje 😊\n\n"
         "Puedo ayudarte con:\n"
         "• Cotizaciones\n"
-        "• Información general\n"
+        "• Información general sobre productos\n"
         "• Contactar a un asesor\n\n"
         "¿Qué necesitas?"
     )
+
+
+

@@ -47,6 +47,21 @@
             color: #fbbf24;
         }
 
+        /* ---------- NAVBAR LOGO ---------- */
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px; /* space between logo and text */
+        }
+
+        .navbar-logo {
+            width: 80px;   /* adjust size as needed */
+            height: 80px;  /* maintain square */
+            border-radius: 6px; /* optional rounded corners */
+            object-fit: cover;
+        }
+
+
         /* ---------- USER MENU ---------- */
         .user-menu {
             display: flex;
@@ -264,25 +279,31 @@
 
 <body>
 
-    <!-- NAVBAR -->
-    <nav class="navbar">
+<!-- NAVBAR -->
+<nav class="navbar">
+    <div class="logo-container">
+        <img src="https://github.com/arturokishi/ELISE_CONSTRUCTION/blob/main/PHOTO-2026-01-20-16-43-14.jpg?raw=true" 
+             alt="Elice Logo" class="navbar-logo">
         <h1>Elice Construcción</h1>
-        <div class="user-menu">
-            {% if user.is_authenticated %}
-                <span class="user-greeting">Hola, {{ user.username }}</span>
-                <a href="{% url 'home:profile' %}">Mi Perfil</a>
-                <a href="{% url 'home:chat' %}">Chat</a>
-                <a href="{% url 'home:logout' %}" class="btn-logout">Cerrar Sesión</a>
-            {% else %}
-                <a href="{% url 'home:login' %}" class="btn-auth">Iniciar Sesión</a>
-                <a href="{% url 'home:register' %}">Registrarse</a>
-            {% endif %}
-            <a href="{% url 'home:productos' %}">Productos</a>
-            <a href="{% url 'home:industrias' %}">Industrias</a>
-            <a href="{% url 'home:nosotros' %}">Nosotros</a>
-            <a href="{% url 'home:contacto' %}">Contacto</a>
-        </div>
-    </nav>
+    </div>
+
+    <div class="user-menu">
+        {% if user.is_authenticated %}
+            <span class="user-greeting">Hola, {{ user.username }}</span>
+            <a href="{% url 'home:profile' %}">Mi Perfil</a>
+            <a href="{% url 'home:chat' %}">Chat</a>
+            <a href="{% url 'home:logout' %}" class="btn-logout">Cerrar Sesión</a>
+        {% else %}
+            <a href="{% url 'home:login' %}" class="btn-auth">Iniciar Sesión</a>
+            <a href="{% url 'home:register' %}">Registrarse</a>
+        {% endif %}
+        <a href="{% url 'home:productos' %}">Productos</a>
+        <a href="{% url 'home:industrias' %}">Industrias</a>
+        <a href="{% url 'home:nosotros' %}">Nosotros</a>
+        <a href="{% url 'home:contacto' %}">Contacto</a>
+    </div>
+</nav>
+
 
     <!-- MESSAGES -->
     {% if messages %}

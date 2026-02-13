@@ -1,6 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.contrib.auth.models import User
+
 
 
 class Conversation(models.Model):
@@ -57,6 +61,8 @@ class OrderItem(models.Model):
         return self.product_name
 
 
+# models.py
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     role = models.CharField(
@@ -73,6 +79,22 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.username} ({self.get_role_display()})"
+
+
+# --- PLACE THE SIGNAL HERE, BELOW THE MODEL ---
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+@receiver(post_save, sender=User)
+def create_or_ensure_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(
+            user=instance,
+            role=getattr(instance, 'role', 'client'),  # default 'client'
+            company=getattr(instance, 'company', ''),
+            phone=getattr(instance, 'phone', '')
+        )
+
 
 
 class Message(models.Model):
@@ -93,3 +115,15 @@ class Message(models.Model):
 
     def __str__(self):
         return f"{self.sender.username}: {self.content[:50]}..."
+
+
+@receiver(post_save, sender=User)
+def create_or_ensure_user_profile(sender, instance, created, **kwargs):
+    """
+    Ensure a UserProfile exists for every User.
+    - Creates a new profile if the User is new.
+    - Ensures no duplicate is created if profile already exists.
+    """
+    UserProfile.objects.get_or_create(user=instance, defaults={'role': 'client'})
+
+
