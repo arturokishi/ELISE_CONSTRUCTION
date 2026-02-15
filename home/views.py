@@ -1,12 +1,16 @@
 from django.shortcuts import render
 
 
+
+
 import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import Order, OrderItem
 
 from django.shortcuts import redirect, get_object_or_404
+from .models import QuoteRequest
+
 
 
 from .models import Conversation
@@ -104,121 +108,222 @@ def chat(request):
 
 @login_required
 def get_conversation(request, user_id):
-    """Get or create conversation with another user"""
+
     other_user = get_object_or_404(User, id=user_id)
 
-    # Find existing conversation
+    my_profile = request.user.userprofile
+    other_profile = other_user.userprofile
+
+    # -----------------------------
+    # CLIENT RULES
+    # -----------------------------
+    if my_profile.role == "client":
+
+        # Client can always talk to bot
+        if other_user.username == "elicebot":
+            pass
+
+        # Client → Supplier allowed ONLY if quote is pending or accepted
+        elif other_profile.role == "supplier":
+
+            allowed = QuoteRequest.objects.filter(
+                client=request.user,
+                supplier=other_user,
+                status__in=["pending", "accepted"]
+            ).exists()
+
+            if not allowed:
+                return JsonResponse(
+                    {"error": "No tienes una cotización activa con este proveedor."},
+                    status=403
+                )
+
+        else:
+            return JsonResponse(
+                {"error": "No puedes enviar mensajes a este usuario."},
+                status=403
+            )
+
+    # -----------------------------
+    # SUPPLIER RULES
+    # -----------------------------
+    if my_profile.role == "supplier":
+
+        allowed = QuoteRequest.objects.filter(
+            client=other_user,
+            supplier=request.user,
+            status__in=["pending", "accepted"]
+        ).exists()
+
+        if not allowed:
+            return JsonResponse(
+                {"error": "No tienes una solicitud activa con este cliente."},
+                status=403
+            )
+
+    # -----------------------------
+    # GET OR CREATE CONVERSATION
+    # -----------------------------
     conversation = Conversation.objects.filter(
         participants=request.user
     ).filter(
         participants=other_user
     ).first()
 
-    # Create new conversation if it doesn't exist
     if not conversation:
         conversation = Conversation.objects.create()
         conversation.participants.add(request.user, other_user)
-        conversation.save()
 
-        # Auto-greeting from Elice bot (ONLY once)
-        if other_user.username == "elicebot":
-            Message.objects.create(
-                conversation=conversation,
-                sender=other_user,
-                content="Hola 👋 Soy Elice, el asistente de Recal. ¿En qué puedo ayudarte hoy?",
-                timestamp=timezone.now()
-            )
-
-    # Get messages
     messages = conversation.messages.all().order_by("timestamp")
-
-    # Mark messages as read
-    conversation.messages.filter(
-        sender=other_user,
-        is_read=False
-    ).update(is_read=True)
-
-    messages_data = []
-    for msg in messages:
-        messages_data.append({
-            "id": msg.id,
-            "sender": msg.sender.username,
-            "sender_id": msg.sender.id,
-            "content": msg.content,
-            "file_name": msg.file_name,
-            "timestamp": msg.timestamp.strftime("%I:%M %p • %b %d"),
-            "is_sent": msg.sender.id == request.user.id,
-        })
-
-    other_profile = UserProfile.objects.filter(user=other_user).first()
 
     return JsonResponse({
         "conversation_id": conversation.id,
-        "other_user": {
-            "id": other_user.id,
-            "username": other_user.username,
-            "first_name": other_user.first_name,
-            "last_name": other_user.last_name,
-            "role": other_profile.role if other_profile else "client",
-            "company": other_profile.company if other_profile else "",
-        },
-        "messages": messages_data,
+        "messages": [
+            {
+                "id": msg.id,
+                "sender": msg.sender.username,
+                "content": msg.content,
+                "timestamp": msg.timestamp.strftime("%I:%M %p • %b %d"),
+                "is_sent": msg.sender == request.user
+            }
+            for msg in messages
+        ]
     })
+
+
+
+
 
 
 @login_required
 def send_message(request):
-    """Send a new message"""
-    if request.method == "POST":
-        data = json.loads(request.body)
-        user_id = data.get("user_id")
-        content = data.get("content")
 
-        if not user_id or not content:
-            return JsonResponse({"error": "Missing data"}, status=400)
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid method"}, status=405)
 
-        other_user = get_object_or_404(User, id=user_id)
+    data = json.loads(request.body)
+    user_id = data.get("user_id")
+    content = data.get("content")
 
-        # Get or create conversation
-        conversation = Conversation.objects.filter(
-            participants=request.user
-        ).filter(
-            participants=other_user
-        ).first()
+    other_user = get_object_or_404(User, id=user_id)
 
-        if not conversation:
-            conversation = Conversation.objects.create()
-            conversation.participants.add(request.user, other_user)
+    my_profile = request.user.userprofile
+    text = content.lower().strip()
 
-        # Create user message
-        message = Message.objects.create(
+    conversation = Conversation.objects.filter(
+        participants=request.user
+    ).filter(
+        participants=other_user
+    ).first()
+
+    if not conversation:
+        conversation = Conversation.objects.create()
+        conversation.participants.add(request.user, other_user)
+
+    Message.objects.create(
+        conversation=conversation,
+        sender=request.user,
+        content=content,
+        timestamp=timezone.now()
+    )
+
+    # BOT LOGIC
+    if other_user.username == "elicebot":
+
+        # STEP 1
+        if any(word in text for word in ["quote", "cotización"]):
+            reply = elicebot_reply(content)
+
+        # STEP 2 MATERIAL ROUTING
+        elif "pintura" in text or "paint" in text:
+            supplier = User.objects.filter(
+                userprofile__role="supplier",
+                userprofile__material_category="paint"
+            ).first()
+
+            if supplier:
+                QuoteRequest.objects.create(
+                    client=request.user,
+                    supplier=supplier
+                )
+
+                supplier_convo = Conversation.objects.create()
+                supplier_convo.participants.add(request.user, supplier)
+
+                Message.objects.create(
+                    conversation=supplier_convo,
+                    sender=supplier,
+                    content="Hola 👋 Somos el proveedor de pintura. ¿Qué necesitas?",
+                    timestamp=timezone.now()
+                )
+
+                reply = "Te he conectado con el proveedor de pintura 🎨"
+
+        elif "acero" in text or "steel" in text:
+            supplier = User.objects.filter(
+                userprofile__role="supplier",
+                userprofile__material_category="steel"
+            ).first()
+
+            if supplier:
+                QuoteRequest.objects.create(
+                    client=request.user,
+                    supplier=supplier
+                )
+
+                supplier_convo = Conversation.objects.create()
+                supplier_convo.participants.add(request.user, supplier)
+
+                Message.objects.create(
+                    conversation=supplier_convo,
+                    sender=supplier,
+                    content="Hola 👋 Somos el proveedor de acero.",
+                    timestamp=timezone.now()
+                )
+
+                reply = "Te he conectado con el proveedor de acero 🔩"
+
+        elif "cemento" in text:
+            supplier = User.objects.filter(
+                userprofile__role="supplier",
+                userprofile__material_category="cement"
+            ).first()
+
+            if supplier:
+                QuoteRequest.objects.create(
+                    client=request.user,
+                    supplier=supplier
+                )
+
+                supplier_convo = Conversation.objects.create()
+                supplier_convo.participants.add(request.user, supplier)
+
+                Message.objects.create(
+                    conversation=supplier_convo,
+                    sender=supplier,
+                    content="Hola 👋 Somos el proveedor de cemento.",
+                    timestamp=timezone.now()
+                )
+
+                reply = "Te he conectado con el proveedor de cemento 🏗"
+
+        else:
+            reply = elicebot_reply(content)
+
+        Message.objects.create(
             conversation=conversation,
-            sender=request.user,
-            content=content,
+            sender=other_user,
+            content=reply,
             timestamp=timezone.now()
         )
 
-        # Bot auto-reply
-        if other_user.username == "elicebot":
-            bot_reply = elicebot_reply(content)
+    return JsonResponse({"success": True})
 
-            Message.objects.create(
-                conversation=conversation,
-                sender=other_user,
-                content=bot_reply,
-                timestamp=timezone.now()
-            )
 
-        conversation.updated_at = timezone.now()
-        conversation.save()
 
-        return JsonResponse({
-            "success": True,
-            "message_id": message.id,
-            "timestamp": message.timestamp.strftime("%I:%M %p • %b %d"),
-        })
 
-    return JsonResponse({"error": "Invalid method"}, status=405)
+
+
 
 
 @login_required
@@ -386,24 +491,32 @@ def chat_with_user(request, username):
             request,
             "Debes solicitar una cotización primero a través de Elice."
         )
-        # Redirect to bot chat instead
         return redirect('home:chat_with_user', username="elicebot")
 
     # Get or create conversation
-    conversation = (
-        Conversation.objects
-        .filter(participants=request.user)
-        .filter(participants=target_user)
-        .first()
-    )
+    conversation = Conversation.objects.filter(
+        participants=request.user
+    ).filter(
+        participants=target_user
+    ).first()
 
     if not conversation:
         conversation = Conversation.objects.create()
         conversation.participants.add(request.user, target_user)
         conversation.save()
 
-    # ✅ Redirect to the chat page with conversation
+        # Auto-greeting from Elice bot (only for new conversation)
+        if target_user.username == "elicebot":
+            Message.objects.create(
+                conversation=conversation,
+                sender=target_user,
+                content="Hola 👋 Soy Elice, el asistente de Elice Construcción. ¿En qué puedo ayudarte hoy?",
+                timestamp=timezone.now()
+            )
+
+    # Redirect to chat page with conversation
     return redirect(f"/chat/?conversation={conversation.id}")
+
 
 
 
@@ -449,57 +562,31 @@ def get_conversation_by_id(request, conversation_id):
     })
 
 
+    
+
+
 def elicebot_reply(user_message):
-    """
-    Simple rule-based chatbot for Elice.
-    Returns responses based on keywords and phrases.
-    """
 
     text = user_message.lower().strip()
 
-    # --- Greetings ---
-    if any(word in text for word in ["hi", "hello", "hola", "buenos días", "buenas tardes"]):
+    if any(word in text for word in ["hi", "hello", "hola"]):
         return (
-            "Hola 👋 Soy Elice, el asistente de Elice Construcción.\n\n"
-            "Puedo ayudarte con cotizaciones, información de productos "
-            "o ponerte en contacto con nuestro equipo."
+            "Hola 👋 Soy Elice.\n\n"
+            "Escribe 'quote' o 'cotización' para comenzar una solicitud."
         )
 
-    # --- Asking for quotes / prices ---
-    if any(word in text for word in ["quote", "cotización", "precio", "price", "valor", "cost"]):
+    if any(word in text for word in ["quote", "cotización"]):
         return (
-            "Perfecto 📄\n\n"
-            "Para preparar tu cotización necesito:\n"
-            "• Producto o servicio\n"
-            "• Cantidad\n"
-            "• Empresa (opcional)\n\n"
-            "Puedes escribirlo aquí mismo y te ayudaré."
+            "Perfecto 👍\n\n"
+            "¿Qué material necesitas?\n"
+            "• Pintura\n"
+            "• Acero\n"
+            "• Cemento"
         )
 
-    # --- Contact / email ---
-    if any(word in text for word in ["email", "correo", "contact", "contacto", "asistente"]):
-        return (
-            "Genial 👍\n\n"
-            "Un asesor humano revisará tu solicitud y "
-            "te contactará por correo lo antes posible."
-        )
-
-    # --- Thanks / appreciation ---
-    if any(word in text for word in ["thanks", "gracias", "thank you", "ok", "vale"]):
-        return "¡De nada! 😊 ¿Quieres que te ayude con otra cosa?"
-
-    # --- Small talk or fallback ---
-    if any(word in text for word in ["how are you", "qué tal", "cómo estás"]):
-        return "Estoy bien, gracias por preguntar 😊. ¿En qué puedo ayudarte hoy?"
-
-    # --- Default fallback ---
     return (
-        "Gracias por tu mensaje 😊\n\n"
-        "Puedo ayudarte con:\n"
-        "• Cotizaciones\n"
-        "• Información general sobre productos\n"
-        "• Contactar a un asesor\n\n"
-        "¿Qué necesitas?"
+        "Puedo ayudarte con cotizaciones.\n"
+        "Escribe 'quote' para comenzar."
     )
 
 

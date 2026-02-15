@@ -64,21 +64,35 @@ class OrderItem(models.Model):
 # models.py
 
 class UserProfile(models.Model):
+
+    ROLE_CHOICES = (
+        ('client', 'Cliente'),
+        ('supplier', 'Proveedor'),
+        ('admin', 'Administrador'),
+    )
+
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     role = models.CharField(
-        max_length=100,
-        choices=[
-            ('client', 'Cliente'),
-            ('supplier', 'Proveedor'),
-            ('admin', 'Administrador'),
-        ]
+        max_length=20,
+        choices=ROLE_CHOICES,
+        default='client'
     )
+
     company = models.CharField(max_length=200, blank=True)
     phone = models.CharField(max_length=20, blank=True)
     avatar_color = models.CharField(max_length=7, default='#fbbf24')
 
+    # ✅ Add this field (for supplier material assignment)
+    material_category = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
+    )
+
     def __str__(self):
         return f"{self.user.username} ({self.get_role_display()})"
+
+
 
 
 # --- PLACE THE SIGNAL HERE, BELOW THE MODEL ---
@@ -127,3 +141,34 @@ def create_or_ensure_user_profile(sender, instance, created, **kwargs):
     UserProfile.objects.get_or_create(user=instance, defaults={'role': 'client'})
 
 
+    
+class QuoteRequest(models.Model):
+
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
+    )
+
+    client = models.ForeignKey(
+        User,
+        related_name="client_quotes",
+        on_delete=models.CASCADE
+    )
+
+    supplier = models.ForeignKey(
+        User,
+        related_name="supplier_quotes",
+        on_delete=models.CASCADE
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pending'
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.client.username} → {self.supplier.username} ({self.status})"
