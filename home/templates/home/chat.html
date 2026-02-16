@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Elice Construcción - Chat</title>
     
-    <!-- Add CSRF token for AJAX requests -->
+    <!-- CSRF Token for AJAX -->
     <meta name="csrf-token" content="{{ csrf_token }}">
    
     <style>
@@ -444,11 +444,25 @@
 
             <!-- MESSAGES CONTAINER -->
             <div class="messages-container" id="messagesContainer">
-                <div style="text-align: center; padding: 40px; color: #9ca3af;">
-                    <div style="font-size: 24px; margin-bottom: 10px;">💬</div>
-                    <h3>Selecciona un usuario para chatear</h3>
-                    <p>Elige un contacto de la lista para comenzar una conversación</p>
-                </div>
+                <!-- Django template for initial messages if conversation is selected -->
+                {% if selected_conversation and messages_list %}
+                    {% for message in messages_list %}
+                        <div class="message {% if message.is_sent %}sent{% else %}received{% endif %}">
+                            <div class="message-content">
+                                {{ message.content }}
+                            </div>
+                            <div class="message-time">
+                                {{ message.timestamp|date:"H:i" }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align: center; padding: 40px; color: #9ca3af;">
+                        <div style="font-size: 24px; margin-bottom: 10px;">💬</div>
+                        <h3>Selecciona un usuario para chatear</h3>
+                        <p>Elige un contacto de la lista para comenzar una conversación</p>
+                    </div>
+                {% endif %}
             </div>
 
             <!-- MESSAGE INPUT -->
@@ -465,249 +479,64 @@
     <!-- FILE INPUT (hidden) -->
     <input type="file" id="fileInput" style="display: none;">
 
+    {% load static %}
+    <!-- External JS (if you have one) -->
+    <script src="{% static 'js/chat.js' %}"></script>
+    
+    <!-- Inline JavaScript -->
     <script>
+        console.log("JS LOADED");
+    
         /* ===============================
-           GLOBALS & HELPERS
+           GLOBAL STATE
         ================================ */
         let currentChatUser = null;
         let currentConversationId = null;
-        const csrftoken = document.querySelector('[name=csrf-token]').content;
+        let csrftoken = null;
+        let messageRefreshInterval = null;
         
-        function getQueryParam(name) {
-            const params = new URLSearchParams(window.location.search);
-            return params.get(name);
-        }
-        
-        /* ===============================
-           DOM ELEMENTS
-        ================================ */
-        const usersList = document.getElementById('usersList');
-        const messagesContainer = document.getElementById('messagesContainer');
-        const messageInput = document.getElementById('messageInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const fileBtn = document.getElementById('fileBtn');
-        const fileInput = document.getElementById('fileInput');
-        const messageInputContainer = document.getElementById('messageInputContainer');
-        const currentUserName = document.getElementById('currentUserName');
-        const currentUserInfo = document.getElementById('currentUserInfo');
-        const currentUserAvatar = document.getElementById('currentUserAvatar');
-        const params = new URLSearchParams(window.location.search);
-    const conversationId = params.get("conversation");
-
-    if (conversationId) {
-        fetch(`/chat/conversation/by-id/${conversationId}/`)
-            .then(res => res.json())
-            .then(data => {
-            currentChatUser = data.other_user;
-            currentConversationId = data.conversation_id;
-
-            updateChatHeader(data.other_user);
-            displayMessages(data.messages);
-            messageInputContainer.style.display = "flex";
-        })
-        .catch(err => console.error("Conversation load error:", err));
-}
-
-        
-        /* ===============================
-           LOAD USERS
-        ================================ */
-        async function loadUsers() {
-            try {
-                const response = await fetch('/chat/users/');
-                const data = await response.json();
-        
-                if (data.users?.length) {
-                    displayUsers(data.users);
-                } else {
-                    usersList.innerHTML = `<div style="padding:20px;color:#9ca3af;text-align:center">
-                        No hay otros usuarios registrados
-                    </div>`;
-                }
-            } catch (error) {
-                console.error(error);
-                usersList.innerHTML = `<div style="padding:20px;color:#ef4444;text-align:center">
-                    Error cargando usuarios
-                </div>`;
-            }
-        }
-        
-        /* ===============================
-           DISPLAY USERS
-        ================================ */
-        function displayUsers(users) {
-            usersList.innerHTML = '';
-        
-            const groups = {
-                client: 'Clientes',
-                supplier: 'Proveedores',
-                admin: 'Administradores'
-            };
-        
-            Object.keys(groups).forEach(role => {
-                const list = users.filter(u => u.role === role);
-                if (!list.length) return;
-        
-                usersList.innerHTML += `<h3>${groups[role]}</h3>`;
-                list.forEach(u => usersList.innerHTML += createUserItem(u));
-            });
-        
-            document.querySelectorAll('.user-item').forEach(item => {
-                item.onclick = () => {
-                    selectUser(item.dataset.userId);
-                    document.querySelectorAll('.user-item').forEach(i => i.classList.remove('active'));
-                    item.classList.add('active');
-                };
-            });
-        }
-        
-        function createUserItem(user) {
-            const name = user.first_name && user.last_name
-                ? `${user.first_name} ${user.last_name}`
-                : user.username;
-        
-            return `
-                <div class="user-item" data-user-id="${user.id}">
-                    <div class="user-avatar" style="background:${user.avatar_color}">
-                        ${name.charAt(0).toUpperCase()}
-                    </div>
-                    <div class="user-info">
-                        <div class="user-name">${name}<span class="status-indicator status-online"></span></div>
-                        <div class="user-role">${user.role}</div>
-                        ${user.company ? `<div class="user-role">${user.company}</div>` : ''}
-                    </div>
-                </div>
-            `;
-        }
-        
-        /* ===============================
-           SELECT USER (SIDEBAR CLICK)
-        ================================ */
-        async function selectUser(userId) {
-            const res = await fetch(`/chat/conversation/${userId}/`);
-            const data = await res.json();
-        
-            currentChatUser = data.other_user;
-            currentConversationId = data.conversation_id;
-        
-            updateChatHeader(data.other_user);
-            displayMessages(data.messages);
-        
-            messageInputContainer.style.display = 'flex';
-        }
-        
-        /* ===============================
-           SELECT BY CONVERSATION ID (AUTO)
-        ================================ */
-        async function selectConversationById(conversationId) {
-            const res = await fetch(`/chat/conversation/by-id/${conversationId}/`);
-            const data = await res.json();
-        
-            if (!data.success) return;
-        
-            currentChatUser = data.other_user;
-            currentConversationId = conversationId;
-        
-            updateChatHeader(data.other_user);
-            displayMessages(data.messages);
-            messageInputContainer.style.display = 'flex';
-        
-            document.querySelectorAll('.user-item').forEach(item => {
-                item.classList.toggle('active', item.dataset.userId == data.other_user.id);
-            });
-        }
-        
-        /* ===============================
-           HEADER & MESSAGES
-        ================================ */
-        function updateChatHeader(user) {
-            const name = user.first_name && user.last_name
-                ? `${user.first_name} ${user.last_name}`
-                : user.username;
-        
-            currentUserName.textContent = name;
-            currentUserAvatar.textContent = name[0].toUpperCase();
-            currentUserInfo.innerHTML = `${user.role} ${user.company ? '• ' + user.company : ''}`;
-        }
-        
-        function displayMessages(messages) {
-            messagesContainer.innerHTML = '';
-        
-            if (!messages.length) {
-                messagesContainer.innerHTML = `<div style="padding:40px;text-align:center;color:#9ca3af">
-                    Comienza la conversación
-                </div>`;
-                return;
-            }
-        
-            messages.forEach(m => {
-                const div = document.createElement('div');
-                div.className = `message ${m.is_sent ? 'sent' : 'received'}`;
-                div.innerHTML = `
-                    <div class="message-content">${escapeHtml(m.content)}</div>
-                    <div class="message-time">${m.timestamp}</div>
-                `;
-                messagesContainer.appendChild(div);
-            });
-        
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-        
-        /* ===============================
-           SEND MESSAGE
-        ================================ */
-        async function sendMessage() {
-            const content = messageInput.value.trim();
-            if (!content) return;
-        
-            const res = await fetch('/chat/send/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken
-                },
-                body: JSON.stringify({
-                    user_id: currentChatUser.id,
-                    content
-                })
-            });
-        
-            const data = await res.json();
-            if (!data.success) return;
-        
-            messageInput.value = '';
-            selectUser(currentChatUser.id);
-        }
-        
-        /* ===============================
-           UTILS
-        ================================ */
-        function escapeHtml(text) {
-            const d = document.createElement('div');
-            d.textContent = text;
-            return d.innerHTML;
-        }
-        
-        /* ===============================
-           EVENTS
-        ================================ */
-        sendBtn.onclick = sendMessage;
-        messageInput.onkeypress = e => {
-            if (e.key === 'Enter') sendMessage();
-        };
-        
-        fileBtn.onclick = () => fileInput.click();
-        
-        fileInput.onchange = e => {
-            if (!e.target.files[0]) return;
-            messageInput.value = `📎 Archivo: ${e.target.files[0].name}`;
-            sendMessage();
-        };
+        let usersList,
+            messagesContainer,
+            messageInput,
+            sendBtn,
+            fileBtn,
+            fileInput,
+            messageInputContainer,
+            currentUserName,
+            currentUserInfo,
+            currentUserAvatar;
         
         /* ===============================
            INIT
         ================================ */
         document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM fully loaded");
+            
+            // Get CSRF token
+            const metaTag = document.querySelector('meta[name="csrf-token"]');
+            if (metaTag) {
+                csrftoken = metaTag.getAttribute('content');
+            }
+        
+            // Cache DOM elements
+            usersList = document.getElementById('usersList');
+            messagesContainer = document.getElementById('messagesContainer');
+            messageInput = document.getElementById('messageInput');
+            sendBtn = document.getElementById('sendBtn');
+            fileBtn = document.getElementById('fileBtn');
+            fileInput = document.getElementById('fileInput');
+            messageInputContainer = document.getElementById('messageInputContainer');
+            currentUserName = document.getElementById('currentUserName');
+            currentUserInfo = document.getElementById('currentUserInfo');
+            currentUserAvatar = document.getElementById('currentUserAvatar');
+        
+            // Check if all elements exist
+            if (!usersList || !messagesContainer || !messageInput || !sendBtn) {
+                console.error("Critical DOM elements missing!");
+                return;
+            }
+        
+            wireEvents();
             loadUsers();
         
             const conversationId = getQueryParam('conversation');
@@ -715,15 +544,499 @@
                 selectConversationById(conversationId);
             }
         });
-        </script>
         
+        /* ===============================
+           HELPERS
+        ================================ */
+        function getQueryParam(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function formatTime(date = new Date()) {
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        
+        /* ===============================
+           LOAD USERS
+        ================================ */
+        async function loadUsers() {
+            try {
+                const res = await fetch('/chat/users/');
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+                const data = await res.json();
+        
+                if (!data.users || !data.users.length) {
+                    usersList.innerHTML = `
+                        <div style="padding:20px;color:#9ca3af;text-align:center">
+                            No hay otros usuarios registrados
+                        </div>`;
+                    return;
+                }
+        
+                displayUsers(data.users);
+        
+            } catch (error) {
+                console.error("Error loading users:", error);
+                usersList.innerHTML = `
+                    <div style="padding:20px;color:#ef4444;text-align:center">
+                        Error cargando usuarios: ${error.message}
+                    </div>`;
+            }
+        }
+        
+        /* ===============================
+           DISPLAY USERS
+        ================================ */
+        function displayUsers(users) {
+            if (!usersList) return;
+            usersList.innerHTML = '';
+        
+            // Define role groups in Spanish
+            const groups = {
+                'client': 'Clientes',
+                'supplier': 'Proveedores',
+                'admin': 'Administradores',
+                'staff': 'Personal'
+            };
+        
+            // Group users by role
+            const groupedUsers = {};
+            users.forEach(user => {
+                const role = user.role || 'client';
+                if (!groupedUsers[role]) {
+                    groupedUsers[role] = [];
+                }
+                groupedUsers[role].push(user);
+            });
+        
+            // Display each role group
+            Object.keys(groups).forEach(roleKey => {
+                const roleUsers = groupedUsers[roleKey];
+                if (!roleUsers || roleUsers.length === 0) return;
+        
+                // Add role header
+                const header = document.createElement('h3');
+                header.textContent = groups[roleKey];
+                usersList.appendChild(header);
+        
+                // Add users in this role
+                roleUsers.forEach(user => {
+                    const userItem = createUserItem(user);
+                    usersList.appendChild(userItem);
+                });
+            });
+        
+            // Add click handlers
+            document.querySelectorAll('.user-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    // Remove active class from all
+                    document.querySelectorAll('.user-item').forEach(i => {
+                        i.classList.remove('active');
+                    });
+                    // Add active class to clicked
+                    this.classList.add('active');
+                    
+                    const userId = this.dataset.userId;
+                    if (userId) {
+                        selectUser(userId);
+                    }
+                });
+            });
+        }
+        
+        function createUserItem(user) {
+            const name = (user.first_name && user.last_name)
+                ? `${user.first_name} ${user.last_name}`
+                : user.username;
+            
+            const avatarColor = user.avatar_color || '#fbbf24';
+            const initial = name.charAt(0).toUpperCase();
+            const role = user.role_display || user.role || 'Usuario';
+            const company = user.company ? `<div class="user-role">${user.company}</div>` : '';
+            
+            const item = document.createElement('div');
+            item.className = 'user-item';
+            item.dataset.userId = user.id;
+            
+            item.innerHTML = `
+                <div class="user-avatar" style="background:${avatarColor}">
+                    ${initial}
+                </div>
+                <div class="user-info">
+                    <div class="user-name">
+                        ${escapeHtml(name)}
+                        <span class="status-indicator status-online"></span>
+                    </div>
+                    <div class="user-role">${escapeHtml(role)}</div>
+                    ${company}
+                </div>
+            `;
+            
+            return item;
+        }
+        
+        /* ===============================
+           SELECT USER
+        ================================ */
+        async function selectUser(userId) {
+            if (!userId) return;
+            
+            // Clear any existing refresh interval
+            if (messageRefreshInterval) {
+                clearInterval(messageRefreshInterval);
+                messageRefreshInterval = null;
+            }
+            
+            try {
+                const res = await fetch(`/chat/conversation/${userId}/`);
+                if (!res.ok) {
+                    // Handle 403 Forbidden specifically
+                    if (res.status === 403) {
+                        const errorData = await res.json();
+                        messagesContainer.innerHTML = `
+                            <div style="text-align: center; padding: 40px; color: #ef4444;">
+                                <div style="font-size: 24px; margin-bottom: 10px;">🚫</div>
+                                <h3>No puedes chatear con este usuario</h3>
+                                <p>${errorData.error || 'Debes solicitar una cotización primero.'}</p>
+                            </div>
+                        `;
+                        if (messageInputContainer) {
+                            messageInputContainer.style.display = 'none';
+                        }
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+                
+                const data = await res.json();
+        
+                if (!data.other_user) {
+                    console.error("No user data returned");
+                    return;
+                }
+        
+                currentChatUser = data.other_user;
+                currentConversationId = data.conversation_id;
+        
+                updateChatHeader(data.other_user);
+                displayMessages(data.messages || []);
+        
+                if (messageInputContainer) {
+                    messageInputContainer.style.display = 'flex';
+                }
+        
+                // Enable call/video buttons if needed
+                const callBtn = document.getElementById('callBtn');
+                const videoBtn = document.getElementById('videoBtn');
+                if (callBtn) callBtn.disabled = false;
+                if (videoBtn) videoBtn.disabled = false;
+                
+                // Start periodic refresh for new messages (every 5 seconds)
+                startMessageRefresh();
+        
+            } catch (error) {
+                console.error("Select user error:", error);
+                messagesContainer.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #ef4444;">
+                        <div style="font-size: 24px; margin-bottom: 10px;">❌</div>
+                        <h3>Error al cargar la conversación</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        /* ===============================
+           SELECT BY CONVERSATION ID
+        ================================ */
+        async function selectConversationById(conversationId) {
+            if (!conversationId) return;
+            
+            // Clear any existing refresh interval
+            if (messageRefreshInterval) {
+                clearInterval(messageRefreshInterval);
+                messageRefreshInterval = null;
+            }
+            
+            try {
+                const res = await fetch(`/chat/conversation/by-id/${conversationId}/`);
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                
+                const data = await res.json();
+        
+                if (!data.success) return;
+        
+                currentChatUser = data.other_user;
+                currentConversationId = conversationId;
+        
+                updateChatHeader(data.other_user);
+                displayMessages(data.messages || []);
+        
+                if (messageInputContainer) {
+                    messageInputContainer.style.display = 'flex';
+                }
+                
+                // Start periodic refresh for new messages
+                startMessageRefresh();
+        
+            } catch (error) {
+                console.error("Conversation load error:", error);
+            }
+        }
+        
+        /* ===============================
+           MESSAGE REFRESH
+        ================================ */
+        function startMessageRefresh() {
+            if (messageRefreshInterval) {
+                clearInterval(messageRefreshInterval);
+            }
+            // Refresh messages every 5 seconds
+            messageRefreshInterval = setInterval(refreshMessages, 5000);
+        }
+        
+        async function refreshMessages() {
+            if (!currentConversationId) return;
+            
+            try {
+                const res = await fetch(`/chat/conversation/by-id/${currentConversationId}/`);
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                
+                const data = await res.json();
+                
+                if (data.messages && messagesContainer) {
+                    // Store current scroll position
+                    const wasAtBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop <= messagesContainer.clientHeight + 100;
+                    
+                    // Clear and reload all messages
+                    messagesContainer.innerHTML = '';
+                    data.messages.forEach(msg => appendMessage(msg, false)); // false = don't scroll yet
+                    
+                    // Scroll to bottom if we were near bottom
+                    if (wasAtBottom) {
+                        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                    }
+                }
+            } catch (error) {
+                console.error("Refresh error:", error);
+            }
+        }
+        
+        /* ===============================
+           HEADER & MESSAGES
+        ================================ */
+        function updateChatHeader(user) {
+            if (!user) return;
+            
+            const name = (user.first_name && user.last_name)
+                ? `${user.first_name} ${user.last_name}`
+                : user.username;
+        
+            if (currentUserName) currentUserName.textContent = name;
+            if (currentUserAvatar) currentUserAvatar.textContent = name.charAt(0).toUpperCase();
+            
+            let infoText = user.role_display || user.role || '';
+            if (user.company) infoText += ` • ${user.company}`;
+            
+            if (currentUserInfo) currentUserInfo.innerHTML = escapeHtml(infoText);
+        }
+        
+        function displayMessages(messages) {
+            if (!messagesContainer) return;
+            
+            messagesContainer.innerHTML = '';
+        
+            if (!messages || messages.length === 0) {
+                messagesContainer.innerHTML = `
+                    <div style="padding:40px;text-align:center;color:#9ca3af">
+                        No hay mensajes. Comienza la conversación
+                    </div>`;
+                return;
+            }
+        
+            messages.forEach(msg => appendMessage(msg, false));
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        /* ===============================
+           APPEND MESSAGE
+        ================================ */
+        function appendMessage(message, shouldScroll = true) {
+            if (!messagesContainer) return;
+            
+            // Check if message already exists (prevent duplicates)
+            const existingMessages = messagesContainer.querySelectorAll('.message');
+            for (let i = 0; i < existingMessages.length; i++) {
+                const msgDiv = existingMessages[i];
+                const content = msgDiv.querySelector('.message-content')?.textContent;
+                const isSent = msgDiv.classList.contains('sent') === message.is_sent;
+                
+                // Simple duplicate check (you might want a more robust check with message IDs)
+                if (content === message.content && isSent) {
+                    return; // Skip if duplicate
+                }
+            }
+            
+            const div = document.createElement('div');
+            div.className = `message ${message.is_sent ? 'sent' : 'received'}`;
+        
+            div.innerHTML = `
+                <div class="message-content">
+                    ${escapeHtml(message.content)}
+                </div>
+                <div class="message-time">
+                    ${message.timestamp || formatTime()}
+                </div>
+            `;
+        
+            messagesContainer.appendChild(div);
+            
+            if (shouldScroll) {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+        }
+        
+        /* ===============================
+           SEND MESSAGE - IMPROVED VERSION
+        ================================ */
+        async function sendMessage() {
+            if (!messageInput) return;
+            
+            const content = messageInput.value.trim();
+            if (!content || !currentChatUser) return;
+        
+            // Store the message to check for duplicates
+            const sentContent = content;
+        
+            // Optimistically add message to UI
+            appendMessage({
+                content: content,
+                is_sent: true,
+                timestamp: formatTime()
+            });
+        
+            messageInput.value = '';
+        
+            try {
+                const res = await fetch('/chat/send/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify({
+                        user_id: currentChatUser.id,
+                        content: content,
+                        conversation_id: currentConversationId
+                    })
+                });
+        
+                if (!res.ok) {
+                    // Try to get error message from response
+                    const errorData = await res.json().catch(() => ({}));
+                    throw new Error(errorData.error || `HTTP error! status: ${res.status}`);
+                }
+                
+                const data = await res.json();
+        
+                // If bot replied, show it after a short delay
+                if (data.bot_reply) {
+                    // Small delay to simulate typing
+                    setTimeout(() => {
+                        appendMessage({
+                            content: data.bot_reply,
+                            is_sent: false,
+                            timestamp: formatTime()
+                        });
+                    }, 500);
+                }
+                
+                // Also refresh messages from server to ensure sync
+                // Short delay to let server process
+                setTimeout(refreshMessages, 300);
+        
+            } catch (error) {
+                console.error("Send message error:", error);
+                appendMessage({
+                    content: `❌ Error al enviar mensaje: ${error.message}`,
+                    is_sent: true,
+                    timestamp: formatTime()
+                });
+            }
+        }
+        
+        /* ===============================
+           EVENTS
+        ================================ */
+        function wireEvents() {
+            if (sendBtn) {
+                sendBtn.addEventListener('click', sendMessage);
+            }
+        
+            if (messageInput) {
+                messageInput.addEventListener('keypress', e => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        sendMessage();
+                    }
+                });
+            }
+        
+            if (fileBtn && fileInput) {
+                fileBtn.addEventListener('click', () => fileInput.click());
+        
+                fileInput.addEventListener('change', function(e) {
+                    if (!this.files || !this.files[0]) return;
+                    
+                    const fileName = this.files[0].name;
+                    if (messageInput) {
+                        messageInput.value = `📎 Archivo: ${fileName}`;
+                    }
+                    // Optional: auto-send after brief delay
+                    setTimeout(sendMessage, 100);
+                });
+            }
+        
+            // Handle call/video buttons if needed
+            const callBtn = document.getElementById('callBtn');
+            const videoBtn = document.getElementById('videoBtn');
+            
+            if (callBtn) {
+                callBtn.addEventListener('click', () => {
+                    if (currentChatUser) {
+                        alert(`Llamada a ${currentChatUser.username} (simulada)`);
+                    }
+                });
+            }
+            
+            if (videoBtn) {
+                videoBtn.addEventListener('click', () => {
+                    if (currentChatUser) {
+                        alert(`Videollamada a ${currentChatUser.username} (simulada)`);
+                    }
+                });
+            }
+        }
+        
+        // Make handleKeyPress available globally if used in onkeypress attribute
+        window.handleKeyPress = function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendMessage();
+            }
+        };
+    </script>
 </body>
 </html>
 
-{% if selected_conversation %}
-    {% for message in selected_conversation.messages.all %}
-        <!-- render message -->
-    {% endfor %}
-{% else %}
-    <p>Selecciona una conversación</p>
-{% endif %}
+

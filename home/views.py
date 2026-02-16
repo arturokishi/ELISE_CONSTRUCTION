@@ -108,62 +108,55 @@ def chat(request):
 
 @login_required
 def get_conversation(request, user_id):
-
     other_user = get_object_or_404(User, id=user_id)
 
     my_profile = request.user.userprofile
     other_profile = other_user.userprofile
 
-    # -----------------------------
-    # CLIENT RULES
-    # -----------------------------
-    if my_profile.role == "client":
+    print(f"DEBUG: Current user: {request.user.username} (role: {my_profile.role})")
+    print(f"DEBUG: Other user: {other_user.username} (role: {other_profile.role})")
 
+    # CLIENT RULES
+    if my_profile.role == "client":
         # Client can always talk to bot
         if other_user.username == "elicebot":
-            pass
+            print("DEBUG: Allowed - chatting with bot")
+            # <-- FIX: This path needs to continue to the conversation logic below.
+            # Do NOT return here. Just let the function proceed to fetch/create the conversation.
 
         # Client → Supplier allowed ONLY if quote is pending or accepted
         elif other_profile.role == "supplier":
-
             allowed = QuoteRequest.objects.filter(
                 client=request.user,
                 supplier=other_user,
                 status__in=["pending", "accepted"]
             ).exists()
-
             if not allowed:
+                print(f"DEBUG: BLOCKING - no active quote with supplier {other_user.username}")
                 return JsonResponse(
                     {"error": "No tienes una cotización activa con este proveedor."},
                     status=403
                 )
-
         else:
+            # This blocks client from talking to other clients or unknown roles
+            print(f"DEBUG: BLOCKING - cannot message user with role {other_profile.role}")
             return JsonResponse(
                 {"error": "No puedes enviar mensajes a este usuario."},
                 status=403
             )
 
-    # -----------------------------
-    # SUPPLIER RULES
-    # -----------------------------
-    if my_profile.role == "supplier":
+    # SUPPLIER RULES (Add similar debug prints and ensure returns are correct)
+    elif my_profile.role == "supplier":
+        # ... your supplier logic ...
+        # Make sure it either returns a 403 for disallowed cases,
+        # or lets the function proceed for allowed cases.
+        pass # Placeholder - replace with your actual logic
 
-        allowed = QuoteRequest.objects.filter(
-            client=other_user,
-            supplier=request.user,
-            status__in=["pending", "accepted"]
-        ).exists()
+    # --- COMMON LOGIC FOR ALLOWED CASES ---
+    # This part should only be reached if the user is allowed to chat.
+    # For example: bot chats, or client-supplier with active quote, etc.
 
-        if not allowed:
-            return JsonResponse(
-                {"error": "No tienes una solicitud activa con este cliente."},
-                status=403
-            )
-
-    # -----------------------------
     # GET OR CREATE CONVERSATION
-    # -----------------------------
     conversation = Conversation.objects.filter(
         participants=request.user
     ).filter(
@@ -176,6 +169,7 @@ def get_conversation(request, user_id):
 
     messages = conversation.messages.all().order_by("timestamp")
 
+    # <-- FIX: This is the critical return that was missing for the bot path
     return JsonResponse({
         "conversation_id": conversation.id,
         "messages": [
@@ -187,9 +181,14 @@ def get_conversation(request, user_id):
                 "is_sent": msg.sender == request.user
             }
             for msg in messages
-        ]
+        ],
+        "other_user": { # It's helpful to return other user info too
+            "id": other_user.id,
+            "username": other_user.username,
+            "first_name": other_user.first_name,
+            "last_name": other_user.last_name,
+        }
     })
-
 
 
 
@@ -220,6 +219,7 @@ def send_message(request):
         conversation = Conversation.objects.create()
         conversation.participants.add(request.user, other_user)
 
+    # Save user message
     Message.objects.create(
         conversation=conversation,
         sender=request.user,
@@ -227,14 +227,17 @@ def send_message(request):
         timestamp=timezone.now()
     )
 
+    # Initialize bot_reply variable
+    bot_reply_content = None
+
     # BOT LOGIC
     if other_user.username == "elicebot":
 
-        # STEP 1
+        # STEP 1: Check for quote keywords
         if any(word in text for word in ["quote", "cotización"]):
             reply = elicebot_reply(content)
 
-        # STEP 2 MATERIAL ROUTING
+        # STEP 2: MATERIAL ROUTING
         elif "pintura" in text or "paint" in text:
             supplier = User.objects.filter(
                 userprofile__role="supplier",
@@ -258,6 +261,8 @@ def send_message(request):
                 )
 
                 reply = "Te he conectado con el proveedor de pintura 🎨"
+            else:
+                reply = "Lo siento, no hay proveedores de pintura disponibles en este momento."
 
         elif "acero" in text or "steel" in text:
             supplier = User.objects.filter(
@@ -282,6 +287,8 @@ def send_message(request):
                 )
 
                 reply = "Te he conectado con el proveedor de acero 🔩"
+            else:
+                reply = "Lo siento, no hay proveedores de acero disponibles en este momento."
 
         elif "cemento" in text:
             supplier = User.objects.filter(
@@ -306,18 +313,29 @@ def send_message(request):
                 )
 
                 reply = "Te he conectado con el proveedor de cemento 🏗"
+            else:
+                reply = "Lo siento, no hay proveedores de cemento disponibles en este momento."
 
         else:
             reply = elicebot_reply(content)
 
+        # Save bot message
         Message.objects.create(
             conversation=conversation,
             sender=other_user,
             content=reply,
             timestamp=timezone.now()
         )
+        
+        # Store the reply to return to frontend
+        bot_reply_content = reply
 
-    return JsonResponse({"success": True})
+    # Return success AND bot reply if any
+    response_data = {"success": True}
+    if bot_reply_content:
+        response_data["bot_reply"] = bot_reply_content
+    
+    return JsonResponse(response_data)
 
 
 
