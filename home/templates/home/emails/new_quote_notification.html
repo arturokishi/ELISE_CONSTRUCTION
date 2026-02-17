@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #1f2933; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: #f9fafb; }
+        .button { 
+            background: #fbbf24; 
+            color: #1f2933; 
+            padding: 12px 24px; 
+            text-decoration: none; 
+            border-radius: 5px;
+            display: inline-block;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .footer { font-size: 12px; color: #6b7280; text-align: center; padding: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Elice Construcción</h2>
+        </div>
+        <div class="content">
+            <h3>¡Nueva solicitud de cotización! 🎯</h3>
+            
+            <p>Hola <strong>{{ supplier.first_name|default:supplier.username }}</strong>,</p>
+            
+            <p>Un cliente está interesado en tus productos de <strong>{{ material }}</strong>:</p>
+            
+            <table style="width:100%; margin:20px 0;">
+                <tr>
+                    <td><strong>Cliente:</strong></td>
+                    <td>{{ client.first_name|default:client.username }} {{ client.last_name }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Email:</strong></td>
+                    <td>{{ client.email }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Fecha:</strong></td>
+                    <td>{{ date }}</td>
+                </tr>
+            </table>
+            
+            <div style="text-align: center;">
+                <a href="{{ chat_link }}" class="button">Responder al Cliente</a>
+            </div>
+            
+            <p>Por favor, responde lo antes posible para no perder la oportunidad.</p>
+        </div>
+        <div class="footer">
+            © 2026 Elice Construcción - Plataforma de conexión cliente-proveedor
+        </div>
+    </div>
+</body>
+</html>

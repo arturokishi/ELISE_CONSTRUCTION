@@ -1,7 +1,7 @@
 from django.shortcuts import render
-
-
-
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
 import json
 from django.http import JsonResponse
@@ -245,7 +245,7 @@ def send_message(request):
             ).first()
 
             if supplier:
-                QuoteRequest.objects.create(
+                quote = QuoteRequest.objects.create(
                     client=request.user,
                     supplier=supplier
                 )
@@ -260,6 +260,19 @@ def send_message(request):
                     timestamp=timezone.now()
                 )
 
+                # 🔔 SEND EMAIL NOTIFICATION TO SUPPLIER
+                try:
+                    send_supplier_notification(
+                        supplier=supplier,
+                        client=request.user,
+                        material="pintura",
+                        conversation_id=supplier_convo.id,
+                        quote_id=quote.id
+                    )
+                    print(f"✅ Email notification sent to {supplier.email}")
+                except Exception as e:
+                    print(f"❌ Email notification failed: {e}")
+
                 reply = "Te he conectado con el proveedor de pintura 🎨"
             else:
                 reply = "Lo siento, no hay proveedores de pintura disponibles en este momento."
@@ -271,7 +284,7 @@ def send_message(request):
             ).first()
 
             if supplier:
-                QuoteRequest.objects.create(
+                quote = QuoteRequest.objects.create(
                     client=request.user,
                     supplier=supplier
                 )
@@ -286,6 +299,19 @@ def send_message(request):
                     timestamp=timezone.now()
                 )
 
+                # 🔔 SEND EMAIL NOTIFICATION TO SUPPLIER
+                try:
+                    send_supplier_notification(
+                        supplier=supplier,
+                        client=request.user,
+                        material="acero",
+                        conversation_id=supplier_convo.id,
+                        quote_id=quote.id
+                    )
+                    print(f"✅ Email notification sent to {supplier.email}")
+                except Exception as e:
+                    print(f"❌ Email notification failed: {e}")
+
                 reply = "Te he conectado con el proveedor de acero 🔩"
             else:
                 reply = "Lo siento, no hay proveedores de acero disponibles en este momento."
@@ -297,7 +323,7 @@ def send_message(request):
             ).first()
 
             if supplier:
-                QuoteRequest.objects.create(
+                quote = QuoteRequest.objects.create(
                     client=request.user,
                     supplier=supplier
                 )
@@ -311,6 +337,19 @@ def send_message(request):
                     content="Hola 👋 Somos el proveedor de cemento.",
                     timestamp=timezone.now()
                 )
+
+                # 🔔 SEND EMAIL NOTIFICATION TO SUPPLIER
+                try:
+                    send_supplier_notification(
+                        supplier=supplier,
+                        client=request.user,
+                        material="cemento",
+                        conversation_id=supplier_convo.id,
+                        quote_id=quote.id
+                    )
+                    print(f"✅ Email notification sent to {supplier.email}")
+                except Exception as e:
+                    print(f"❌ Email notification failed: {e}")
 
                 reply = "Te he conectado con el proveedor de cemento 🏗"
             else:
@@ -609,3 +648,27 @@ def elicebot_reply(user_message):
 
 
 
+
+def send_supplier_notification(supplier, client, material):
+    """Send email notification to supplier about new quote request"""
+    
+    subject = f"Nueva solicitud de cotización - {material}"
+    
+    html_message = render_to_string('emails/new_quote_notification.html', {
+        'supplier': supplier,
+        'client': client,
+        'material': material,
+        'date': timezone.now().strftime("%d/%m/%Y %H:%M"),
+        'chat_link': f"http://127.0.0.1:8000/chat/?conversation={conversation.id}"
+    })
+    
+    plain_message = strip_tags(html_message)
+    
+    send_mail(
+        subject,
+        plain_message,
+        DEFAULT_FROM_EMAIL,
+        [supplier.email],
+        html_message=html_message,
+        fail_silently=False,
+    )

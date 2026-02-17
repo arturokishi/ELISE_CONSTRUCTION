@@ -99,15 +99,6 @@ class UserProfile(models.Model):
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-@receiver(post_save, sender=User)
-def create_or_ensure_user_profile(sender, instance, created, **kwargs):
-    if created:
-        UserProfile.objects.create(
-            user=instance,
-            role=getattr(instance, 'role', 'client'),  # default 'client'
-            company=getattr(instance, 'company', ''),
-            phone=getattr(instance, 'phone', '')
-        )
 
 
 
@@ -131,14 +122,7 @@ class Message(models.Model):
         return f"{self.sender.username}: {self.content[:50]}..."
 
 
-@receiver(post_save, sender=User)
-def create_or_ensure_user_profile(sender, instance, created, **kwargs):
-    """
-    Ensure a UserProfile exists for every User.
-    - Creates a new profile if the User is new.
-    - Ensures no duplicate is created if profile already exists.
-    """
-    UserProfile.objects.get_or_create(user=instance, defaults={'role': 'client'})
+
 
 
     
