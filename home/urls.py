@@ -38,7 +38,8 @@ urlpatterns = [
     "chat/conversation/by-id/<int:conversation_id>/",
     views.get_conversation_by_id,
     name="get_conversation_by_id",
-),
+    ),
+    path('chat/quote-form/<int:supplier_id>/', views.get_quote_form, name='quote_form'),
 
 
 ]

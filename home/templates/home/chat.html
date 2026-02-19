@@ -382,6 +382,119 @@
                 height: 70%;
             }
         }
+
+        /* ---------- MODAL STYLES ---------- */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: modalFadeIn 0.3s;
+        }
+        
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .quote-message {
+            background: #f8fafc;
+            border-left: 4px solid #fbbf24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .quote-message h4 {
+            margin: 0 0 10px 0;
+            color: #1f2933;
+        }
+        
+        .quote-detail {
+            display: flex;
+            margin-bottom: 5px;
+        }
+        
+        .quote-label {
+            font-weight: 600;
+            width: 120px;
+            color: #4b5563;
+        }
+        
+        .quote-value {
+            flex: 1;
+            color: #1f2933;
+        }
+        
+        .quote-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .quote-accept {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .quote-counter {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #1f2933;
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #fbbf24;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -437,6 +550,8 @@
                     </div>
                 </div>
                 <div class="chat-actions">
+                    <!-- Step 1: Add Quote Button -->
+                    <button class="chat-btn" title="Solicitar Cotización" id="quoteBtn" disabled>📋</button>
                     <button class="chat-btn" title="Llamada" id="callBtn" disabled>📞</button>
                     <button class="chat-btn" title="Video" id="videoBtn" disabled>📹</button>
                 </div>
@@ -478,6 +593,49 @@
 
     <!-- FILE INPUT (hidden) -->
     <input type="file" id="fileInput" style="display: none;">
+
+    <!-- Step 2: DYNAMIC QUOTE MODAL -->
+    <div class="modal" id="quoteModal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin: 0;">📋 Solicitar Cotización</h3>
+                <span style="font-size: 14px; color: #6b7280;" id="supplier-name"></span>
+            </div>
+            
+            <div id="quote-form-loading" style="text-align: center; padding: 40px;">
+                <div class="loader"></div>
+                <p>Cargando productos...</p>
+            </div>
+            
+            <div id="quote-form-container" style="display: none;">
+                <form id="dynamicQuoteForm">
+                    <div class="form-group">
+                        <label>Producto</label>
+                        <select id="quote-product" class="message-input" required>
+                            <option value="">Selecciona un producto</option>
+                        </select>
+                    </div>
+                    
+                    <div id="product-options-container"></div>
+                    
+                    <div class="form-group">
+                        <label>Cantidad</label>
+                        <input type="number" id="quote-quantity" class="message-input" min="1" value="1" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Notas adicionales</label>
+                        <textarea id="quote-notes" class="message-input" rows="3" placeholder="Detalles específicos..."></textarea>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                        <button type="button" onclick="closeQuoteModal()" class="send-btn" style="background: #6b7280; width: auto; padding: 10px 20px; border-radius: 5px;">Cancelar</button>
+                        <button type="button" onclick="submitDynamicQuote()" class="send-btn" style="background: #fbbf24; color: #1f2933; width: auto; padding: 10px 20px; border-radius: 5px;">Enviar Cotización</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     {% load static %}
     <!-- External JS (if you have one) -->
@@ -686,7 +844,7 @@
         }
         
         /* ===============================
-           SELECT USER
+           SELECT USER - UPDATED WITH QUOTE BUTTON
         ================================ */
         async function selectUser(userId) {
             if (!userId) return;
@@ -735,9 +893,12 @@
                     messageInputContainer.style.display = 'flex';
                 }
         
-                // Enable call/video buttons if needed
+                // Enable quote, call, video buttons
+                const quoteBtn = document.getElementById('quoteBtn');
                 const callBtn = document.getElementById('callBtn');
                 const videoBtn = document.getElementById('videoBtn');
+                
+                if (quoteBtn) quoteBtn.disabled = false;
                 if (callBtn) callBtn.disabled = false;
                 if (videoBtn) videoBtn.disabled = false;
                 
@@ -976,7 +1137,180 @@
         }
         
         /* ===============================
-           EVENTS
+           QUOTE FORM FUNCTIONS - STEP 5
+        ================================ */
+        
+        // Load dynamic quote form
+        async function loadQuoteForm() {
+            if (!currentChatUser) {
+                alert('Selecciona un usuario primero');
+                return;
+            }
+            
+            const modal = document.getElementById('quoteModal');
+            const loading = document.getElementById('quote-form-loading');
+            const container = document.getElementById('quote-form-container');
+            const supplierName = document.getElementById('supplier-name');
+            
+            modal.style.display = 'flex';
+            loading.style.display = 'block';
+            container.style.display = 'none';
+            
+            try {
+                const response = await fetch(`/chat/quote-form/${currentChatUser.id}/`);
+                const data = await response.json();
+                
+                supplierName.textContent = `Proveedor: ${data.supplier.name}`;
+                
+                // Populate product dropdown
+                const productSelect = document.getElementById('quote-product');
+                productSelect.innerHTML = '<option value="">Selecciona un producto</option>';
+                
+                data.categories.forEach(category => {
+                    const optgroup = document.createElement('optgroup');
+                    optgroup.label = category.name;
+                    
+                    category.products.forEach(product => {
+                        const option = document.createElement('option');
+                        option.value = JSON.stringify({
+                            id: product.id,
+                            name: product.name,
+                            price: product.base_price,
+                            unit: product.unit,
+                            options: product.options
+                        });
+                        option.textContent = `${product.name} - $${product.base_price} por ${product.unit}`;
+                        optgroup.appendChild(option);
+                    });
+                    
+                    productSelect.appendChild(optgroup);
+                });
+                
+                loading.style.display = 'none';
+                container.style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error loading form:', error);
+                loading.innerHTML = '<p style="color: red;">Error al cargar productos</p>';
+            }
+        }
+
+        // Handle product selection change - STEP 6
+        document.getElementById('quote-product')?.addEventListener('change', function(e) {
+            const optionsContainer = document.getElementById('product-options-container');
+            optionsContainer.innerHTML = '';
+            
+            if (!this.value) return;
+            
+            const product = JSON.parse(this.value);
+            
+            product.options.forEach(opt => {
+                const div = document.createElement('div');
+                div.className = 'form-group';
+                div.innerHTML = `
+                    <label>${opt.name} ${opt.required ? '*' : ''}</label>
+                    <select id="opt-${opt.name}" class="message-input" ${opt.required ? 'required' : ''}>
+                        <option value="">Selecciona...</option>
+                        ${opt.options.map(o => `<option value="${o}">${o}</option>`).join('')}
+                    </select>
+                `;
+                optionsContainer.appendChild(div);
+            });
+        });
+
+        // Open quote modal
+        function openQuoteModal() {
+            if (!currentChatUser) {
+                alert('Selecciona un usuario para enviar una cotización');
+                return;
+            }
+            loadQuoteForm();
+        }
+
+        // Close quote modal
+        function closeQuoteModal() {
+            document.getElementById('quoteModal').style.display = 'none';
+            document.getElementById('dynamicQuoteForm').reset();
+            document.getElementById('product-options-container').innerHTML = '';
+        }
+
+        // Submit dynamic quote - STEP 7
+        async function submitDynamicQuote() {
+            const productSelect = document.getElementById('quote-product');
+            if (!productSelect.value) {
+                alert('Selecciona un producto');
+                return;
+            }
+            
+            const productData = JSON.parse(productSelect.value);
+            const quantity = document.getElementById('quote-quantity').value;
+            const notes = document.getElementById('quote-notes').value;
+            
+            // Collect options
+            const options = {};
+            productData.options.forEach(opt => {
+                const select = document.getElementById(`opt-${opt.name}`);
+                if (select && select.value) {
+                    options[opt.name] = select.value;
+                }
+            });
+            
+            const quoteData = {
+                product_id: productData.id,
+                product_name: productData.name,
+                quantity: parseInt(quantity),
+                options: options,
+                notes: notes,
+                estimated_total: productData.price * quantity
+            };
+            
+            // Send to chat
+            const message = formatQuoteMessage(quoteData, currentChatUser);
+            
+            try {
+                const res = await fetch('/chat/send/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify({
+                        user_id: currentChatUser.id,
+                        content: message,
+                        conversation_id: currentConversationId
+                    })
+                });
+                
+                if (res.ok) {
+                    alert('✅ Cotización enviada correctamente');
+                    closeQuoteModal();
+                    refreshMessages();
+                } else {
+                    throw new Error('Error al enviar');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Error al enviar la cotización');
+            }
+        }
+
+        function formatQuoteMessage(data, supplier) {
+            const options = Object.entries(data.options)
+                .map(([k, v]) => `  • ${k}: ${v}`).join('\n');
+            
+            return `📋 **NUEVA SOLICITUD DE COTIZACIÓN**\n` +
+                `━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                `**Producto:** ${data.product_name}\n` +
+                `**Cantidad:** ${data.quantity}\n` +
+                `${options ? `**Especificaciones:**\n${options}\n` : ''}` +
+                `**Total estimado:** $${data.estimated_total}\n` +
+                `**Notas:** ${data.notes || 'Ninguna'}\n` +
+                `━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                `_Enviado a: ${supplier.username}_`;
+        }
+        
+        /* ===============================
+           EVENTS - UPDATED WITH QUOTE BUTTON
         ================================ */
         function wireEvents() {
             if (sendBtn) {
@@ -1005,6 +1339,12 @@
                     // Optional: auto-send after brief delay
                     setTimeout(sendMessage, 100);
                 });
+            }
+        
+            // Quote button
+            const quoteBtn = document.getElementById('quoteBtn');
+            if (quoteBtn) {
+                quoteBtn.addEventListener('click', openQuoteModal);
             }
         
             // Handle call/video buttons if needed

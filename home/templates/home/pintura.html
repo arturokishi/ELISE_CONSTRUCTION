@@ -6,61 +6,221 @@
 
     <style>
         body {
-            font-family: Arial, Helvetica, sans-serif;
-            background: #f5f7fa;
+            font-family: 'Segoe UI', Roboto, Arial, Helvetica, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9eef5 100%);
             margin: 0;
+            min-height: 100vh;
         }
 
         .navbar {
-            background: #1f2933;
-            padding: 16px 40px;
+            background: linear-gradient(90deg, #1f2933 0%, #2d3a47 100%);
+            padding: 20px 40px;
             color: white;
-            font-size: 20px;
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-bottom: 3px solid #fbbf24;
         }
 
         .container {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 30px;
-            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
         }
 
-        .product, .cart {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        /* PRODUCT GRID - CENTERED */
+        .products {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* For smaller screens, adjust the grid */
+        @media (max-width: 1000px) {
+            .products {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .products {
+                grid-template-columns: 1fr;
+            }
         }
 
         .product {
-            margin-bottom: 20px;
+            background: white;
+            border-radius: 16px;
+            padding: 0;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.05);
+            width: 100%;
+        }
+
+        .product:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 35px rgba(0,0,0,0.15);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            border-bottom: 3px solid #fbbf24;
+            transition: transform 0.5s;
+        }
+
+        .product:hover .product-image {
+            transform: scale(1.05);
+        }
+
+        .product-content {
+            padding: 20px;
+        }
+
+        .product h3 {
+            margin: 0 0 10px 0;
+            color: #1f2933;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .product p {
+            color: #4b5563;
+            margin: 10px 0;
+            line-height: 1.5;
+            font-size: 0.95rem;
         }
 
         .price {
-            font-weight: bold;
-            margin: 10px 0;
+            font-weight: 700;
+            margin: 15px 0;
+            color: #047857;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
-        button {
-            padding: 10px 16px;
-            background: #fbbf24;
+        .price::before {
+            content: '$';
+            font-size: 1rem;
+            color: #6b7280;
+            font-weight: normal;
+        }
+
+        .price::after {
+            content: 'MXN';
+            font-size: 0.9rem;
+            color: #6b7280;
+            font-weight: normal;
+            margin-left: 5px;
+        }
+
+        .quote-btn {
+            width: 100%;
+            padding: 14px 20px;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
             border: none;
             cursor: pointer;
-            font-weight: bold;
-            border-radius: 4px;
+            font-weight: 600;
+            border-radius: 8px;
+            color: #1f2933;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+            transition: all 0.3s;
+            border: 1px solid rgba(0,0,0,0.1);
+            margin-top: 5px;
         }
 
-        button:hover {
-            background: #f59e0b;
+        .quote-btn:hover {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.4);
+        }
+
+        .cart {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            height: fit-content;
+            position: sticky;
+            top: 30px;
+            border: 1px solid rgba(0,0,0,0.05);
         }
 
         .cart h2 {
             margin-top: 0;
+            color: #1f2933;
+            font-size: 1.8rem;
+            border-bottom: 3px solid #fbbf24;
+            padding-bottom: 15px;
+        }
+
+        #cart-items {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        #cart-items li {
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border-left: 4px solid #fbbf24;
+            font-size: 0.95rem;
+            color: #1f2933;
+            font-weight: 500;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
         }
 
         .total {
-            font-size: 18px;
-            margin: 15px 0;
+            font-size: 1.3rem;
+            margin: 20px 0;
+            padding: 15px;
+            background: linear-gradient(135deg, #1f2933 0%, #2d3a47 100%);
+            color: white;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .total span {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #fbbf24;
+        }
+
+        .cart button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            border-radius: 8px;
+            color: white;
+            font-size: 1.1rem;
+            letter-spacing: 0.5px;
+            transition: all 0.3s;
+            border: 1px solid rgba(0,0,0,0.1);
+            margin-top: 10px;
+        }
+
+        .cart button:hover {
+            background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(5, 150, 105, 0.4);
         }
 
         /* ---------- MODAL ---------- */
@@ -68,38 +228,112 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0,0,0,0.7);
             align-items: center;
             justify-content: center;
+            backdrop-filter: blur(5px);
+            z-index: 1000;
         }
 
         .modal-content {
             background: white;
-            padding: 30px;
-            border-radius: 8px;
+            padding: 35px;
+            border-radius: 20px;
             width: 100%;
-            max-width: 400px;
+            max-width: 450px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            transform: scale(0.95);
+            animation: modalPop 0.3s ease forwards;
+        }
+
+        @keyframes modalPop {
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
         .modal-content h3 {
             margin-top: 0;
+            color: #1f2933;
+            font-size: 1.8rem;
+            border-bottom: 3px solid #fbbf24;
+            padding-bottom: 15px;
         }
 
         .modal-content input {
             width: 100%;
-            padding: 10px;
+            padding: 14px;
             margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+
+        .modal-content input:focus {
+            border-color: #fbbf24;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2);
         }
 
         .modal-actions {
             display: flex;
             justify-content: space-between;
+            gap: 15px;
+            margin-top: 20px;
         }
 
-        .close {
+        .modal-actions button {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .modal-actions button:first-child {
             background: #e5e7eb;
+            color: #1f2933;
+        }
+
+        .modal-actions button:first-child:hover {
+            background: #d1d5db;
+        }
+
+        .modal-actions button:last-child {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #1f2933;
+        }
+
+        .modal-actions button:last-child:hover {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.4);
+        }
+
+        /* Empty cart message */
+        .empty-cart {
+            text-align: center;
+            color: #9ca3af;
+            padding: 30px;
+            font-style: italic;
+        }
+
+        /* Product badge */
+        .product-badge {
+            background: #fbbf24;
+            color: #1f2933;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -107,49 +341,121 @@
 <body>
 
 <nav class="navbar">
-    Elice Construcción
+    Elice Construcción 🏗️
 </nav>
 
 <div class="container">
 
-    <!-- PRODUCTS -->
+    <!-- PRODUCTS - CENTERED GRID -->
     <div class="products">
         <div class="product">
-            <h3>Cemento Portland (50kg)</h3>
-            <p>Cemento estructural de alta resistencia para obra pesada.</p>
-            <div class="price">$180 MXN</div>
-            <button onclick="addToCart('Cemento Portland', 180)">Agregar</button>
-            <button class="quote-btn"
-            onclick="window.location.href='{% url 'home:chat_with_user' 'elicebot' %}'">
-            Solicitar cotización
-        </button>
-        </div>
-
-        <div class="product">
-            <h3>Varilla Corrugada 3/8"</h3>
-            <p>Acero certificado para refuerzo estructural.</p>
-            <div class="price">$145 MXN</div>
-            <button onclick="addToCart('Varilla 3/8', 145)">Agregar</button>
-            <button class="quote-btn"
-            onclick="window.location.href='{% url 'home:chat_with_user' 'elicebot' %}'">
-             Solicitar cotización
-            </button>
-        </div>
-
-        <div class="product">
-            <h3>Pintura Vinílica Blanca (19L)</h3>
-            <p>Acabado interior/exterior, alto rendimiento.</p>
-            <div class="price">$1,250 MXN</div>
-            <button onclick="addToCart('Pintura Vinílica', 1250)">Agregar</button>
-            <button class="quote-btn"
-            onclick="window.location.href='{% url 'home:chat_with_user' 'elicebot' %}'">
-            Solicitar cotización
+            <img src="https://images.unsplash.com/photo-1589939705384-5185137a7f0f?q=80&w=2070&auto=format&fit=crop" 
+                 alt="Pintura blanca profesional" 
+                 class="product-image"
+                 onerror="this.src='https://via.placeholder.com/400x220?text=Pintura+Blanca'">
+            <div class="product-content">
+                <span class="product-badge">⭐ Más vendido</span>
+                <h3>Pintura Vinílica Blanca (19L)</h3>
+                <p>Pintura de alta calidad para interiores y exteriores. Acabado mate, excelente cobertura y durabilidad. Resistente a la formación de hongos.</p>
+                <div class="price">180</div>
+                <!--<button onclick="addToCart('Pintura Vinílica Blanca 19L', 180)">Agregar</button>-->
+                <button class="quote-btn"
+                onclick="window.location.href='{% url 'home:chat_with_user' 'elicebot' %}'">
+                Solicitar cotización 📋
             </button>
             </div>
-            
+        </div>
+
+        <div class="product">
+            <img src="https://images.unsplash.com/photo-1562259929-b4ec1d3f76f6?q=80&w=2070&auto=format&fit=crop" 
+                 alt="Pintura esmalte" 
+                 class="product-image"
+                 onerror="this.src='https://via.placeholder.com/400x220?text=Esmalte'">
+            <div class="product-content">
+                <span class="product-badge">✨ Premium</span>
+                <h3>Esmalte Sintético Brillante (4L)</h3>
+                <p>Acabado brillante de alta durabilidad para superficies de madera y metal. Resistente a la intemperie y rayos UV. Secado rápido.</p>
+                <div class="price">145</div>
+                <!--<button onclick="addToCart('Esmalte Sintético 4L', 145)">Agregar</button>-->
+                <button class="quote-btn"
+                onclick="window.location.href='{% url 'home:chat_with_user' 'elicebot' %}'">
+                 Solicitar cotización 📋
+                </button>
+            </div>
+        </div>
+
+        <div class="product">
+            <img src="https://images.unsplash.com/photo-1562259929-f3a5d3a5e5b5?q=80&w=2070&auto=format&fit=crop" 
+                 alt="Pintura vinílica económica" 
+                 class="product-image"
+                 onerror="this.src='https://via.placeholder.com/400x220?text=Vinílica'">
+            <div class="product-content">
+                <span class="product-badge">💰 Económico</span>
+                <h3>Pintura Vinílica Blanca (19L)</h3>
+                <p>Acabado interior/exterior de alto rendimiento. Fácil aplicación, lavable y con excelente relación calidad-precio. Ideal para grandes proyectos.</p>
+                <div class="price">1,250</div>
+                 <!--<button onclick="addToCart('Pintura Vinílica 19L', 1250)">Agregar</button>-->
+                <button class="quote-btn"
+                onclick="window.location.href='{% url 'home:chat_with_user' 'elicebot' %}'">
+                Solicitar cotización 📋
+                </button>
+            </div>
+        </div>
+        
+        <!-- Additional paint product -->
+        <div class="product">
+            <img src="https://images.unsplash.com/photo-1562259929-b4ec1d3f76f7?q=80&w=2070&auto=format&fit=crop" 
+                 alt="Impermeabilizante" 
+                 class="product-image"
+                 onerror="this.src='https://via.placeholder.com/400x220?text=Impermeabilizante'">
+            <div class="product-content">
+                <span class="product-badge">🌧️ Impermeabilizante</span>
+                <h3>Impermeabilizante Acrílico (19L)</h3>
+                <p>Protección contra filtraciones y humedad. Tecnología elastomérica que sella grietas y previene goteras. Resistente a rayos UV.</p>
+                <div class="price">2,450</div>
+                <button class="quote-btn"
+                onclick="window.location.href='{% url 'home:chat_with_user' 'elicebot' %}'">
+                Solicitar cotización 📋
+                </button>
+            </div>
+        </div>
+        
+        <div class="product">
+            <img src="https://images.unsplash.com/photo-1562259929-b4ec1d3f76f8?q=80&w=2070&auto=format&fit=crop" 
+                 alt="Pintura anticorrosiva" 
+                 class="product-image"
+                 onerror="this.src='https://via.placeholder.com/400x220?text=Anticorrosivo'">
+            <div class="product-content">
+                <span class="product-badge">🛡️ Anticorrosivo</span>
+                <h3>Pintura Anticorrosiva (4L)</h3>
+                <p>Protección especial para estructuras metálicas. Previene la oxidación y corrosión en ambientes industriales y costeros.</p>
+                <div class="price">890</div>
+                <button class="quote-btn"
+                onclick="window.location.href='{% url 'home:chat_with_user' 'elicebot' %}'">
+                Solicitar cotización 📋
+                </button>
+            </div>
+        </div>
+        
+        <div class="product">
+            <img src="https://images.unsplash.com/photo-1562259929-b4ec1d3f76f9?q=80&w=2070&auto=format&fit=crop" 
+                 alt="Pintura texturizada" 
+                 class="product-image"
+                 onerror="this.src='https://via.placeholder.com/400x220?text=Texturizada'">
+            <div class="product-content">
+                <span class="product-badge">🎨 Texturizada</span>
+                <h3>Pintura Texturizada (19L)</h3>
+                <p>Acabado decorativo con textura para muros interiores y exteriores. Oculta imperfecciones y proporciona un aspecto moderno.</p>
+                <div class="price">1,890</div>
+                <button class="quote-btn"
+                onclick="window.location.href='{% url 'home:chat_with_user' 'elicebot' %}'">
+                Solicitar cotización 📋
+                </button>
+            </div>
+        </div>
     </div>
 
-    <!-- CART -->
+    <!-- CART 
     <div class="cart">
         <h2>Resumen</h2>
         <ul id="cart-items"></ul>
@@ -159,7 +465,7 @@
         </div>
 
         <button onclick="openModal()">Solicitar Cotización</button>
-    </div>
+    </div>-->
 
 </div>
 
@@ -247,8 +553,6 @@
         });
     }
 </script>
-
-
 
 </body>
 </html>
