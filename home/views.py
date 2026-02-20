@@ -30,7 +30,7 @@ from django.http import JsonResponse
 from .forms import UserRegisterForm, UserProfileForm
 from .models import UserProfile
 import json
-
+from home.models import Conversation, Message, UserProfile, ProductCategory, Product, ProductOption, QuoteRequest
 
 
 

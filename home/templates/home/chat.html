@@ -1141,60 +1141,116 @@
         ================================ */
         
         // Load dynamic quote form
-        async function loadQuoteForm() {
-            if (!currentChatUser) {
-                alert('Selecciona un usuario primero');
-                return;
-            }
-            
-            const modal = document.getElementById('quoteModal');
-            const loading = document.getElementById('quote-form-loading');
-            const container = document.getElementById('quote-form-container');
-            const supplierName = document.getElementById('supplier-name');
-            
-            modal.style.display = 'flex';
-            loading.style.display = 'block';
-            container.style.display = 'none';
-            
-            try {
-                const response = await fetch(`/chat/quote-form/${currentChatUser.id}/`);
-                const data = await response.json();
+// Load dynamic quote form - ENHANCED DEBUG VERSION
+async function loadQuoteForm() {
+    if (!currentChatUser) {
+        alert('Selecciona un usuario primero');
+        return;
+    }
+    
+    console.log('🔍 Loading quote form for user:', currentChatUser);
+    console.log('🔍 User ID:', currentChatUser.id);
+    console.log('🔍 User role:', currentChatUser.role);
+    
+    const modal = document.getElementById('quoteModal');
+    const loading = document.getElementById('quote-form-loading');
+    const container = document.getElementById('quote-form-container');
+    const supplierName = document.getElementById('supplier-name');
+    
+    if (!modal || !loading || !container || !supplierName) {
+        console.error('❌ Modal elements not found!');
+        alert('Error: Elementos del modal no encontrados');
+        return;
+    }
+    
+    modal.style.display = 'flex';
+    loading.style.display = 'block';
+    loading.innerHTML = '<div class="loader"></div><p>Cargando productos...</p>';
+    container.style.display = 'none';
+    
+    try {
+        const url = `/chat/quote-form/${currentChatUser.id}/`;
+        console.log('🔍 Fetching from:', url);
+        
+        const response = await fetch(url);
+        console.log('🔍 Response status:', response.status);
+        console.log('🔍 Response OK?', response.ok);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Error response:', errorText);
+            loading.innerHTML = `<p style="color: #ef4444;">❌ Error ${response.status}: ${errorText.substring(0, 100)}</p>`;
+            return;
+        }
+        
+        const data = await response.json();
+        console.log('🔍 Received data:', data);
+        
+        if (data.error) {
+            console.error('❌ API error:', data.error);
+            loading.innerHTML = `<p style="color: #ef4444;">❌ Error: ${data.error}</p>`;
+            return;
+        }
+        
+        // Check if we have categories
+        if (!data.categories || data.categories.length === 0) {
+            console.warn('⚠️ No categories or products found');
+            loading.innerHTML = '<p style="color: #f59e0b;">⚠️ Este proveedor no tiene productos disponibles.</p>';
+            return;
+        }
+        
+        console.log(`✅ Found ${data.categories.length} categories`);
+        
+        supplierName.textContent = `Proveedor: ${data.supplier.name}`;
+        
+        // Populate product dropdown
+        const productSelect = document.getElementById('quote-product');
+        if (!productSelect) {
+            console.error('❌ Product select element not found');
+            return;
+        }
+        
+        productSelect.innerHTML = '<option value="">Selecciona un producto</option>';
+        
+        let productCount = 0;
+        data.categories.forEach(category => {
+            if (category.products && category.products.length > 0) {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = category.name;
                 
-                supplierName.textContent = `Proveedor: ${data.supplier.name}`;
-                
-                // Populate product dropdown
-                const productSelect = document.getElementById('quote-product');
-                productSelect.innerHTML = '<option value="">Selecciona un producto</option>';
-                
-                data.categories.forEach(category => {
-                    const optgroup = document.createElement('optgroup');
-                    optgroup.label = category.name;
-                    
-                    category.products.forEach(product => {
-                        const option = document.createElement('option');
-                        option.value = JSON.stringify({
-                            id: product.id,
-                            name: product.name,
-                            price: product.base_price,
-                            unit: product.unit,
-                            options: product.options
-                        });
-                        option.textContent = `${product.name} - $${product.base_price} por ${product.unit}`;
-                        optgroup.appendChild(option);
+                category.products.forEach(product => {
+                    productCount++;
+                    const option = document.createElement('option');
+                    option.value = JSON.stringify({
+                        id: product.id,
+                        name: product.name,
+                        price: product.base_price,
+                        unit: product.unit,
+                        options: product.options || []
                     });
-                    
-                    productSelect.appendChild(optgroup);
+                    option.textContent = `${product.name} - $${product.base_price} por ${product.unit}`;
+                    optgroup.appendChild(option);
                 });
                 
-                loading.style.display = 'none';
-                container.style.display = 'block';
-                
-            } catch (error) {
-                console.error('Error loading form:', error);
-                loading.innerHTML = '<p style="color: red;">Error al cargar productos</p>';
+                productSelect.appendChild(optgroup);
             }
+        });
+        
+        if (productCount === 0) {
+            console.warn('⚠️ No products found in categories');
+            loading.innerHTML = '<p style="color: #f59e0b;">⚠️ Este proveedor no tiene productos activos.</p>';
+            return;
         }
-
+        
+        console.log(`✅ Loaded ${productCount} products`);
+        loading.style.display = 'none';
+        container.style.display = 'block';
+        
+    } catch (error) {
+        console.error('❌ Error loading form:', error);
+        loading.innerHTML = `<p style="color: #ef4444;">❌ Error: ${error.message}</p>`;
+    }
+}
         // Handle product selection change - STEP 6
         document.getElementById('quote-product')?.addEventListener('change', function(e) {
             const optionsContainer = document.getElementById('product-options-container');
