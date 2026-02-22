@@ -385,37 +385,82 @@ def send_message(request):
 
 @login_required
 def get_users(request):
-    """Get all users for sidebar"""
-    users = User.objects.exclude(id=request.user.id)
+    """Get users for sidebar - clients only see suppliers, grouped by product category"""
+    current_user = request.user
+    current_profile = current_user.userprofile
+    
     users_data = []
     
-    for user in users:
-        profile = UserProfile.objects.filter(user=user).first()
+    # If current user is a client, get all suppliers with their product categories
+    if current_profile.role == 'client':
+        # Get all suppliers
+        suppliers = User.objects.filter(userprofile__role='supplier').distinct()
         
-        # Get last message with this user
-        conversation = Conversation.objects.filter(
-            participants=request.user
-        ).filter(
-            participants=user
-        ).first()
+        for supplier in suppliers:
+            profile = UserProfile.objects.filter(user=supplier).first()
+            
+            # Get all product categories for this supplier
+            product_categories = Product.objects.filter(
+                supplier=supplier, 
+                is_active=True
+            ).values_list('category__name', flat=True).distinct()
+            
+            # Get conversation with this supplier
+            conversation = Conversation.objects.filter(
+                participants=current_user
+            ).filter(
+                participants=supplier
+            ).first()
+            
+            last_message = None
+            if conversation:
+                last_msg = conversation.messages.last()
+                if last_msg:
+                    last_message = last_msg.content[:50] + '...' if len(last_msg.content) > 50 else last_msg.content
+            
+            users_data.append({
+                'id': supplier.id,
+                'username': supplier.username,
+                'first_name': supplier.first_name,
+                'last_name': supplier.last_name,
+                'email': supplier.email,
+                'role': 'supplier',
+                'company': profile.company if profile else '',
+                'avatar_color': profile.avatar_color if profile else '#fbbf24',
+                'last_message': last_message,
+                'categories': list(product_categories),  # Add categories to user data
+            })
+    
+    else:
+        # For suppliers, show all clients (existing logic)
+        users = User.objects.exclude(id=current_user.id).filter(userprofile__role='client')
         
-        last_message = None
-        if conversation:
-            last_msg = conversation.messages.last()
-            if last_msg:
-                last_message = last_msg.content[:50] + '...' if len(last_msg.content) > 50 else last_msg.content
-        
-        users_data.append({
-            'id': user.id,
-            'username': user.username,
-            'first_name': user.first_name,
-            'last_name': user.last_name,
-            'email': user.email,
-            'role': profile.role if profile else 'client',
-            'company': profile.company if profile else '',
-            'avatar_color': profile.avatar_color if profile else '#fbbf24',
-            'last_message': last_message,
-        })
+        for user in users:
+            profile = UserProfile.objects.filter(user=user).first()
+            
+            conversation = Conversation.objects.filter(
+                participants=current_user
+            ).filter(
+                participants=user
+            ).first()
+            
+            last_message = None
+            if conversation:
+                last_msg = conversation.messages.last()
+                if last_msg:
+                    last_message = last_msg.content[:50] + '...' if len(last_msg.content) > 50 else last_msg.content
+            
+            users_data.append({
+                'id': user.id,
+                'username': user.username,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'email': user.email,
+                'role': 'client',
+                'company': profile.company if profile else '',
+                'avatar_color': profile.avatar_color if profile else '#fbbf24',
+                'last_message': last_message,
+            })
     
     return JsonResponse({'users': users_data})
 

@@ -554,6 +554,7 @@
                     <button class="chat-btn" title="Solicitar Cotización" id="quoteBtn" disabled>📋</button>
                     <button class="chat-btn" title="Llamada" id="callBtn" disabled>📞</button>
                     <button class="chat-btn" title="Video" id="videoBtn" disabled>📹</button>
+                    <body data-user-role="{{ request.user.userprofile.role }}">
                 </div>
             </div>
 
@@ -752,96 +753,136 @@
             }
         }
         
-        /* ===============================
-           DISPLAY USERS
-        ================================ */
-        function displayUsers(users) {
-            if (!usersList) return;
-            usersList.innerHTML = '';
+/* ===============================
+   DISPLAY USERS - UPDATED WITH CATEGORIES
+=============================== */
+function displayUsers(users) {
+    if (!usersList) return;
+    usersList.innerHTML = '';
+    
+    // Check current user role from the page (you might need to pass this from Django)
+    const isClient = document.body.dataset.userRole === 'client';
+    
+    if (isClient) {
+        // For clients: Group suppliers by their product categories
+        const suppliersByCategory = {};
         
-            // Define role groups in Spanish
-            const groups = {
-                'client': 'Clientes',
-                'supplier': 'Proveedores',
-                'admin': 'Administradores',
-                'staff': 'Personal'
-            };
-        
-            // Group users by role
-            const groupedUsers = {};
-            users.forEach(user => {
-                const role = user.role || 'client';
-                if (!groupedUsers[role]) {
-                    groupedUsers[role] = [];
-                }
-                groupedUsers[role].push(user);
-            });
-        
-            // Display each role group
-            Object.keys(groups).forEach(roleKey => {
-                const roleUsers = groupedUsers[roleKey];
-                if (!roleUsers || roleUsers.length === 0) return;
-        
-                // Add role header
-                const header = document.createElement('h3');
-                header.textContent = groups[roleKey];
-                usersList.appendChild(header);
-        
-                // Add users in this role
-                roleUsers.forEach(user => {
-                    const userItem = createUserItem(user);
-                    usersList.appendChild(userItem);
-                });
-            });
-        
-            // Add click handlers
-            document.querySelectorAll('.user-item').forEach(item => {
-                item.addEventListener('click', function(e) {
-                    // Remove active class from all
-                    document.querySelectorAll('.user-item').forEach(i => {
-                        i.classList.remove('active');
-                    });
-                    // Add active class to clicked
-                    this.classList.add('active');
-                    
-                    const userId = this.dataset.userId;
-                    if (userId) {
-                        selectUser(userId);
+        users.forEach(user => {
+            if (user.categories && user.categories.length > 0) {
+                user.categories.forEach(category => {
+                    if (!suppliersByCategory[category]) {
+                        suppliersByCategory[category] = [];
                     }
+                    suppliersByCategory[category].push(user);
                 });
-            });
-        }
+            } else {
+                // Suppliers with no categories go to "Otros"
+                if (!suppliersByCategory['Otros']) {
+                    suppliersByCategory['Otros'] = [];
+                }
+                suppliersByCategory['Otros'].push(user);
+            }
+        });
         
-        function createUserItem(user) {
-            const name = (user.first_name && user.last_name)
-                ? `${user.first_name} ${user.last_name}`
-                : user.username;
+        // Display categories and their suppliers
+        Object.keys(suppliersByCategory).sort().forEach(category => {
+            const categoryHeader = document.createElement('h3');
+            categoryHeader.textContent = category;
+            categoryHeader.style.marginTop = '15px';
+            categoryHeader.style.color = '#fbbf24';
+            usersList.appendChild(categoryHeader);
             
-            const avatarColor = user.avatar_color || '#fbbf24';
-            const initial = name.charAt(0).toUpperCase();
-            const role = user.role_display || user.role || 'Usuario';
-            const company = user.company ? `<div class="user-role">${user.company}</div>` : '';
+            suppliersByCategory[category].forEach(user => {
+                const userItem = createUserItem(user);
+                usersList.appendChild(userItem);
+            });
+        });
+    } else {
+        // For suppliers: Show all clients (existing logic)
+        const groupedUsers = {};
+        users.forEach(user => {
+            const role = user.role || 'client';
+            if (!groupedUsers[role]) {
+                groupedUsers[role] = [];
+            }
+            groupedUsers[role].push(user);
+        });
+        
+        // Display each role group
+        Object.keys(groups).forEach(roleKey => {
+            const roleUsers = groupedUsers[roleKey];
+            if (!roleUsers || roleUsers.length === 0) return;
             
-            const item = document.createElement('div');
-            item.className = 'user-item';
-            item.dataset.userId = user.id;
+            const header = document.createElement('h3');
+            header.textContent = groups[roleKey];
+            usersList.appendChild(header);
             
-            item.innerHTML = `
-                <div class="user-avatar" style="background:${avatarColor}">
-                    ${initial}
-                </div>
-                <div class="user-info">
-                    <div class="user-name">
-                        ${escapeHtml(name)}
-                        <span class="status-indicator status-online"></span>
-                    </div>
-                    <div class="user-role">${escapeHtml(role)}</div>
-                    ${company}
-                </div>
-            `;
+            roleUsers.forEach(user => {
+                const userItem = createUserItem(user);
+                usersList.appendChild(userItem);
+            });
+        });
+    }
+    
+    // Add click handlers
+    document.querySelectorAll('.user-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            document.querySelectorAll('.user-item').forEach(i => {
+                i.classList.remove('active');
+            });
+            this.classList.add('active');
             
-            return item;
+            const userId = this.dataset.userId;
+            if (userId) {
+                selectUser(userId);
+            }
+        });
+    });
+}
+function createUserItem(user) {
+    const name = (user.first_name && user.last_name)
+        ? `${user.first_name} ${user.last_name}`
+        : user.username;
+    
+    const avatarColor = user.avatar_color || '#fbbf24';
+    const initial = name.charAt(0).toUpperCase();
+    const role = user.role_display || user.role || 'Usuario';
+    const company = user.company ? `<div class="user-role">${user.company}</div>` : '';
+    
+    // Add category badges if they exist (for suppliers)
+    let categoryHtml = '';
+    if (user.categories && user.categories.length > 0) {
+        categoryHtml = '<div style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px;">';
+        user.categories.slice(0, 2).forEach(cat => {
+            categoryHtml += `<span style="font-size: 10px; background: #fbbf24; color: #1f2933; padding: 2px 6px; border-radius: 10px;">${cat}</span>`;
+        });
+        if (user.categories.length > 2) {
+            categoryHtml += `<span style="font-size: 10px; color: #9ca3af;">+${user.categories.length-2}</span>`;
         }
+        categoryHtml += '</div>';
+    }
+    
+    const item = document.createElement('div');
+    item.className = 'user-item';
+    item.dataset.userId = user.id;
+    
+    item.innerHTML = `
+        <div class="user-avatar" style="background:${avatarColor}">
+            ${initial}
+        </div>
+        <div class="user-info">
+            <div class="user-name">
+                ${escapeHtml(name)}
+                <span class="status-indicator status-online"></span>
+            </div>
+            <div class="user-role">${escapeHtml(role)}</div>
+            ${company}
+            ${categoryHtml}
+        </div>
+    `;
+    
+    return item;
+}
         
         /* ===============================
            SELECT USER - UPDATED WITH QUOTE BUTTON
