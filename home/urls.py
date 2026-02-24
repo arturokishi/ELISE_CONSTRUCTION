@@ -20,6 +20,7 @@ urlpatterns = [
     path("api/create-order/", views.create_order, name="create_order"),
     path("productos/pintura/", views.pintura, name="pintura"),
     path("productos/andamios/", views.andamios, name="andamios"),
+    path('materiales/', views.materiales, name="materiales"),
     
     # Auth URLs
     path("login/", views.custom_login, name="login"),

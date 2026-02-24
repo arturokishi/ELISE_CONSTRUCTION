@@ -753,136 +753,226 @@
             }
         }
         
-/* ===============================
-   DISPLAY USERS - UPDATED WITH CATEGORIES
-=============================== */
-function displayUsers(users) {
-    if (!usersList) return;
-    usersList.innerHTML = '';
-    
-    // Check current user role from the page (you might need to pass this from Django)
-    const isClient = document.body.dataset.userRole === 'client';
-    
-    if (isClient) {
-        // For clients: Group suppliers by their product categories
-        const suppliersByCategory = {};
-        
-        users.forEach(user => {
-            if (user.categories && user.categories.length > 0) {
-                user.categories.forEach(category => {
-                    if (!suppliersByCategory[category]) {
-                        suppliersByCategory[category] = [];
+        /* ===============================
+           DISPLAY USERS - FIXED (NO DUPLICATES)
+        =============================== */
+        function displayUsers(users) {
+            if (!usersList) return;
+            usersList.innerHTML = '';
+            
+            // Define role groups in Spanish
+            const groups = {
+                'client': 'Clientes',
+                'supplier': 'Proveedores',
+                'admin': 'Administradores',
+                'staff': 'Personal'
+            };
+            
+            // Check current user role from the page
+            const isClient = document.body.dataset.userRole === 'client';
+            
+            if (isClient) {
+                // Separate bot from regular suppliers
+                const botUsers = users.filter(user => user.is_bot);
+                const supplierUsers = users.filter(user => !user.is_bot);
+                
+                // Remove duplicate suppliers by ID
+                const uniqueSuppliers = [];
+                const seenSupplierIds = new Set();
+                
+                supplierUsers.forEach(user => {
+                    if (!seenSupplierIds.has(user.id)) {
+                        seenSupplierIds.add(user.id);
+                        uniqueSuppliers.push(user);
                     }
-                    suppliersByCategory[category].push(user);
                 });
-            } else {
-                // Suppliers with no categories go to "Otros"
-                if (!suppliersByCategory['Otros']) {
-                    suppliersByCategory['Otros'] = [];
+                
+                console.log(`Original suppliers: ${supplierUsers.length}, Unique: ${uniqueSuppliers.length}`);
+                
+                // Display bot first (if exists) - also deduplicate bot
+                if (botUsers.length > 0) {
+                    const uniqueBot = [];
+                    const seenBotIds = new Set();
+                    
+                    botUsers.forEach(user => {
+                        if (!seenBotIds.has(user.id)) {
+                            seenBotIds.add(user.id);
+                            uniqueBot.push(user);
+                        }
+                    });
+                    
+                    if (uniqueBot.length > 0) {
+                        const botHeader = document.createElement('h3');
+                        botHeader.textContent = '🤖 Asistente';
+                        botHeader.style.marginTop = '0';
+                        botHeader.style.color = '#9ca3af';
+                        usersList.appendChild(botHeader);
+                        
+                        uniqueBot.forEach(user => {
+                            const userItem = createUserItem(user);
+                            usersList.appendChild(userItem);
+                        });
+                    }
                 }
-                suppliersByCategory['Otros'].push(user);
+                
+                // Group suppliers by their product categories
+                const suppliersByCategory = {};
+                const categoryUserMap = new Map(); // Track which users are already in which category
+                
+                uniqueSuppliers.forEach(user => {
+                    if (user.categories && user.categories.length > 0) {
+                        // Remove duplicate categories for the same user
+                        const uniqueCategories = [...new Set(user.categories)];
+                        
+                        uniqueCategories.forEach(category => {
+                            if (!suppliersByCategory[category]) {
+                                suppliersByCategory[category] = [];
+                                categoryUserMap.set(category, new Set());
+                            }
+                            
+                            // Check if this user is already in this category
+                            if (!categoryUserMap.get(category).has(user.id)) {
+                                categoryUserMap.get(category).add(user.id);
+                                suppliersByCategory[category].push(user);
+                            }
+                        });
+                    } else {
+                        // Suppliers with no categories go to "Otros"
+                        const category = 'Otros';
+                        if (!suppliersByCategory[category]) {
+                            suppliersByCategory[category] = [];
+                            categoryUserMap.set(category, new Set());
+                        }
+                        
+                        if (!categoryUserMap.get(category).has(user.id)) {
+                            categoryUserMap.get(category).add(user.id);
+                            suppliersByCategory[category].push(user);
+                        }
+                    }
+                });
+                
+                // Display categories and their suppliers
+                Object.keys(suppliersByCategory).sort().forEach(category => {
+                    // Only show category if it has suppliers
+                    if (suppliersByCategory[category].length > 0) {
+                        const categoryHeader = document.createElement('h3');
+                        categoryHeader.textContent = category;
+                        categoryHeader.style.marginTop = '15px';
+                        categoryHeader.style.color = '#fbbf24';
+                        usersList.appendChild(categoryHeader);
+                        
+                        suppliersByCategory[category].forEach(user => {
+                            const userItem = createUserItem(user);
+                            usersList.appendChild(userItem);
+                        });
+                    }
+                });
+                
+            } else {
+                // For suppliers: Show all users grouped by role - with deduplication
+                const groupedUsers = {};
+                const seenUserIds = new Set();
+                
+                users.forEach(user => {
+                    if (!seenUserIds.has(user.id)) {
+                        seenUserIds.add(user.id);
+                        const role = user.role || 'client';
+                        if (!groupedUsers[role]) {
+                            groupedUsers[role] = [];
+                        }
+                        groupedUsers[role].push(user);
+                    }
+                });
+                
+                // Display each role group
+                Object.keys(groups).forEach(roleKey => {
+                    const roleUsers = groupedUsers[roleKey];
+                    if (!roleUsers || roleUsers.length === 0) return;
+                    
+                    const header = document.createElement('h3');
+                    header.textContent = groups[roleKey];
+                    usersList.appendChild(header);
+                    
+                    roleUsers.forEach(user => {
+                        const userItem = createUserItem(user);
+                        usersList.appendChild(userItem);
+                    });
+                });
             }
-        });
-        
-        // Display categories and their suppliers
-        Object.keys(suppliersByCategory).sort().forEach(category => {
-            const categoryHeader = document.createElement('h3');
-            categoryHeader.textContent = category;
-            categoryHeader.style.marginTop = '15px';
-            categoryHeader.style.color = '#fbbf24';
-            usersList.appendChild(categoryHeader);
             
-            suppliersByCategory[category].forEach(user => {
-                const userItem = createUserItem(user);
-                usersList.appendChild(userItem);
+            // Add click handlers
+            document.querySelectorAll('.user-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    document.querySelectorAll('.user-item').forEach(i => {
+                        i.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    const userId = this.dataset.userId;
+                    if (userId) {
+                        selectUser(userId);
+                    }
+                });
             });
-        });
-    } else {
-        // For suppliers: Show all clients (existing logic)
-        const groupedUsers = {};
-        users.forEach(user => {
-            const role = user.role || 'client';
-            if (!groupedUsers[role]) {
-                groupedUsers[role] = [];
-            }
-            groupedUsers[role].push(user);
-        });
-        
-        // Display each role group
-        Object.keys(groups).forEach(roleKey => {
-            const roleUsers = groupedUsers[roleKey];
-            if (!roleUsers || roleUsers.length === 0) return;
-            
-            const header = document.createElement('h3');
-            header.textContent = groups[roleKey];
-            usersList.appendChild(header);
-            
-            roleUsers.forEach(user => {
-                const userItem = createUserItem(user);
-                usersList.appendChild(userItem);
-            });
-        });
-    }
-    
-    // Add click handlers
-    document.querySelectorAll('.user-item').forEach(item => {
-        item.addEventListener('click', function(e) {
-            document.querySelectorAll('.user-item').forEach(i => {
-                i.classList.remove('active');
-            });
-            this.classList.add('active');
-            
-            const userId = this.dataset.userId;
-            if (userId) {
-                selectUser(userId);
-            }
-        });
-    });
-}
-function createUserItem(user) {
-    const name = (user.first_name && user.last_name)
-        ? `${user.first_name} ${user.last_name}`
-        : user.username;
-    
-    const avatarColor = user.avatar_color || '#fbbf24';
-    const initial = name.charAt(0).toUpperCase();
-    const role = user.role_display || user.role || 'Usuario';
-    const company = user.company ? `<div class="user-role">${user.company}</div>` : '';
-    
-    // Add category badges if they exist (for suppliers)
-    let categoryHtml = '';
-    if (user.categories && user.categories.length > 0) {
-        categoryHtml = '<div style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px;">';
-        user.categories.slice(0, 2).forEach(cat => {
-            categoryHtml += `<span style="font-size: 10px; background: #fbbf24; color: #1f2933; padding: 2px 6px; border-radius: 10px;">${cat}</span>`;
-        });
-        if (user.categories.length > 2) {
-            categoryHtml += `<span style="font-size: 10px; color: #9ca3af;">+${user.categories.length-2}</span>`;
         }
-        categoryHtml += '</div>';
-    }
-    
-    const item = document.createElement('div');
-    item.className = 'user-item';
-    item.dataset.userId = user.id;
-    
-    item.innerHTML = `
-        <div class="user-avatar" style="background:${avatarColor}">
-            ${initial}
-        </div>
-        <div class="user-info">
-            <div class="user-name">
-                ${escapeHtml(name)}
-                <span class="status-indicator status-online"></span>
-            </div>
-            <div class="user-role">${escapeHtml(role)}</div>
-            ${company}
-            ${categoryHtml}
-        </div>
-    `;
-    
-    return item;
-}
+        
+        /* ===============================
+           CREATE USER ITEM - FIXED (NO DUPLICATE CATEGORIES)
+        =============================== */
+        function createUserItem(user) {
+            const name = (user.first_name && user.last_name)
+                ? `${user.first_name} ${user.last_name}`
+                : user.username;
+            
+            // Use different avatar color for bot
+            const avatarColor = user.is_bot ? '#9ca3af' : (user.avatar_color || '#fbbf24');
+            const initial = user.is_bot ? '🤖' : name.charAt(0).toUpperCase();
+            const role = user.is_bot ? 'Bot' : (user.role_display || user.role || 'Usuario');
+            const company = user.company ? `<div class="user-role">${user.company}</div>` : '';
+            
+            // Add category badges if they exist (for suppliers) - ensure no duplicates
+            let categoryHtml = '';
+            if (!user.is_bot && user.categories && user.categories.length > 0) {
+                // Remove duplicate categories
+                const uniqueCategories = [...new Set(user.categories)];
+                
+                categoryHtml = '<div style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px;">';
+                uniqueCategories.slice(0, 2).forEach(cat => {
+                    categoryHtml += `<span style="font-size: 10px; background: #fbbf24; color: #1f2933; padding: 2px 6px; border-radius: 10px;">${cat}</span>`;
+                });
+                if (uniqueCategories.length > 2) {
+                    categoryHtml += `<span style="font-size: 10px; color: #9ca3af;">+${uniqueCategories.length-2}</span>`;
+                }
+                categoryHtml += '</div>';
+            }
+            
+            // Add bot badge
+            let botBadge = '';
+            if (user.is_bot) {
+                botBadge = '<span style="font-size: 10px; background: #9ca3af; color: white; padding: 2px 6px; border-radius: 10px; margin-left: 5px;">Bot</span>';
+            }
+            
+            const item = document.createElement('div');
+            item.className = 'user-item';
+            item.dataset.userId = user.id;
+            
+            item.innerHTML = `
+                <div class="user-avatar" style="background:${avatarColor}">
+                    ${initial}
+                </div>
+                <div class="user-info">
+                    <div class="user-name">
+                        ${escapeHtml(name)}${botBadge}
+                        <span class="status-indicator ${user.is_bot ? 'status-offline' : 'status-online'}"></span>
+                    </div>
+                    <div class="user-role">${escapeHtml(role)}</div>
+                    ${company}
+                    ${categoryHtml}
+                </div>
+            `;
+            
+            return item;
+        }
         
         /* ===============================
            SELECT USER - UPDATED WITH QUOTE BUTTON
@@ -1178,121 +1268,121 @@ function createUserItem(user) {
         }
         
         /* ===============================
-           QUOTE FORM FUNCTIONS - STEP 5
+           QUOTE FORM FUNCTIONS
         ================================ */
         
-        // Load dynamic quote form
-// Load dynamic quote form - ENHANCED DEBUG VERSION
-async function loadQuoteForm() {
-    if (!currentChatUser) {
-        alert('Selecciona un usuario primero');
-        return;
-    }
-    
-    console.log('🔍 Loading quote form for user:', currentChatUser);
-    console.log('🔍 User ID:', currentChatUser.id);
-    console.log('🔍 User role:', currentChatUser.role);
-    
-    const modal = document.getElementById('quoteModal');
-    const loading = document.getElementById('quote-form-loading');
-    const container = document.getElementById('quote-form-container');
-    const supplierName = document.getElementById('supplier-name');
-    
-    if (!modal || !loading || !container || !supplierName) {
-        console.error('❌ Modal elements not found!');
-        alert('Error: Elementos del modal no encontrados');
-        return;
-    }
-    
-    modal.style.display = 'flex';
-    loading.style.display = 'block';
-    loading.innerHTML = '<div class="loader"></div><p>Cargando productos...</p>';
-    container.style.display = 'none';
-    
-    try {
-        const url = `/chat/quote-form/${currentChatUser.id}/`;
-        console.log('🔍 Fetching from:', url);
-        
-        const response = await fetch(url);
-        console.log('🔍 Response status:', response.status);
-        console.log('🔍 Response OK?', response.ok);
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('❌ Error response:', errorText);
-            loading.innerHTML = `<p style="color: #ef4444;">❌ Error ${response.status}: ${errorText.substring(0, 100)}</p>`;
-            return;
-        }
-        
-        const data = await response.json();
-        console.log('🔍 Received data:', data);
-        
-        if (data.error) {
-            console.error('❌ API error:', data.error);
-            loading.innerHTML = `<p style="color: #ef4444;">❌ Error: ${data.error}</p>`;
-            return;
-        }
-        
-        // Check if we have categories
-        if (!data.categories || data.categories.length === 0) {
-            console.warn('⚠️ No categories or products found');
-            loading.innerHTML = '<p style="color: #f59e0b;">⚠️ Este proveedor no tiene productos disponibles.</p>';
-            return;
-        }
-        
-        console.log(`✅ Found ${data.categories.length} categories`);
-        
-        supplierName.textContent = `Proveedor: ${data.supplier.name}`;
-        
-        // Populate product dropdown
-        const productSelect = document.getElementById('quote-product');
-        if (!productSelect) {
-            console.error('❌ Product select element not found');
-            return;
-        }
-        
-        productSelect.innerHTML = '<option value="">Selecciona un producto</option>';
-        
-        let productCount = 0;
-        data.categories.forEach(category => {
-            if (category.products && category.products.length > 0) {
-                const optgroup = document.createElement('optgroup');
-                optgroup.label = category.name;
-                
-                category.products.forEach(product => {
-                    productCount++;
-                    const option = document.createElement('option');
-                    option.value = JSON.stringify({
-                        id: product.id,
-                        name: product.name,
-                        price: product.base_price,
-                        unit: product.unit,
-                        options: product.options || []
-                    });
-                    option.textContent = `${product.name} - $${product.base_price} por ${product.unit}`;
-                    optgroup.appendChild(option);
-                });
-                
-                productSelect.appendChild(optgroup);
+        // Load dynamic quote form - ENHANCED DEBUG VERSION
+        async function loadQuoteForm() {
+            if (!currentChatUser) {
+                alert('Selecciona un usuario primero');
+                return;
             }
-        });
+            
+            console.log('🔍 Loading quote form for user:', currentChatUser);
+            console.log('🔍 User ID:', currentChatUser.id);
+            console.log('🔍 User role:', currentChatUser.role);
+            
+            const modal = document.getElementById('quoteModal');
+            const loading = document.getElementById('quote-form-loading');
+            const container = document.getElementById('quote-form-container');
+            const supplierName = document.getElementById('supplier-name');
+            
+            if (!modal || !loading || !container || !supplierName) {
+                console.error('❌ Modal elements not found!');
+                alert('Error: Elementos del modal no encontrados');
+                return;
+            }
+            
+            modal.style.display = 'flex';
+            loading.style.display = 'block';
+            loading.innerHTML = '<div class="loader"></div><p>Cargando productos...</p>';
+            container.style.display = 'none';
+            
+            try {
+                const url = `/chat/quote-form/${currentChatUser.id}/`;
+                console.log('🔍 Fetching from:', url);
+                
+                const response = await fetch(url);
+                console.log('🔍 Response status:', response.status);
+                console.log('🔍 Response OK?', response.ok);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ Error response:', errorText);
+                    loading.innerHTML = `<p style="color: #ef4444;">❌ Error ${response.status}: ${errorText.substring(0, 100)}</p>`;
+                    return;
+                }
+                
+                const data = await response.json();
+                console.log('🔍 Received data:', data);
+                
+                if (data.error) {
+                    console.error('❌ API error:', data.error);
+                    loading.innerHTML = `<p style="color: #ef4444;">❌ Error: ${data.error}</p>`;
+                    return;
+                }
+                
+                // Check if we have categories
+                if (!data.categories || data.categories.length === 0) {
+                    console.warn('⚠️ No categories or products found');
+                    loading.innerHTML = '<p style="color: #f59e0b;">⚠️ Este proveedor no tiene productos disponibles.</p>';
+                    return;
+                }
+                
+                console.log(`✅ Found ${data.categories.length} categories`);
+                
+                supplierName.textContent = `Proveedor: ${data.supplier.name}`;
+                
+                // Populate product dropdown
+                const productSelect = document.getElementById('quote-product');
+                if (!productSelect) {
+                    console.error('❌ Product select element not found');
+                    return;
+                }
+                
+                productSelect.innerHTML = '<option value="">Selecciona un producto</option>';
+                
+                let productCount = 0;
+                data.categories.forEach(category => {
+                    if (category.products && category.products.length > 0) {
+                        const optgroup = document.createElement('optgroup');
+                        optgroup.label = category.name;
+                        
+                        category.products.forEach(product => {
+                            productCount++;
+                            const option = document.createElement('option');
+                            option.value = JSON.stringify({
+                                id: product.id,
+                                name: product.name,
+                                price: product.base_price,
+                                unit: product.unit,
+                                options: product.options || []
+                            });
+                            option.textContent = `${product.name} - $${product.base_price} por ${product.unit}`;
+                            optgroup.appendChild(option);
+                        });
+                        
+                        productSelect.appendChild(optgroup);
+                    }
+                });
         
-        if (productCount === 0) {
-            console.warn('⚠️ No products found in categories');
-            loading.innerHTML = '<p style="color: #f59e0b;">⚠️ Este proveedor no tiene productos activos.</p>';
-            return;
+                if (productCount === 0) {
+                    console.warn('⚠️ No products found in categories');
+                    loading.innerHTML = '<p style="color: #f59e0b;">⚠️ Este proveedor no tiene productos activos.</p>';
+                    return;
+                }
+                
+                console.log(`✅ Loaded ${productCount} products`);
+                loading.style.display = 'none';
+                container.style.display = 'block';
+                
+            } catch (error) {
+                console.error('❌ Error loading form:', error);
+                loading.innerHTML = `<p style="color: #ef4444;">❌ Error: ${error.message}</p>`;
+            }
         }
         
-        console.log(`✅ Loaded ${productCount} products`);
-        loading.style.display = 'none';
-        container.style.display = 'block';
-        
-    } catch (error) {
-        console.error('❌ Error loading form:', error);
-        loading.innerHTML = `<p style="color: #ef4444;">❌ Error: ${error.message}</p>`;
-    }
-}
-        // Handle product selection change - STEP 6
+        // Handle product selection change
         document.getElementById('quote-product')?.addEventListener('change', function(e) {
             const optionsContainer = document.getElementById('product-options-container');
             optionsContainer.innerHTML = '';
@@ -1331,7 +1421,7 @@ async function loadQuoteForm() {
             document.getElementById('product-options-container').innerHTML = '';
         }
 
-        // Submit dynamic quote - STEP 7
+        // Submit dynamic quote
         async function submitDynamicQuote() {
             const productSelect = document.getElementById('quote-product');
             if (!productSelect.value) {
