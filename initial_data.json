@@ -1,0 +1,3232 @@
+[
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$IYAwfO61YcqS2AOfDRCBq4$equ4GlDe6ANSPzqvII9hq0u8hT3MOVzAOa7jNoJNaKU=",
+    "last_login": "2026-02-23T23:58:17.986Z",
+    "is_superuser": true,
+    "username": "kishigme",
+    "first_name": "",
+    "last_name": "",
+    "email": "arturokg03@gmail.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-02-19T19:04:49.040Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "!Ghvgju8ZL1N3VcYvMt3cfPhiphe7Uhirn4KmGETq",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "elicebot",
+    "first_name": "Elice",
+    "last_name": "Bot",
+    "email": "bot@elice.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-02-19T19:15:59.493Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$1x7jjwOBsFiFUjac4qZVLw$9Mer9GBL21yy82NQA5Y4EzVINoHOknj1CMKUKk1Z4sk=",
+    "last_login": "2026-02-19T20:29:32Z",
+    "is_superuser": false,
+    "username": "provedor_cemento",
+    "first_name": "provedor1",
+    "last_name": "cement",
+    "email": "arturo.kishi@mail.utoronto.ca",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-02-19T20:29:32Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$35pZgm5NrfNeQTHPYSpHlx$caW1E5pFBwZUWfai2Zl8cz5DM31Z6gQ++FGOHHY9Mds=",
+    "last_login": "2026-02-19T20:30:02.739Z",
+    "is_superuser": false,
+    "username": "cliente1",
+    "first_name": "Arturo",
+    "last_name": "Kishi Gomez",
+    "email": "arturo.kishi@mail.utoronto.ca",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-02-19T20:30:02.585Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$Ru36jwqyRa96zMqwmIsLwd$2kszQVHjgIgYSYBLlhG1VldvzmjQanL7mwHW2ZfRImE=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "proveedor_pintura1",
+    "first_name": "provedor",
+    "last_name": "pintura1",
+    "email": "proveedor1@elice.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-02-20T16:38:55Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$ThO1nW0vKvO574wtb4tmSt$W3nFHxDLVtwbWZV+u+mOVgDTElK7yaooS/v/Qkk8jlg=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "proveedor_acero1",
+    "first_name": "provedor",
+    "last_name": "acero1",
+    "email": "proveedor2@elice.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-02-20T17:52:06Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$ogG2uE2YOmUveto2sDqZBM$2YVQAYwqxWKFY/L+W52a5ekF4AFhCtp1ZqmylBYFUac=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "provedor_cemento_2",
+    "first_name": "provedor",
+    "last_name": "cemento 2",
+    "email": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-02-23T23:55:56Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$tQdK5eXv8KXl6nC9nv48vV$wyAFKntWnL8PTd7Upa5rP/WiKp3mEaYTF3I6+plnKuU=",
+    "last_login": "2026-02-23T23:57:32.936Z",
+    "is_superuser": false,
+    "username": "cliente3",
+    "first_name": "cliente",
+    "last_name": "3",
+    "email": "arturo.kishi@mail.utoronto.ca",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-02-23T23:57:32.757Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "1dtfewdz9kwtxaa1l4hfpgrodmdxsfn7",
+  "fields": {
+    "session_data": ".eJxVjDEOgzAMAP-SuYpIYnDo2J03IDs2hbZKJAJT1b9XSAztene6txlp3-Zxr7qOi5ircebyy5jSU_Mh5EH5XmwqeVsXtkdiT1vtUERft7P9G8xU52PrIUorIXlKioHJOUAI6CD2GF1oQFUiEyePcZrapgu9aoeeGVsSMJ8vz1Q3ow:1vufof:EfWF8yC0G-cJkKzwK_P3082EVZz81FcO-u-W3gvXCfU",
+    "expire_date": "2026-03-09T23:58:17.987Z"
+  }
+},
+{
+  "model": "home.conversation",
+  "pk": 1,
+  "fields": {
+    "created_at": "2026-02-19T19:18:18.266Z",
+    "updated_at": "2026-02-19T19:18:18.269Z",
+    "is_active": true,
+    "participants": [
+      [
+        "kishigme"
+      ],
+      [
+        "elicebot"
+      ]
+    ]
+  }
+},
+{
+  "model": "home.conversation",
+  "pk": 2,
+  "fields": {
+    "created_at": "2026-02-20T05:49:29.426Z",
+    "updated_at": "2026-02-20T05:49:29.426Z",
+    "is_active": true,
+    "participants": [
+      [
+        "kishigme"
+      ],
+      [
+        "provedor_cemento"
+      ]
+    ]
+  }
+},
+{
+  "model": "home.conversation",
+  "pk": 3,
+  "fields": {
+    "created_at": "2026-02-20T17:55:26.577Z",
+    "updated_at": "2026-02-20T17:55:26.577Z",
+    "is_active": true,
+    "participants": [
+      [
+        "kishigme"
+      ],
+      [
+        "provedor_cemento"
+      ]
+    ]
+  }
+},
+{
+  "model": "home.conversation",
+  "pk": 4,
+  "fields": {
+    "created_at": "2026-02-20T17:56:43.956Z",
+    "updated_at": "2026-02-20T17:56:43.956Z",
+    "is_active": true,
+    "participants": [
+      [
+        "kishigme"
+      ]
+    ]
+  }
+},
+{
+  "model": "home.conversation",
+  "pk": 5,
+  "fields": {
+    "created_at": "2026-02-20T17:57:45.719Z",
+    "updated_at": "2026-02-20T17:57:45.719Z",
+    "is_active": true,
+    "participants": [
+      [
+        "kishigme"
+      ],
+      [
+        "proveedor_pintura1"
+      ]
+    ]
+  }
+},
+{
+  "model": "home.conversation",
+  "pk": 6,
+  "fields": {
+    "created_at": "2026-02-20T18:17:05.288Z",
+    "updated_at": "2026-02-20T18:17:05.288Z",
+    "is_active": true,
+    "participants": [
+      [
+        "kishigme"
+      ],
+      [
+        "proveedor_pintura1"
+      ]
+    ]
+  }
+},
+{
+  "model": "home.conversation",
+  "pk": 7,
+  "fields": {
+    "created_at": "2026-02-23T23:06:11.914Z",
+    "updated_at": "2026-02-23T23:06:11.914Z",
+    "is_active": true,
+    "participants": [
+      [
+        "kishigme"
+      ],
+      [
+        "provedor_cemento"
+      ]
+    ]
+  }
+},
+{
+  "model": "home.conversation",
+  "pk": 8,
+  "fields": {
+    "created_at": "2026-02-23T23:06:34.535Z",
+    "updated_at": "2026-02-23T23:06:34.535Z",
+    "is_active": true,
+    "participants": [
+      [
+        "kishigme"
+      ],
+      [
+        "proveedor_acero1"
+      ]
+    ]
+  }
+},
+{
+  "model": "home.conversation",
+  "pk": 9,
+  "fields": {
+    "created_at": "2026-02-23T23:28:57.568Z",
+    "updated_at": "2026-02-23T23:28:57.568Z",
+    "is_active": true,
+    "participants": [
+      [
+        "kishigme"
+      ],
+      [
+        "proveedor_acero1"
+      ]
+    ]
+  }
+},
+{
+  "model": "home.conversation",
+  "pk": 10,
+  "fields": {
+    "created_at": "2026-02-23T23:56:17.481Z",
+    "updated_at": "2026-02-23T23:56:17.481Z",
+    "is_active": true,
+    "participants": [
+      [
+        "kishigme"
+      ],
+      [
+        "provedor_cemento"
+      ]
+    ]
+  }
+},
+{
+  "model": "home.conversation",
+  "pk": 11,
+  "fields": {
+    "created_at": "2026-02-23T23:57:40.379Z",
+    "updated_at": "2026-02-23T23:57:40.381Z",
+    "is_active": true,
+    "participants": [
+      [
+        "elicebot"
+      ],
+      [
+        "cliente3"
+      ]
+    ]
+  }
+},
+{
+  "model": "home.conversation",
+  "pk": 12,
+  "fields": {
+    "created_at": "2026-02-23T23:57:54.882Z",
+    "updated_at": "2026-02-23T23:57:54.882Z",
+    "is_active": true,
+    "participants": [
+      [
+        "provedor_cemento"
+      ],
+      [
+        "cliente3"
+      ]
+    ]
+  }
+},
+{
+  "model": "home.conversation",
+  "pk": 13,
+  "fields": {
+    "created_at": "2026-02-24T00:01:53.256Z",
+    "updated_at": "2026-02-24T00:01:53.256Z",
+    "is_active": true,
+    "participants": [
+      [
+        "kishigme"
+      ],
+      [
+        "provedor_cemento"
+      ]
+    ]
+  }
+},
+{
+  "model": "home.conversation",
+  "pk": 14,
+  "fields": {
+    "created_at": "2026-02-24T00:02:03.133Z",
+    "updated_at": "2026-02-24T00:02:03.133Z",
+    "is_active": true,
+    "participants": [
+      [
+        "kishigme"
+      ],
+      [
+        "proveedor_acero1"
+      ]
+    ]
+  }
+},
+{
+  "model": "home.conversation",
+  "pk": 15,
+  "fields": {
+    "created_at": "2026-02-24T00:02:49.850Z",
+    "updated_at": "2026-02-24T00:02:49.850Z",
+    "is_active": true,
+    "participants": [
+      [
+        "kishigme"
+      ],
+      [
+        "proveedor_acero1"
+      ]
+    ]
+  }
+},
+{
+  "model": "home.conversation",
+  "pk": 16,
+  "fields": {
+    "created_at": "2026-02-24T00:03:03.679Z",
+    "updated_at": "2026-02-24T00:03:03.679Z",
+    "is_active": true,
+    "participants": [
+      [
+        "kishigme"
+      ],
+      [
+        "provedor_cemento"
+      ]
+    ]
+  }
+},
+{
+  "model": "home.conversation",
+  "pk": 17,
+  "fields": {
+    "created_at": "2026-02-24T00:03:03.685Z",
+    "updated_at": "2026-02-24T00:03:03.685Z",
+    "is_active": true,
+    "participants": [
+      [
+        "kishigme"
+      ],
+      [
+        "provedor_cemento_2"
+      ]
+    ]
+  }
+},
+{
+  "model": "home.userprofile",
+  "pk": 1,
+  "fields": {
+    "user": [
+      "elicebot"
+    ],
+    "role": "client",
+    "company": "Elice Construcción",
+    "phone": "",
+    "avatar_color": "#fbbf24",
+    "material_category": null
+  }
+},
+{
+  "model": "home.userprofile",
+  "pk": 2,
+  "fields": {
+    "user": [
+      "kishigme"
+    ],
+    "role": "client",
+    "company": "",
+    "phone": "",
+    "avatar_color": "#fbbf24",
+    "material_category": null
+  }
+},
+{
+  "model": "home.userprofile",
+  "pk": 3,
+  "fields": {
+    "user": [
+      "provedor_cemento"
+    ],
+    "role": "supplier",
+    "company": "",
+    "phone": "",
+    "avatar_color": "#fbbf24",
+    "material_category": "cement"
+  }
+},
+{
+  "model": "home.userprofile",
+  "pk": 5,
+  "fields": {
+    "user": [
+      "proveedor_pintura1"
+    ],
+    "role": "supplier",
+    "company": "Pinturas Martínez S.A.",
+    "phone": "555-123-4567",
+    "avatar_color": "#3b82f6",
+    "material_category": "paint"
+  }
+},
+{
+  "model": "home.userprofile",
+  "pk": 6,
+  "fields": {
+    "user": [
+      "proveedor_acero1"
+    ],
+    "role": "supplier",
+    "company": "Materiales García",
+    "phone": "555-987-6543",
+    "avatar_color": "#10b981",
+    "material_category": "steel"
+  }
+},
+{
+  "model": "home.userprofile",
+  "pk": 7,
+  "fields": {
+    "user": [
+      "cliente1"
+    ],
+    "role": "client",
+    "company": "",
+    "phone": "555-555-5555",
+    "avatar_color": "#f59e0b",
+    "material_category": null
+  }
+},
+{
+  "model": "home.userprofile",
+  "pk": 8,
+  "fields": {
+    "user": [
+      "provedor_cemento_2"
+    ],
+    "role": "supplier",
+    "company": "cemento2",
+    "phone": "45685940",
+    "avatar_color": "#fbbf24",
+    "material_category": "cement"
+  }
+},
+{
+  "model": "home.userprofile",
+  "pk": 9,
+  "fields": {
+    "user": [
+      "cliente3"
+    ],
+    "role": "client",
+    "company": "",
+    "phone": "",
+    "avatar_color": "#fbbf24",
+    "material_category": null
+  }
+},
+{
+  "model": "home.message",
+  "pk": 1,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Hola 👋 Soy Elice, el asistente de Elice Construcción. ¿En qué puedo ayudarte hoy?",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-19T19:18:18.269Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 2,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "quote",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-19T19:19:10.672Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 3,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Perfecto 👍\n\n¿Qué material necesitas?\n• Pintura\n• Acero\n• Cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-19T19:19:10.674Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 4,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "pintura",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-19T19:19:15.908Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 5,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Lo siento, no hay proveedores de pintura disponibles en este momento.",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-19T19:19:15.911Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 6,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-19T20:31:26.660Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 7,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Lo siento, no hay proveedores de cemento disponibles en este momento.",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-19T20:31:26.668Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 8,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "quote",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-19T20:32:04.509Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 9,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Perfecto 👍\n\n¿Qué material necesitas?\n• Pintura\n• Acero\n• Cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-19T20:32:04.511Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 10,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-19T20:32:07.191Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 11,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Lo siento, no hay proveedores de cemento disponibles en este momento.",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-19T20:32:07.195Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 12,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-19T20:32:40.397Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 13,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Lo siento, no hay proveedores de cemento disponibles en este momento.",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-19T20:32:40.401Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 14,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "cement",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-19T20:32:46.664Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 15,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Puedo ayudarte con cotizaciones.\nEscribe 'quote' para comenzar.",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-19T20:32:46.666Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 16,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "quote",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-19T20:32:49.514Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 17,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Perfecto 👍\n\n¿Qué material necesitas?\n• Pintura\n• Acero\n• Cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-19T20:32:49.517Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 18,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-19T20:32:53.846Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 19,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Lo siento, no hay proveedores de cemento disponibles en este momento.",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-19T20:32:53.851Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 20,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-19T20:33:24.801Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 21,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "hola",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-19T20:33:30.162Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 22,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Hola 👋 Soy Elice.\n\nEscribe 'quote' o 'cotización' para comenzar una solicitud.",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-19T20:33:30.165Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 23,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "quote",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-19T20:33:35.305Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 24,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Perfecto 👍\n\n¿Qué material necesitas?\n• Pintura\n• Acero\n• Cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-19T20:33:35.312Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 25,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-19T20:33:42.798Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 26,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "quote",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T05:46:14.917Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 27,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Perfecto 👍\n\n¿Qué material necesitas?\n• Pintura\n• Acero\n• Cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T05:46:14.922Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 28,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T05:46:46.493Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 29,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "quote",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T05:49:22.567Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 30,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Perfecto 👍\n\n¿Qué material necesitas?\n• Pintura\n• Acero\n• Cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T05:49:22.571Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 31,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T05:49:29.418Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 32,
+  "fields": {
+    "conversation": 2,
+    "sender": [
+      "provedor_cemento"
+    ],
+    "content": "Hola 👋 Somos el proveedor de cemento.",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T05:49:29.429Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 33,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Te he conectado con el proveedor de cemento 🏗",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T05:49:29.431Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 34,
+  "fields": {
+    "conversation": 2,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "hola",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T05:49:36.464Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 35,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "pintura",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T16:36:36.868Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 36,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Lo siento, no hay proveedores de pintura disponibles en este momento.",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T16:36:36.871Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 37,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "pintura",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T17:55:06.774Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 38,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Lo siento, no hay proveedores de pintura disponibles en este momento.",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T17:55:06.777Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 39,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "quote",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T17:55:10.884Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 40,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Perfecto 👍\n\n¿Qué material necesitas?\n• Pintura\n• Acero\n• Cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T17:55:10.886Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 41,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "pintura",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T17:55:13.990Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 42,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Lo siento, no hay proveedores de pintura disponibles en este momento.",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T17:55:13.994Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 43,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T17:55:26.572Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 44,
+  "fields": {
+    "conversation": 3,
+    "sender": [
+      "provedor_cemento"
+    ],
+    "content": "Hola 👋 Somos el proveedor de cemento.",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T17:55:26.580Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 45,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Te he conectado con el proveedor de cemento 🏗",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T17:55:26.581Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 46,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "quote",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T17:56:41.081Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 47,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Perfecto 👍\n\n¿Qué material necesitas?\n• Pintura\n• Acero\n• Cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T17:56:41.083Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 48,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "pintura",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T17:56:43.950Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 50,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Te he conectado con el proveedor de pintura 🎨",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T17:56:43.961Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 51,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "pintura",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T17:57:45.713Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 52,
+  "fields": {
+    "conversation": 5,
+    "sender": [
+      "proveedor_pintura1"
+    ],
+    "content": "Hola 👋 Somos el proveedor de pintura. ¿Qué necesitas?",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T17:57:45.722Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 53,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Te he conectado con el proveedor de pintura 🎨",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T17:57:45.723Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 54,
+  "fields": {
+    "conversation": 5,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "📋 **NUEVA SOLICITUD DE COTIZACIÓN**\n━━━━━━━━━━━━━━━━━━━━━━━\n**Producto:** Esmalte Sintético (4L)\n**Cantidad:** 1\n**Especificaciones:**\n  • Color: Blanco\n**Total estimado:** $145\n**Notas:** Ninguna\n━━━━━━━━━━━━━━━━━━━━━━━\n_Enviado a: proveedor1_",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T18:16:09.912Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 55,
+  "fields": {
+    "conversation": 5,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "📋 **NUEVA SOLICITUD DE COTIZACIÓN**\n━━━━━━━━━━━━━━━━━━━━━━━\n**Producto:** Impermeabilizante Acrílico (19L)\n**Cantidad:** 1\n**Especificaciones:**\n  • Color: Blanco\n**Total estimado:** $245\n**Notas:** Ninguna\n━━━━━━━━━━━━━━━━━━━━━━━\n_Enviado a: proveedor1_",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T18:16:30.094Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 56,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "quote",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T18:17:02.703Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 57,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Perfecto 👍\n\n¿Qué material necesitas?\n• Pintura\n• Acero\n• Cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T18:17:02.705Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 58,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "pintura",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T18:17:05.283Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 59,
+  "fields": {
+    "conversation": 6,
+    "sender": [
+      "proveedor_pintura1"
+    ],
+    "content": "Hola 👋 Somos el proveedor de pintura. ¿Qué necesitas?",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T18:17:05.291Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 60,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Te he conectado con el proveedor de pintura 🎨",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-20T18:17:05.292Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 61,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "quote",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-23T23:06:07.846Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 62,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Perfecto 👍\n\n¿Qué material necesitas?\n• Pintura\n• Acero\n• Cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-23T23:06:07.848Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 63,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-23T23:06:11.910Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 64,
+  "fields": {
+    "conversation": 7,
+    "sender": [
+      "provedor_cemento"
+    ],
+    "content": "Hola 👋 Somos el proveedor de cemento.",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-23T23:06:11.916Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 65,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Te he conectado con el proveedor de cemento 🏗",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-23T23:06:11.917Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 66,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "quote",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-23T23:06:32.236Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 67,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Perfecto 👍\n\n¿Qué material necesitas?\n• Pintura\n• Acero\n• Cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-23T23:06:32.237Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 68,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "acero",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-23T23:06:34.531Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 69,
+  "fields": {
+    "conversation": 8,
+    "sender": [
+      "proveedor_acero1"
+    ],
+    "content": "Hola 👋 Somos el proveedor de acero.",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-23T23:06:34.536Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 70,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Te he conectado con el proveedor de acero 🔩",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-23T23:06:34.536Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 71,
+  "fields": {
+    "conversation": 8,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "📋 **NUEVA SOLICITUD DE COTIZACIÓN**\n━━━━━━━━━━━━━━━━━━━━━━━\n**Producto:** Martillo de Constructor\n**Cantidad:** 1\n**Especificaciones:**\n  • Peso: 16oz\n**Total estimado:** $85\n**Notas:** Ninguna\n━━━━━━━━━━━━━━━━━━━━━━━\n_Enviado a: proveedor2_",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-23T23:06:47.960Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 72,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "hola",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-23T23:28:46.419Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 73,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Hola 👋 Soy Elice.\n\nEscribe 'quote' o 'cotización' para comenzar una solicitud.",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-23T23:28:46.422Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 74,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "quote",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-23T23:28:51.315Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 75,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Perfecto 👍\n\n¿Qué material necesitas?\n• Pintura\n• Acero\n• Cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-23T23:28:51.317Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 76,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "acero",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-23T23:28:57.564Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 77,
+  "fields": {
+    "conversation": 9,
+    "sender": [
+      "proveedor_acero1"
+    ],
+    "content": "Hola 👋 Somos el proveedor de acero.Porfavor haz click en el icono de arriba para ver lo prodcutos disponibles y hacer una orden",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-23T23:28:57.569Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 78,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Te he conectado con el proveedor de acero 🔩",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-23T23:28:57.570Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 79,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "quote",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-23T23:56:14.088Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 80,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Perfecto 👍\n\n¿Qué material necesitas?\n• Pintura\n• Acero\n• Cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-23T23:56:14.091Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 81,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-23T23:56:17.473Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 82,
+  "fields": {
+    "conversation": 10,
+    "sender": [
+      "provedor_cemento"
+    ],
+    "content": "Hola 👋 Somos el proveedor de cemento.Porfavor haz click en el icono de arriba para ver lo prodcutos disponibles y hacer una orden",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-23T23:56:17.485Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 83,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Te he conectado con el proveedor de cemento 🏗",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-23T23:56:17.487Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 84,
+  "fields": {
+    "conversation": 11,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Hola 👋 Soy Elice, el asistente de Elice Construcción. ¿En qué puedo ayudarte hoy?",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-23T23:57:40.381Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 85,
+  "fields": {
+    "conversation": 11,
+    "sender": [
+      "cliente3"
+    ],
+    "content": "quote",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-23T23:57:51.739Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 86,
+  "fields": {
+    "conversation": 11,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Perfecto 👍\n\n¿Qué material necesitas?\n• Pintura\n• Acero\n• Cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-23T23:57:51.742Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 87,
+  "fields": {
+    "conversation": 11,
+    "sender": [
+      "cliente3"
+    ],
+    "content": "cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-23T23:57:54.876Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 88,
+  "fields": {
+    "conversation": 12,
+    "sender": [
+      "provedor_cemento"
+    ],
+    "content": "Hola 👋 Somos el proveedor de cemento.Porfavor haz click en el icono de arriba para ver lo prodcutos disponibles y hacer una orden",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-23T23:57:54.885Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 89,
+  "fields": {
+    "conversation": 11,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Te he conectado con el proveedor de cemento 🏗",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-23T23:57:54.887Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 90,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "quote",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-24T00:01:46.377Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 91,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Perfecto 👍\n\n¿Qué material necesitas?\n• Pintura\n• Acero\n• Cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-24T00:01:46.379Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 92,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-24T00:01:53.249Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 93,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "acero",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-24T00:02:03.127Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 94,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "quote",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-24T00:02:46.763Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 95,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "Perfecto 👍\n\n¿Qué material necesitas?\n• Pintura\n• Acero\n• Cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-24T00:02:46.766Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 96,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "acero",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-24T00:02:49.845Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 97,
+  "fields": {
+    "conversation": 15,
+    "sender": [
+      "proveedor_acero1"
+    ],
+    "content": "Hola 👋 Somos tu proveedor de acero.\n\n**¿Cómo puedo ayudarte hoy?**\n\n• Para ver nuestros productos disponibles, haz clic en el icono **📋** en la esquina superior derecha\n• Ahí encontrarás: varillas, perfiles y más\n• Selecciona el producto, especifica medidas y envíanos tu solicitud\n\n¡Estamos listos para cotizarte! 🔩",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-24T00:02:49.852Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 98,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "✅ Te he conectado con 1 proveedor(es) de acero. Revisa tu lista de chats. 🔩",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-24T00:02:49.853Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 99,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "cemento",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-24T00:03:03.672Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 100,
+  "fields": {
+    "conversation": 16,
+    "sender": [
+      "provedor_cemento"
+    ],
+    "content": "Hola 👋 Somos tu proveedor de cemento.\n\n**¿Cómo puedo ayudarte hoy?**\n\n• Para ver nuestros productos disponibles, haz clic en el icono **📋** en la esquina superior derecha\n• Ahí encontrarás: cemento, blocks, mortero y más\n• Selecciona el producto, especifica cantidad y envíanos tu solicitud\n\n¡Estamos listos para cotizarte! 🏗️",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-24T00:03:03.682Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 101,
+  "fields": {
+    "conversation": 17,
+    "sender": [
+      "provedor_cemento_2"
+    ],
+    "content": "Hola 👋 Somos tu proveedor de cemento.\n\n**¿Cómo puedo ayudarte hoy?**\n\n• Para ver nuestros productos disponibles, haz clic en el icono **📋** en la esquina superior derecha\n• Ahí encontrarás: cemento, blocks, mortero y más\n• Selecciona el producto, especifica cantidad y envíanos tu solicitud\n\n¡Estamos listos para cotizarte! 🏗️",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-24T00:03:03.687Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 102,
+  "fields": {
+    "conversation": 1,
+    "sender": [
+      "elicebot"
+    ],
+    "content": "✅ Te he conectado con 2 proveedor(es) de cemento. Revisa tu lista de chats. 🏗️",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-24T00:03:03.689Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.message",
+  "pk": 103,
+  "fields": {
+    "conversation": 2,
+    "sender": [
+      "kishigme"
+    ],
+    "content": "📋 **NUEVA SOLICITUD DE COTIZACIÓN**\n━━━━━━━━━━━━━━━━━━━━━━━\n**Producto:** cemento hidraulico\n**Cantidad:** 1\n**Total estimado:** $100\n**Notas:** Ninguna\n━━━━━━━━━━━━━━━━━━━━━━━\n_Enviado a: provedor_cemento_",
+    "file": "",
+    "file_name": "",
+    "timestamp": "2026-02-24T19:48:42.493Z",
+    "is_read": false
+  }
+},
+{
+  "model": "home.quoterequest",
+  "pk": 1,
+  "fields": {
+    "client": [
+      "kishigme"
+    ],
+    "supplier": [
+      "provedor_cemento"
+    ],
+    "conversation": null,
+    "product_name": "",
+    "product_details": {},
+    "client_notes": "",
+    "quoted_price": null,
+    "supplier_notes": "",
+    "valid_until": null,
+    "status": "pending",
+    "created_at": "2026-02-20T05:49:29.423Z",
+    "updated_at": "2026-02-20T05:49:29.423Z"
+  }
+},
+{
+  "model": "home.quoterequest",
+  "pk": 2,
+  "fields": {
+    "client": [
+      "kishigme"
+    ],
+    "supplier": [
+      "provedor_cemento"
+    ],
+    "conversation": null,
+    "product_name": "",
+    "product_details": {},
+    "client_notes": "",
+    "quoted_price": null,
+    "supplier_notes": "",
+    "valid_until": null,
+    "status": "pending",
+    "created_at": "2026-02-20T17:55:26.576Z",
+    "updated_at": "2026-02-20T17:55:26.576Z"
+  }
+},
+{
+  "model": "home.quoterequest",
+  "pk": 4,
+  "fields": {
+    "client": [
+      "kishigme"
+    ],
+    "supplier": [
+      "proveedor_pintura1"
+    ],
+    "conversation": null,
+    "product_name": "",
+    "product_details": {},
+    "client_notes": "",
+    "quoted_price": null,
+    "supplier_notes": "",
+    "valid_until": null,
+    "status": "pending",
+    "created_at": "2026-02-20T17:57:45.717Z",
+    "updated_at": "2026-02-20T17:57:45.717Z"
+  }
+},
+{
+  "model": "home.quoterequest",
+  "pk": 5,
+  "fields": {
+    "client": [
+      "kishigme"
+    ],
+    "supplier": [
+      "proveedor_pintura1"
+    ],
+    "conversation": null,
+    "product_name": "",
+    "product_details": {},
+    "client_notes": "",
+    "quoted_price": null,
+    "supplier_notes": "",
+    "valid_until": null,
+    "status": "pending",
+    "created_at": "2026-02-20T18:17:05.286Z",
+    "updated_at": "2026-02-20T18:17:05.286Z"
+  }
+},
+{
+  "model": "home.quoterequest",
+  "pk": 6,
+  "fields": {
+    "client": [
+      "kishigme"
+    ],
+    "supplier": [
+      "provedor_cemento"
+    ],
+    "conversation": null,
+    "product_name": "",
+    "product_details": {},
+    "client_notes": "",
+    "quoted_price": null,
+    "supplier_notes": "",
+    "valid_until": null,
+    "status": "pending",
+    "created_at": "2026-02-23T23:06:11.913Z",
+    "updated_at": "2026-02-23T23:06:11.913Z"
+  }
+},
+{
+  "model": "home.quoterequest",
+  "pk": 7,
+  "fields": {
+    "client": [
+      "kishigme"
+    ],
+    "supplier": [
+      "proveedor_acero1"
+    ],
+    "conversation": null,
+    "product_name": "",
+    "product_details": {},
+    "client_notes": "",
+    "quoted_price": null,
+    "supplier_notes": "",
+    "valid_until": null,
+    "status": "pending",
+    "created_at": "2026-02-23T23:06:34.534Z",
+    "updated_at": "2026-02-23T23:06:34.534Z"
+  }
+},
+{
+  "model": "home.quoterequest",
+  "pk": 8,
+  "fields": {
+    "client": [
+      "kishigme"
+    ],
+    "supplier": [
+      "proveedor_acero1"
+    ],
+    "conversation": null,
+    "product_name": "",
+    "product_details": {},
+    "client_notes": "",
+    "quoted_price": null,
+    "supplier_notes": "",
+    "valid_until": null,
+    "status": "pending",
+    "created_at": "2026-02-23T23:28:57.567Z",
+    "updated_at": "2026-02-23T23:28:57.567Z"
+  }
+},
+{
+  "model": "home.quoterequest",
+  "pk": 9,
+  "fields": {
+    "client": [
+      "kishigme"
+    ],
+    "supplier": [
+      "provedor_cemento"
+    ],
+    "conversation": null,
+    "product_name": "",
+    "product_details": {},
+    "client_notes": "",
+    "quoted_price": null,
+    "supplier_notes": "",
+    "valid_until": null,
+    "status": "pending",
+    "created_at": "2026-02-23T23:56:17.479Z",
+    "updated_at": "2026-02-23T23:56:17.479Z"
+  }
+},
+{
+  "model": "home.quoterequest",
+  "pk": 10,
+  "fields": {
+    "client": [
+      "cliente3"
+    ],
+    "supplier": [
+      "provedor_cemento"
+    ],
+    "conversation": null,
+    "product_name": "",
+    "product_details": {},
+    "client_notes": "",
+    "quoted_price": null,
+    "supplier_notes": "",
+    "valid_until": null,
+    "status": "pending",
+    "created_at": "2026-02-23T23:57:54.880Z",
+    "updated_at": "2026-02-23T23:57:54.880Z"
+  }
+},
+{
+  "model": "home.quoterequest",
+  "pk": 11,
+  "fields": {
+    "client": [
+      "kishigme"
+    ],
+    "supplier": [
+      "provedor_cemento"
+    ],
+    "conversation": null,
+    "product_name": "",
+    "product_details": {},
+    "client_notes": "",
+    "quoted_price": null,
+    "supplier_notes": "",
+    "valid_until": null,
+    "status": "pending",
+    "created_at": "2026-02-24T00:01:53.254Z",
+    "updated_at": "2026-02-24T00:01:53.254Z"
+  }
+},
+{
+  "model": "home.quoterequest",
+  "pk": 12,
+  "fields": {
+    "client": [
+      "kishigme"
+    ],
+    "supplier": [
+      "proveedor_acero1"
+    ],
+    "conversation": null,
+    "product_name": "",
+    "product_details": {},
+    "client_notes": "",
+    "quoted_price": null,
+    "supplier_notes": "",
+    "valid_until": null,
+    "status": "pending",
+    "created_at": "2026-02-24T00:02:03.131Z",
+    "updated_at": "2026-02-24T00:02:03.131Z"
+  }
+},
+{
+  "model": "home.quoterequest",
+  "pk": 13,
+  "fields": {
+    "client": [
+      "kishigme"
+    ],
+    "supplier": [
+      "proveedor_acero1"
+    ],
+    "conversation": null,
+    "product_name": "",
+    "product_details": {},
+    "client_notes": "",
+    "quoted_price": null,
+    "supplier_notes": "",
+    "valid_until": null,
+    "status": "pending",
+    "created_at": "2026-02-24T00:02:49.848Z",
+    "updated_at": "2026-02-24T00:02:49.848Z"
+  }
+},
+{
+  "model": "home.quoterequest",
+  "pk": 14,
+  "fields": {
+    "client": [
+      "kishigme"
+    ],
+    "supplier": [
+      "provedor_cemento"
+    ],
+    "conversation": null,
+    "product_name": "",
+    "product_details": {},
+    "client_notes": "",
+    "quoted_price": null,
+    "supplier_notes": "",
+    "valid_until": null,
+    "status": "pending",
+    "created_at": "2026-02-24T00:03:03.677Z",
+    "updated_at": "2026-02-24T00:03:03.677Z"
+  }
+},
+{
+  "model": "home.quoterequest",
+  "pk": 15,
+  "fields": {
+    "client": [
+      "kishigme"
+    ],
+    "supplier": [
+      "provedor_cemento_2"
+    ],
+    "conversation": null,
+    "product_name": "",
+    "product_details": {},
+    "client_notes": "",
+    "quoted_price": null,
+    "supplier_notes": "",
+    "valid_until": null,
+    "status": "pending",
+    "created_at": "2026-02-24T00:03:03.684Z",
+    "updated_at": "2026-02-24T00:03:03.684Z"
+  }
+},
+{
+  "model": "home.productcategory",
+  "pk": 1,
+  "fields": {
+    "name": "pintura",
+    "description": "",
+    "icon": "",
+    "order": 0
+  }
+},
+{
+  "model": "home.productcategory",
+  "pk": 2,
+  "fields": {
+    "name": "cemento",
+    "description": "",
+    "icon": "",
+    "order": 0
+  }
+},
+{
+  "model": "home.productcategory",
+  "pk": 3,
+  "fields": {
+    "name": "Pinturas",
+    "description": "Todo tipo de pinturas",
+    "icon": "🎨",
+    "order": 1
+  }
+},
+{
+  "model": "home.productcategory",
+  "pk": 4,
+  "fields": {
+    "name": "Herramientas",
+    "description": "Herramientas para construcción",
+    "icon": "🔨",
+    "order": 2
+  }
+},
+{
+  "model": "home.productcategory",
+  "pk": 5,
+  "fields": {
+    "name": "Materiales Básicos",
+    "description": "Cemento, varilla, block",
+    "icon": "🧱",
+    "order": 3
+  }
+},
+{
+  "model": "home.productcategory",
+  "pk": 6,
+  "fields": {
+    "name": "Acabados",
+    "description": "Esmaltes, selladores, impermeabilizantes",
+    "icon": "✨",
+    "order": 4
+  }
+},
+{
+  "model": "home.product",
+  "pk": 1,
+  "fields": {
+    "supplier": [
+      "kishigme"
+    ],
+    "category": 2,
+    "name": "cemento",
+    "description": "cemento",
+    "base_price": "100.00",
+    "unit": "unidad",
+    "image": "",
+    "is_active": true,
+    "created_at": "2026-02-20T05:55:18.283Z",
+    "updated_at": "2026-02-20T16:30:32.733Z"
+  }
+},
+{
+  "model": "home.product",
+  "pk": 2,
+  "fields": {
+    "supplier": [
+      "kishigme"
+    ],
+    "category": 1,
+    "name": "pintura",
+    "description": "pintura",
+    "base_price": "100.00",
+    "unit": "unidad",
+    "image": "",
+    "is_active": true,
+    "created_at": "2026-02-20T05:55:39.022Z",
+    "updated_at": "2026-02-20T05:55:39.022Z"
+  }
+},
+{
+  "model": "home.product",
+  "pk": 3,
+  "fields": {
+    "supplier": [
+      "kishigme"
+    ],
+    "category": 1,
+    "name": "pintura blanca",
+    "description": "blanca",
+    "base_price": "200.00",
+    "unit": "uniy",
+    "image": "",
+    "is_active": true,
+    "created_at": "2026-02-20T16:35:11.375Z",
+    "updated_at": "2026-02-20T16:35:11.375Z"
+  }
+},
+{
+  "model": "home.product",
+  "pk": 4,
+  "fields": {
+    "supplier": [
+      "proveedor_pintura1"
+    ],
+    "category": 3,
+    "name": "Pintura Vinílica Blanca (19L)",
+    "description": "Pintura de alta calidad para interiores y exteriores. Acabado mate, excelente cobertura.",
+    "base_price": "180.00",
+    "unit": "litro",
+    "image": "",
+    "is_active": true,
+    "created_at": "2026-02-20T17:54:02.240Z",
+    "updated_at": "2026-02-20T17:54:02.240Z"
+  }
+},
+{
+  "model": "home.product",
+  "pk": 5,
+  "fields": {
+    "supplier": [
+      "proveedor_pintura1"
+    ],
+    "category": 6,
+    "name": "Esmalte Sintético (4L)",
+    "description": "Esmalte de alta durabilidad para madera y metal. Resistente a la intemperie.",
+    "base_price": "145.00",
+    "unit": "litro",
+    "image": "",
+    "is_active": true,
+    "created_at": "2026-02-20T17:54:02.245Z",
+    "updated_at": "2026-02-20T17:54:02.245Z"
+  }
+},
+{
+  "model": "home.product",
+  "pk": 6,
+  "fields": {
+    "supplier": [
+      "proveedor_pintura1"
+    ],
+    "category": 6,
+    "name": "Impermeabilizante Acrílico (19L)",
+    "description": "Protección contra filtraciones y humedad. Tecnología elastomérica.",
+    "base_price": "245.00",
+    "unit": "litro",
+    "image": "",
+    "is_active": true,
+    "created_at": "2026-02-20T17:54:02.247Z",
+    "updated_at": "2026-02-20T17:54:02.247Z"
+  }
+},
+{
+  "model": "home.product",
+  "pk": 7,
+  "fields": {
+    "supplier": [
+      "proveedor_acero1"
+    ],
+    "category": 5,
+    "name": "Cemento Portland (50kg)",
+    "description": "Cemento de alta resistencia para construcción.",
+    "base_price": "320.00",
+    "unit": "saco",
+    "image": "",
+    "is_active": true,
+    "created_at": "2026-02-20T17:54:13.235Z",
+    "updated_at": "2026-02-20T17:54:13.235Z"
+  }
+},
+{
+  "model": "home.product",
+  "pk": 8,
+  "fields": {
+    "supplier": [
+      "proveedor_acero1"
+    ],
+    "category": 5,
+    "name": "Varilla Corrugada 3/8\"",
+    "description": "Varilla de acero para refuerzo estructural.",
+    "base_price": "145.00",
+    "unit": "pieza",
+    "image": "",
+    "is_active": true,
+    "created_at": "2026-02-20T17:54:13.239Z",
+    "updated_at": "2026-02-20T17:54:13.239Z"
+  }
+},
+{
+  "model": "home.product",
+  "pk": 9,
+  "fields": {
+    "supplier": [
+      "proveedor_acero1"
+    ],
+    "category": 4,
+    "name": "Martillo de Constructor",
+    "description": "Martillo profesional con mango de fibra.",
+    "base_price": "85.00",
+    "unit": "pieza",
+    "image": "",
+    "is_active": true,
+    "created_at": "2026-02-20T17:54:13.241Z",
+    "updated_at": "2026-02-20T17:54:13.241Z"
+  }
+},
+{
+  "model": "home.product",
+  "pk": 10,
+  "fields": {
+    "supplier": [
+      "proveedor_pintura1"
+    ],
+    "category": 1,
+    "name": "pintura roja",
+    "description": "",
+    "base_price": "100.00",
+    "unit": "unidad",
+    "image": "",
+    "is_active": true,
+    "created_at": "2026-02-23T23:08:27.057Z",
+    "updated_at": "2026-02-23T23:09:23.204Z"
+  }
+},
+{
+  "model": "home.product",
+  "pk": 11,
+  "fields": {
+    "supplier": [
+      "provedor_cemento"
+    ],
+    "category": 2,
+    "name": "cemento hidraulico",
+    "description": "",
+    "base_price": "100.00",
+    "unit": "pieza",
+    "image": "",
+    "is_active": true,
+    "created_at": "2026-02-24T19:47:36.297Z",
+    "updated_at": "2026-02-24T19:48:21.093Z"
+  }
+},
+{
+  "model": "home.productoption",
+  "pk": 1,
+  "fields": {
+    "product": 4,
+    "name": "Color",
+    "options": "Blanco, Beige, Gris, Crema",
+    "required": true
+  }
+},
+{
+  "model": "home.productoption",
+  "pk": 2,
+  "fields": {
+    "product": 4,
+    "name": "Acabado",
+    "options": "Mate, Brillante, Satinado",
+    "required": false
+  }
+},
+{
+  "model": "home.productoption",
+  "pk": 3,
+  "fields": {
+    "product": 5,
+    "name": "Color",
+    "options": "Blanco, Negro, Rojo, Azul",
+    "required": true
+  }
+},
+{
+  "model": "home.productoption",
+  "pk": 4,
+  "fields": {
+    "product": 6,
+    "name": "Color",
+    "options": "Blanco, Terracota, Gris",
+    "required": true
+  }
+},
+{
+  "model": "home.productoption",
+  "pk": 5,
+  "fields": {
+    "product": 7,
+    "name": "Tipo",
+    "options": "Tipo I, Tipo II, Tipo III",
+    "required": true
+  }
+},
+{
+  "model": "home.productoption",
+  "pk": 6,
+  "fields": {
+    "product": 8,
+    "name": "Longitud",
+    "options": "6m, 9m, 12m",
+    "required": true
+  }
+},
+{
+  "model": "home.productoption",
+  "pk": 7,
+  "fields": {
+    "product": 9,
+    "name": "Peso",
+    "options": "16oz, 20oz, 24oz",
+    "required": true
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 1,
+  "fields": {
+    "action_time": "2026-02-19T20:31:02.433Z",
+    "user": [
+      "kishigme"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "3",
+    "object_repr": "proveedor1",
+    "action_flag": 2,
+    "change_message": "[{\"added\": {\"name\": \"user profile\", \"object\": \"proveedor1 (Cliente)\"}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 2,
+  "fields": {
+    "action_time": "2026-02-19T20:31:51.062Z",
+    "user": [
+      "kishigme"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "3",
+    "object_repr": "proveedor1",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"name\": \"user profile\", \"object\": \"proveedor1 (Cliente)\", \"fields\": [\"Material category\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 3,
+  "fields": {
+    "action_time": "2026-02-19T20:32:27.297Z",
+    "user": [
+      "kishigme"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "3",
+    "object_repr": "proveedor1",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"name\": \"user profile\", \"object\": \"proveedor1 (Proveedor)\", \"fields\": [\"Role\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 4,
+  "fields": {
+    "action_time": "2026-02-19T20:33:08.633Z",
+    "user": [
+      "kishigme"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "3",
+    "object_repr": "proveedor1",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"name\": \"user profile\", \"object\": \"proveedor1 (Proveedor)\", \"fields\": [\"Material category\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 5,
+  "fields": {
+    "action_time": "2026-02-20T05:54:34.770Z",
+    "user": [
+      "kishigme"
+    ],
+    "content_type": [
+      "home",
+      "productcategory"
+    ],
+    "object_id": "1",
+    "object_repr": "pintura",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 6,
+  "fields": {
+    "action_time": "2026-02-20T05:54:54.765Z",
+    "user": [
+      "kishigme"
+    ],
+    "content_type": [
+      "home",
+      "productcategory"
+    ],
+    "object_id": "2",
+    "object_repr": "cemento",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 7,
+  "fields": {
+    "action_time": "2026-02-20T05:55:18.284Z",
+    "user": [
+      "kishigme"
+    ],
+    "content_type": [
+      "home",
+      "product"
+    ],
+    "object_id": "1",
+    "object_repr": "cemento - $100",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 8,
+  "fields": {
+    "action_time": "2026-02-20T05:55:39.023Z",
+    "user": [
+      "kishigme"
+    ],
+    "content_type": [
+      "home",
+      "product"
+    ],
+    "object_id": "2",
+    "object_repr": "pintura - $100",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 9,
+  "fields": {
+    "action_time": "2026-02-20T16:29:52.013Z",
+    "user": [
+      "kishigme"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "3",
+    "object_repr": "provedor1",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Username\", \"First name\", \"Last name\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 10,
+  "fields": {
+    "action_time": "2026-02-20T16:30:32.735Z",
+    "user": [
+      "kishigme"
+    ],
+    "content_type": [
+      "home",
+      "product"
+    ],
+    "object_id": "1",
+    "object_repr": "cemento - $100.00",
+    "action_flag": 2,
+    "change_message": "[]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 11,
+  "fields": {
+    "action_time": "2026-02-20T16:34:33.058Z",
+    "user": [
+      "kishigme"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "5",
+    "object_repr": "provedor_pintura",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}, {\"added\": {\"name\": \"user profile\", \"object\": \"provedor_pintura (Proveedor)\"}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 12,
+  "fields": {
+    "action_time": "2026-02-20T16:35:11.375Z",
+    "user": [
+      "kishigme"
+    ],
+    "content_type": [
+      "home",
+      "product"
+    ],
+    "object_id": "3",
+    "object_repr": "pintura blanca - $200",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 13,
+  "fields": {
+    "action_time": "2026-02-20T16:35:25.829Z",
+    "user": [
+      "kishigme"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "3",
+    "object_repr": "provedor_cemento",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Username\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 14,
+  "fields": {
+    "action_time": "2026-02-20T16:35:50.984Z",
+    "user": [
+      "kishigme"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "5",
+    "object_repr": "provedor_pintura",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"First name\", \"Last name\", \"Email address\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 15,
+  "fields": {
+    "action_time": "2026-02-20T17:55:51.244Z",
+    "user": [
+      "kishigme"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "5",
+    "object_repr": "provedor_pintura",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"name\": \"user profile\", \"object\": \"provedor_pintura (Proveedor)\", \"fields\": [\"Company\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 16,
+  "fields": {
+    "action_time": "2026-02-20T17:56:00.359Z",
+    "user": [
+      "kishigme"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "5",
+    "object_repr": "provedor_pintura",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"name\": \"user profile\", \"object\": \"provedor_pintura (Proveedor)\", \"fields\": [\"Material category\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 17,
+  "fields": {
+    "action_time": "2026-02-20T17:56:16.727Z",
+    "user": [
+      "kishigme"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "6",
+    "object_repr": "proveedor1",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"name\": \"user profile\", \"object\": \"proveedor1 (Proveedor)\", \"fields\": [\"Material category\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 18,
+  "fields": {
+    "action_time": "2026-02-20T17:56:26.825Z",
+    "user": [
+      "kishigme"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "7",
+    "object_repr": "proveedor2",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"name\": \"user profile\", \"object\": \"proveedor2 (Proveedor)\", \"fields\": [\"Material category\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 19,
+  "fields": {
+    "action_time": "2026-02-20T17:57:27.294Z",
+    "user": [
+      "kishigme"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "5",
+    "object_repr": "provedor_pintura",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 20,
+  "fields": {
+    "action_time": "2026-02-23T23:08:27.058Z",
+    "user": [
+      "kishigme"
+    ],
+    "content_type": [
+      "home",
+      "product"
+    ],
+    "object_id": "10",
+    "object_repr": "pintura roja - $100",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 21,
+  "fields": {
+    "action_time": "2026-02-23T23:09:23.204Z",
+    "user": [
+      "kishigme"
+    ],
+    "content_type": [
+      "home",
+      "product"
+    ],
+    "object_id": "10",
+    "object_repr": "pintura roja - $100.00",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Supplier\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 22,
+  "fields": {
+    "action_time": "2026-02-23T23:55:56.864Z",
+    "user": [
+      "kishigme"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "8",
+    "object_repr": "provedor_cemento_2",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}, {\"added\": {\"name\": \"user profile\", \"object\": \"provedor_cemento_2 (Proveedor)\"}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 23,
+  "fields": {
+    "action_time": "2026-02-23T23:58:38.275Z",
+    "user": [
+      "kishigme"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "8",
+    "object_repr": "provedor_cemento_2",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"First name\", \"Last name\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 24,
+  "fields": {
+    "action_time": "2026-02-24T00:03:42.444Z",
+    "user": [
+      "kishigme"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "6",
+    "object_repr": "proveedor_pintura1",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Username\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 25,
+  "fields": {
+    "action_time": "2026-02-24T00:03:53.097Z",
+    "user": [
+      "kishigme"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "7",
+    "object_repr": "proveedor_acero1",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Username\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 26,
+  "fields": {
+    "action_time": "2026-02-24T00:04:28.150Z",
+    "user": [
+      "kishigme"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "6",
+    "object_repr": "proveedor_pintura1",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"First name\", \"Last name\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 27,
+  "fields": {
+    "action_time": "2026-02-24T00:04:45.285Z",
+    "user": [
+      "kishigme"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "7",
+    "object_repr": "proveedor_acero1",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"First name\", \"Last name\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 28,
+  "fields": {
+    "action_time": "2026-02-24T19:47:36.305Z",
+    "user": [
+      "kishigme"
+    ],
+    "content_type": [
+      "home",
+      "product"
+    ],
+    "object_id": "11",
+    "object_repr": "cemento hidraulico - $100",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 29,
+  "fields": {
+    "action_time": "2026-02-24T19:48:21.095Z",
+    "user": [
+      "kishigme"
+    ],
+    "content_type": [
+      "home",
+      "product"
+    ],
+    "object_id": "11",
+    "object_repr": "cemento hidraulico - $100.00",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Supplier\"]}}]"
+  }
+}
+]
