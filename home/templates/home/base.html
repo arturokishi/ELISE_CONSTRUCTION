@@ -1,8 +1,12 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>{% block title %}Elice Construcción{% endblock %}</title>
     <style>
         * {
@@ -44,10 +48,23 @@
             color: #fbbf24;
         }
 
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .nav-items {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
         .user-menu {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 20px;
+            margin-left: 20px;
         }
 
         .user-greeting {
@@ -66,26 +83,48 @@
         .btn-login:hover {
             background: #f59e0b;
         }
+
+        .logout-btn {
+            color: #fca5a5 !important;
+            margin-left: auto;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
     <!-- NAVBAR -->
     <nav class="navbar">
-        <h1>Elice Construcción</h1>
-        <div class="user-menu">
+        <div class="nav-left">
+            <h1>Elice Construcción</h1>
+            
+            <!-- Navigation Links -->
+            <div class="nav-items">
+                <a href="{% url 'home:home' %}">Inicio</a>
+                <a href="{% url 'home:productos' %}">Productos</a>
+                <a href="{% url 'home:contacto' %}">Contacto</a>
+            </div>
+        </div>
+
+        <!-- Right Section -->
+        <div class="nav-right">
             {% if user.is_authenticated %}
-                <span class="user-greeting">Hola, {{ user.username }}</span>
-                <a href="{% url 'home:profile' %}">Mi Perfil</a>
-                <a href="{% url 'home:chat' %}">Chat</a>
-                <a href="{% url 'home:logout' %}" style="color: #fca5a5;">Cerrar Sesión</a>
+                <div class="user-menu">
+                    <span class="user-greeting">Hola, {{ user.username }}</span>
+                    <a href="{% url 'home:profile' %}">Mi Perfil</a>
+                    <a href="{% url 'home:chat' %}">Chat</a>
+                </div>
+                <a href="{% url 'home:logout' %}" style="color: #fca5a5; margin-left: 20px;">Cerrar Sesión</a>
             {% else %}
-                <a href="{% url 'home:login' %}" class="btn-login">Iniciar Sesión</a>
-                <a href="{% url 'home:register' %}">Registrarse</a>
+                <div class="user-menu">
+                    <a href="{% url 'home:login' %}" class="btn-login">Iniciar Sesión</a>
+                    <a href="{% url 'home:register' %}">Registrarse</a>
+                </div>
             {% endif %}
-            <a href="{% url 'home:home' %}">Inicio</a>
-            <a href="{% url 'home:productos' %}">Productos</a>
-            <a href="{% url 'home:contacto' %}">Contacto</a>
         </div>
     </nav>
 
