@@ -44,11 +44,15 @@
             gap: 12px;
         }
 
-        .navbar-logo {
-            width: 60px;
-            height: 60px;
-            border-radius: 6px;
-            object-fit: cover;
+        .logo-svg {
+            width: 100px;
+            height: 100px;
+            display: block;
+        }
+
+        .logo-svg svg {
+            width: 100%;
+            height: 100%;
         }
 
         /* ---------- RIGHT SECTION (USER GREETING + HAMBURGER) ---------- */
@@ -341,7 +345,7 @@
                 padding: 16px 20px;
             }
             
-            .navbar-logo {
+            .logo-svg {
                 width: 50px;
                 height: 50px;
             }
@@ -362,8 +366,80 @@
 <!-- NAVBAR -->
 <nav class="navbar">
     <div class="logo-container">
-        <img src="https://github.com/arturokishi/ELISE_CONSTRUCTION/blob/main/PHOTO-2026-01-20-16-43-14.jpg?raw=true" 
-             alt="Elice Logo" class="navbar-logo">
+        <div class="logo-svg">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+                <defs>
+                    <!-- Metallic gradient for the right "A" shape -->
+                    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0" stop-color="#f2f2f2"/>
+                        <stop offset="0.25" stop-color="#cfcfcf"/>
+                        <stop offset="0.55" stop-color="#9e9e9e"/>
+                        <stop offset="0.75" stop-color="#d9d9d9"/>
+                        <stop offset="1" stop-color="#8f8f8f"/>
+                    </linearGradient>
+
+                    <!-- Subtle inner shadow-like stroke color -->
+                    <linearGradient id="ring" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0" stop-color="#bdbdbd"/>
+                        <stop offset="1" stop-color="#8f8f8f"/>
+                    </linearGradient>
+                </defs>
+
+                <!-- Background -->
+                <rect width="1024" height="1024" fill="transparent"/>
+
+                <!-- Double ring -->
+                <circle cx="512" cy="512" r="410" fill="none" stroke="url(#ring)" stroke-width="6"/>
+                <circle cx="512" cy="512" r="398" fill="none" stroke="#b3b3b3" stroke-width="3"/>
+
+                <!-- Mark (centered) -->
+                <!-- Group scale/position tuned for 1024 canvas -->
+                <g transform="translate(512 470)">
+                    <!-- Left blue block (stylized "E") -->
+                    <g transform="translate(-120 -90)">
+                        <!-- Main blue pillar -->
+                        <rect x="0" y="0" width="86" height="180" rx="2" fill="#0b4f83"/>
+                        <!-- Middle arm -->
+                        <rect x="54" y="70" width="56" height="40" rx="2" fill="#0b4f83"/>
+                        <!-- Small notch / detail (white cut) -->
+                        <polygon points="86,90 104,90 95,105" fill="#ffffff"/>
+                    </g>
+
+                    <!-- Right metallic "A" / triangle -->
+                    <g transform="translate(-20 -96)">
+                        <!-- Outer A shape -->
+                        <path d="
+                            M 0 0
+                            L 180 0
+                            L 88 204
+                            L 0 204
+                            L 78 40
+                            L 0 40
+                            Z"
+                            fill="url(#metal)"/>
+                        <!-- Inner cut to form the A counter -->
+                        <path d="
+                            M 62 60
+                            L 130 60
+                            L 92 144
+                            L 62 144
+                            L 80 104
+                            L 62 104
+                            Z"
+                            fill="#ffffff" opacity="0.95"/>
+                    </g>
+                </g>
+
+                <!-- Text -->
+                <text x="512" y="640"
+                      text-anchor="middle"
+                      font-size="64"
+                      font-family="Poppins, Montserrat, Arial, sans-serif"
+                      fill="#666666">
+                    Elice elementos
+                </text>
+            </svg>
+        </div>
         <h1>Elice Construcción</h1>
     </div>
 
