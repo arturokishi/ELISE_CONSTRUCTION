@@ -49,6 +49,32 @@ def serialize_message(msg, current_user):
 
 # ---------------- VIEWS ---------------- #
 
+def get_supplier_greeting(material):
+    greetings = {
+        "pintura": (
+            "Hola 👋 Somos tu proveedor de pintura. **¿Cómo puedo ayudarte hoy?**\n\n"
+            "• Para ver nuestros productos disponibles, haz clic en el icono **📋** en la esquina superior derecha\n"
+            "• Ahí encontrarás: pinturas, barnices y más\n"
+            "• Selecciona el producto, especifica medidas y envíanos tu solicitud\n\n"
+            "¡Estamos listos para cotizarte! 🎨"
+        ),
+        "acero": (
+            "Hola 👋 Somos tu proveedor de acero. **¿Cómo puedo ayudarte hoy?**\n\n"
+            "• Para ver nuestros productos disponibles, haz clic en el icono **📋** en la esquina superior derecha\n"
+            "• Ahí encontrarás: varillas, perfiles y más\n"
+            "• Selecciona el producto, especifica medidas y envíanos tu solicitud\n\n"
+            "¡Estamos listos para cotizarte! 🔩"
+        ),
+        "cemento": (
+            "Hola 👋 Somos tu proveedor de cemento. **¿Cómo puedo ayudarte hoy?**\n\n"
+            "• Para ver nuestros productos disponibles, haz clic en el icono **📋** en la esquina superior derecha\n"
+            "• Ahí encontrarás: cemento, mortero y más\n"
+            "• Selecciona el producto, especifica medidas y envíanos tu solicitud\n\n"
+            "¡Estamos listos para cotizarte! 🏗️"
+        ),
+    }
+    return greetings.get(material, "Hola 👋 ¿En qué te puedo ayudar hoy?")
+
 @login_required
 def chat(request):
     conversations = request.user.conversations.all().order_by("-updated_at")
@@ -152,6 +178,10 @@ def elicebot_reply(message, user=None):
 @login_required
 def send_message(request):
 
+    bot_reply_id = None
+    bot_reply_content = None
+
+
     if request.method != "POST":
         return JsonResponse({"error": "Invalid method"}, status=405)
 
@@ -166,14 +196,12 @@ def send_message(request):
 
     conversation = get_or_create_conversation(request.user, other_user)
 
-    Message.objects.create(
-        conversation=conversation,
-        sender=request.user,
-        content=content,
-        timestamp=timezone.now()
-    )
-
-    bot_reply_content = None
+    msg = Message.objects.create(
+    conversation=conversation,
+    sender=request.user,
+    content=content,
+    timestamp=timezone.now()
+)
 
     if other_user.username == "elicebot":
         print("DEBUG: Message is to the bot")
@@ -315,21 +343,24 @@ def send_message(request):
             print(f"DEBUG: Bot reply: '{reply}'")
 
         try:
-            Message.objects.create(
+            bot_msg = Message.objects.create(
                 conversation=conversation,
                 sender=other_user,
                 content=reply,
                 timestamp=timezone.now()
             )
             print("DEBUG: Bot message sent to conversation")
+            bot_reply_content = reply
+            bot_reply_id = bot_msg.id
         except Exception as e:
             print(f"DEBUG: Error sending bot message: {e}")
 
-        bot_reply_content = reply
+            bot_reply_id = None
 
-    response_data = {"success": True}
+    response_data = {"success": True, "message_id": msg.id}
     if bot_reply_content:
-        response_data["bot_reply"] = bot_reply_content
+            response_data["bot_reply"] = bot_reply_content
+            response_data["bot_reply_id"] = bot_reply_id
 
     return JsonResponse(response_data)
 

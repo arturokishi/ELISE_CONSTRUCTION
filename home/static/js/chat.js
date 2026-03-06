@@ -470,7 +470,7 @@
             if (!messages || messages.length === 0) {
                 messagesContainer.innerHTML = `
                     <div style="padding:40px;text-align:center;color:#9ca3af">
-                        No hay mensajes. Comienza la conversación
+                        No hay mensajes. Comienza la conversación para conectar con proveedores!
                     </div>`;
                 return;
             }
@@ -562,48 +562,56 @@
             // Store the message to check for duplicates
             const sentContent = content;
         
-            // Optimistically add message to UI
-            appendMessage({
-                content: content,
-                is_sent: true,
-                timestamp: formatTime()
-            });
+         const tempId = 'temp-' + Date.now();
+appendMessage({
+    id: tempId,
+    content: content,
+    is_sent: true,
+    timestamp: formatTime()
+});
+
+// Guarda referencia al elemento temporal
+const tempMsg = messagesContainer.querySelector(`[data-message-id="${tempId}"]`);
         
             messageInput.value = '';
         
             try {
                 const res = await fetch('/chat/send/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrftoken
-                    },
-                    body: JSON.stringify({
-                        user_id: currentChatUser.id,
-                        content: content,
-                        conversation_id: currentConversationId
-                    })
-                });
-        
-                if (!res.ok) {
-                    // Try to get error message from response
-                    const errorData = await res.json().catch(() => ({}));
-                    throw new Error(errorData.error || `HTTP error! status: ${res.status}`);
-                }
-                
-                const data = await res.json();
-        
-                // If bot replied, show it after a short delay
-                if (data.bot_reply) {
-                    // Small delay to simulate typing
-                    setTimeout(() => {
-                        appendMessage({
-                            content: data.bot_reply,
-                            is_sent: false,
-                            timestamp: formatTime()
-                        });
-                    }, 500);
-                }
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrftoken
+    },
+    body: JSON.stringify({
+        user_id: currentChatUser.id,
+        content: content,
+        conversation_id: currentConversationId
+    })
+});
+
+if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || `HTTP error! status: ${res.status}`);
+}
+
+const data = await res.json();
+
+// ✅ Reemplaza el tempId con el ID real del servidor
+if (data.message_id && tempMsg) {
+    tempMsg.dataset.messageId = String(data.message_id);
+}
+
+// If bot replied, show it after a short delay
+if (data.bot_reply) {
+    setTimeout(() => {
+        appendMessage({
+            id: data.bot_reply_id,
+            content: data.bot_reply,
+            is_sent: false,
+            timestamp: formatTime()
+        });
+    }, 500);
+}
                 
                 // Also refresh messages from server to ensure sync
                 // Short delay to let server process

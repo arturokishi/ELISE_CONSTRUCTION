@@ -101,6 +101,14 @@ class UserProfile(models.Model):
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.get_or_create(
+            user=instance,
+            defaults={"role": "client"}
+        )
+
 
 
 
@@ -124,41 +132,6 @@ class Message(models.Model):
         return f"{self.sender.username}: {self.content[:50]}..."
 
 
-
-
-
-    
-class QuoteRequest(models.Model):
-
-    STATUS_CHOICES = (
-        ('pending', 'Pending'),
-        ('accepted', 'Accepted'),
-        ('rejected', 'Rejected'),
-    )
-
-    client = models.ForeignKey(
-        User,
-        related_name="client_quotes",
-        on_delete=models.CASCADE
-    )
-
-    supplier = models.ForeignKey(
-        User,
-        related_name="supplier_quotes",
-        on_delete=models.CASCADE
-    )
-
-    status = models.CharField(
-        max_length=20,
-        choices=STATUS_CHOICES,
-        default='pending'
-    )
-
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.client.username} → {self.supplier.username} ({self.status})"
-# Add to the VERY BOTTOM of home/models.py
 
 
 @receiver(pre_delete, sender=User)
