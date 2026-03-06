@@ -7,7 +7,6 @@ from .views.chat_views import (
     get_conversation,
     send_message,
     get_users,
-    chat_with_user,
     get_conversation_by_id,
     get_quote_form
 )
@@ -41,7 +40,6 @@ urlpatterns = [
     path("chat/conversation/<int:user_id>/", get_conversation, name="get_conversation"),
     path("chat/send/", send_message, name="send_message"),
     path("chat/users/", get_users, name="get_users"),
-    path("chat/with/<str:username>/", chat_with_user, name="chat_with_user"),
     path("chat/conversation/by-id/<int:conversation_id>/", get_conversation_by_id, name="get_conversation_by_id"),
     path("chat/quote-form/<int:supplier_id>/", get_quote_form, name="quote_form"),
 ]

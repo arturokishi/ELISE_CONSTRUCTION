@@ -4,10 +4,50 @@ from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.utils import timezone
 from home.models import Conversation, Message, UserProfile, QuoteRequest, Product
-from django.db.models import Q  # or whatever you need from db.models
+from django.db.models import Q
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+from django.conf import settings
+import json
+
+import unicodedata
+
+def remove_accents(text):
+    """Quita tildes de una palabra"""
+    return ''.join(
+        c for c in unicodedata.normalize('NFD', text)
+        if unicodedata.category(c) != 'Mn'
+    )
+
+
+# ---------------- HELPERS ---------------- #
+
+def get_or_create_conversation(user1, user2):
+    conversation = Conversation.objects.filter(
+        participants=user1
+    ).filter(
+        participants=user2
+    ).first()
+
+    if not conversation:
+        conversation = Conversation.objects.create()
+        conversation.participants.add(user1, user2)
+
+    return conversation
+
+
+def serialize_message(msg, current_user):
+    return {
+        "id": msg.id,
+        "sender": msg.sender.username,
+        "content": msg.content,
+        "timestamp": msg.timestamp.strftime("%I:%M %p • %b %d"),
+        "is_sent": msg.sender == current_user
+    }
+
+
+# ---------------- VIEWS ---------------- #
 
 @login_required
 def chat(request):
@@ -25,6 +65,7 @@ def chat(request):
         "selected_conversation": selected_conversation,
     })
 
+
 @login_required
 def get_conversation(request, user_id):
     other_user = get_object_or_404(User, id=user_id)
@@ -35,15 +76,9 @@ def get_conversation(request, user_id):
     print(f"DEBUG: Current user: {request.user.username} (role: {my_profile.role})")
     print(f"DEBUG: Other user: {other_user.username} (role: {other_profile.role})")
 
-    # CLIENT RULES
     if my_profile.role == "client":
-        # Client can always talk to bot
         if other_user.username == "elicebot":
             print("DEBUG: Allowed - chatting with bot")
-            # <-- FIX: This path needs to continue to the conversation logic below.
-            # Do NOT return here. Just let the function proceed to fetch/create the conversation.
-
-        # Client → Supplier allowed ONLY if quote is pending or accepted
         elif other_profile.role == "supplier":
             allowed = QuoteRequest.objects.filter(
                 client=request.user,
@@ -51,57 +86,28 @@ def get_conversation(request, user_id):
                 status__in=["pending", "accepted"]
             ).exists()
             if not allowed:
-                print(f"DEBUG: BLOCKING - no active quote with supplier {other_user.username}")
                 return JsonResponse(
                     {"error": "No tienes una cotización activa con este proveedor."},
                     status=403
                 )
         else:
-            # This blocks client from talking to other clients or unknown roles
-            print(f"DEBUG: BLOCKING - cannot message user with role {other_profile.role}")
             return JsonResponse(
                 {"error": "No puedes enviar mensajes a este usuario."},
                 status=403
             )
 
-    # SUPPLIER RULES (Add similar debug prints and ensure returns are correct)
-    elif my_profile.role == "supplier":
-        # ... your supplier logic ...
-        # Make sure it either returns a 403 for disallowed cases,
-        # or lets the function proceed for allowed cases.
-        pass # Placeholder - replace with your actual logic
+    conversation = get_or_create_conversation(request.user, other_user)
 
-    # --- COMMON LOGIC FOR ALLOWED CASES ---
-    # This part should only be reached if the user is allowed to chat.
-    # For example: bot chats, or client-supplier with active quote, etc.
+    # TRAER SOLO LOS ÚLTIMOS 15 MENSAJES
+    messages = conversation.messages.all().order_by("-timestamp")[:15]  # últimos 15 más recientes
+    messages = list(reversed(messages))  # invertir para mostrar del más antiguo al más reciente
 
-    # GET OR CREATE CONVERSATION
-    conversation = Conversation.objects.filter(
-        participants=request.user
-    ).filter(
-        participants=other_user
-    ).first()
-
-    if not conversation:
-        conversation = Conversation.objects.create()
-        conversation.participants.add(request.user, other_user)
-
-    messages = conversation.messages.all().order_by("timestamp")
-
-    # <-- FIX: This is the critical return that was missing for the bot path
     return JsonResponse({
         "conversation_id": conversation.id,
         "messages": [
-            {
-                "id": msg.id,
-                "sender": msg.sender.username,
-                "content": msg.content,
-                "timestamp": msg.timestamp.strftime("%I:%M %p • %b %d"),
-                "is_sent": msg.sender == request.user
-            }
-            for msg in messages
+            serialize_message(msg, request.user) for msg in messages
         ],
-        "other_user": { # It's helpful to return other user info too
+        "other_user": {
             "id": other_user.id,
             "username": other_user.username,
             "first_name": other_user.first_name,
@@ -109,6 +115,38 @@ def get_conversation(request, user_id):
         }
     })
 
+def elicebot_reply(message, user=None):
+    print(f"DEBUG: elicebot_reply called with: {message}")
+    text = remove_accents(message.lower().strip())  # <- quitar tildes
+
+    # SALUDOS
+    greetings = ["hola", "buenos días", "buenas tardes", "buenas", "hi", "hello"]
+    if any(greet in text for greet in greetings):
+        username = user.username if user else ""
+        return f"¡Hola {username}! 😊 Puedo ayudarte a conectar con proveedores de materiales como acero, pintura o cemento. ¿Qué necesitas hoy?"
+    
+    # COTIZACION
+    if "cotizacion" in text or "quote" in text:
+        return "💡 Para ver proveedores y solicitar cotización, dime el material que necesitas: acero, pintura o cemento."
+
+    # MATERIALES
+    materials = {
+        "acero": "🔩",
+        "steel": "🔩",
+        "pintura": "🎨",
+        "paint": "🎨",
+        "cemento": "🏗️",
+        "cement": "🏗️"
+    }
+
+    for keyword, emoji in materials.items():
+        if keyword in text:
+            print(f"DEBUG: Keyword '{keyword}' detected")
+            return f"✅ Te he conectado con proveedores de {keyword}. {emoji}"
+
+    # FALLO / OTRO MENSAJE
+    print("DEBUG: No keyword detected, using fallback")
+    return "No entendí tu mensaje 😅. Puedes escribirme el nombre del material o decir 'cotización' para ver proveedores disponibles."
 
 
 @login_required
@@ -123,20 +161,11 @@ def send_message(request):
 
     other_user = get_object_or_404(User, id=user_id)
 
-    my_profile = request.user.userprofile
     text = content.lower().strip()
+    print(f"DEBUG: Received message from {request.user.username}: '{text}'")
 
-    conversation = Conversation.objects.filter(
-        participants=request.user
-    ).filter(
-        participants=other_user
-    ).first()
+    conversation = get_or_create_conversation(request.user, other_user)
 
-    if not conversation:
-        conversation = Conversation.objects.create()
-        conversation.participants.add(request.user, other_user)
-
-    # Save user message
     Message.objects.create(
         conversation=conversation,
         sender=request.user,
@@ -144,171 +173,181 @@ def send_message(request):
         timestamp=timezone.now()
     )
 
-    # Initialize bot_reply variable
     bot_reply_content = None
 
-    # BOT LOGIC
     if other_user.username == "elicebot":
+        print("DEBUG: Message is to the bot")
 
-        # STEP 1: Check for quote keywords
         if any(word in text for word in ["quote", "cotización"]):
+            print("DEBUG: Keyword 'quote' detected")
             reply = elicebot_reply(content)
+            print(f"DEBUG: Bot reply: '{reply}'")
 
-        # STEP 2: MATERIAL ROUTING - NOW SHOWS ALL SUPPLIERS
         elif "pintura" in text or "paint" in text:
-            # Get ALL paint suppliers
+            print("DEBUG: Keyword 'pintura' detected")
             suppliers = User.objects.filter(
                 userprofile__role="supplier",
                 userprofile__material_category="paint"
             )
-            
+            print(f"DEBUG: Found {suppliers.count()} paint suppliers")
+
             if suppliers.exists():
-                # Create conversations with ALL suppliers
                 for supplier in suppliers:
-                    quote = QuoteRequest.objects.create(
-                        client=request.user,
-                        supplier=supplier
-                    )
-
-                    supplier_convo = Conversation.objects.create()
-                    supplier_convo.participants.add(request.user, supplier)
-
-                    Message.objects.create(
-                        conversation=supplier_convo,
-                        sender=supplier,
-                        content=get_supplier_greeting('pintura'),
-                        timestamp=timezone.now()
-                    )
-
-                    # Send email notification to supplier
                     try:
-                        send_supplier_notification(
-                            supplier=supplier,
+                        quote, created = QuoteRequest.objects.get_or_create(
                             client=request.user,
-                            material="pintura",
-                            conversation_id=supplier_convo.id,
-                            quote_id=quote.id
+                            supplier=supplier,
+                            defaults={"status": "pending"}
                         )
-                        print(f"✅ Email notification sent to {supplier.email}")
+                        supplier_convo = get_or_create_conversation(request.user, supplier)
+                        Message.objects.create(
+                            conversation=supplier_convo,
+                            sender=supplier,
+                            content=get_supplier_greeting("pintura"),
+                            timestamp=timezone.now()
+                        )
+                        print(f"DEBUG: Sent greeting to paint supplier {supplier.username}")
+                        try:
+                            send_supplier_notification(
+                                supplier=supplier,
+                                client=request.user,
+                                material="pintura",
+                                conversation_id=supplier_convo.id,
+                                quote_id=quote.id
+                            )
+                        except Exception as e:
+                            print(f"Email error {e}")
                     except Exception as e:
-                        print(f"❌ Email notification failed: {e}")
+                        print(f"DEBUG: Error creating paint supplier message: {e}")
 
-                reply = f"✅ Te he conectado con {suppliers.count()} proveedor(es) de pintura. Revisa tu lista de chats para ver todos. 🎨"
+                reply = f"✅ Te he conectado con {suppliers.count()} proveedor(es) de pintura. 🎨"
             else:
-                reply = "Lo siento, no hay proveedores de pintura disponibles en este momento."
+                reply = "No hay proveedores de pintura disponibles."
+            print(f"DEBUG: Bot reply: '{reply}'")
 
         elif "acero" in text or "steel" in text:
-            # Get ALL steel suppliers
+            print("DEBUG: Keyword 'acero' detected")
             suppliers = User.objects.filter(
                 userprofile__role="supplier",
                 userprofile__material_category="steel"
             )
-            
+            print(f"DEBUG: Found {suppliers.count()} steel suppliers")
+
             if suppliers.exists():
                 for supplier in suppliers:
-                    quote = QuoteRequest.objects.create(
-                        client=request.user,
-                        supplier=supplier
-                    )
-
-                    supplier_convo = Conversation.objects.create()
-                    supplier_convo.participants.add(request.user, supplier)
-
-                    Message.objects.create(
-                        conversation=supplier_convo,
-                        sender=supplier,
-                        content=get_supplier_greeting('acero'),
-                        timestamp=timezone.now()
-                    )
-
                     try:
-                        send_supplier_notification(
-                            supplier=supplier,
+                        quote, created = QuoteRequest.objects.get_or_create(
                             client=request.user,
-                            material="acero",
-                            conversation_id=supplier_convo.id,
-                            quote_id=quote.id
+                            supplier=supplier,
+                            defaults={"status": "pending"}
                         )
+                        supplier_convo = get_or_create_conversation(request.user, supplier)
+                        Message.objects.create(
+                            conversation=supplier_convo,
+                            sender=supplier,
+                            content=get_supplier_greeting("acero"),
+                            timestamp=timezone.now()
+                        )
+                        print(f"DEBUG: Sent greeting to steel supplier {supplier.username}")
+                        try:
+                            send_supplier_notification(
+                                supplier=supplier,
+                                client=request.user,
+                                material="acero",
+                                conversation_id=supplier_convo.id,
+                                quote_id=quote.id
+                            )
+                        except Exception as e:
+                            print(f"Email error {e}")
                     except Exception as e:
-                        print(f"❌ Email notification failed: {e}")
+                        print(f"DEBUG: Error creating steel supplier message: {e}")
 
-                reply = f"✅ Te he conectado con {suppliers.count()} proveedor(es) de acero. Revisa tu lista de chats. 🔩"
+                reply = f"✅ Te he conectado con {suppliers.count()} proveedor(es) de acero. 🔩"
             else:
-                reply = "Lo siento, no hay proveedores de acero disponibles en este momento."
+                reply = "No hay proveedores de acero disponibles."
+            print(f"DEBUG: Bot reply: '{reply}'")
 
         elif "cemento" in text:
-            # Get ALL cement suppliers
+            print("DEBUG: Keyword 'cemento' detected")
             suppliers = User.objects.filter(
                 userprofile__role="supplier",
                 userprofile__material_category="cement"
             )
-            
+            print(f"DEBUG: Found {suppliers.count()} cement suppliers")
+
             if suppliers.exists():
                 for supplier in suppliers:
-                    quote = QuoteRequest.objects.create(
-                        client=request.user,
-                        supplier=supplier
-                    )
-
-                    supplier_convo = Conversation.objects.create()
-                    supplier_convo.participants.add(request.user, supplier)
-
-                    Message.objects.create(
-                        conversation=supplier_convo,
-                        sender=supplier,
-                        content=get_supplier_greeting('cemento'),
-                        timestamp=timezone.now()
-                    )
-
                     try:
-                        send_supplier_notification(
-                            supplier=supplier,
+                        quote, created = QuoteRequest.objects.get_or_create(
                             client=request.user,
-                            material="cemento",
-                            conversation_id=supplier_convo.id,
-                            quote_id=quote.id
+                            supplier=supplier,
+                            defaults={"status": "pending"}
                         )
+                        supplier_convo = get_or_create_conversation(request.user, supplier)
+                        Message.objects.create(
+                            conversation=supplier_convo,
+                            sender=supplier,
+                            content=get_supplier_greeting("cemento"),
+                            timestamp=timezone.now()
+                        )
+                        print(f"DEBUG: Sent greeting to cement supplier {supplier.username}")
+                        try:
+                            send_supplier_notification(
+                                supplier=supplier,
+                                client=request.user,
+                                material="cemento",
+                                conversation_id=supplier_convo.id,
+                                quote_id=quote.id
+                            )
+                        except Exception as e:
+                            print(f"Email error {e}")
                     except Exception as e:
-                        print(f"❌ Email notification failed: {e}")
+                        print(f"DEBUG: Error creating cement supplier message: {e}")
 
-                reply = f"✅ Te he conectado con {suppliers.count()} proveedor(es) de cemento. Revisa tu lista de chats. 🏗️"
+                reply = f"✅ Te he conectado con {suppliers.count()} proveedor(es) de cemento. 🏗️"
             else:
-                reply = "Lo siento, no hay proveedores de cemento disponibles en este momento."
+                reply = "No hay proveedores de cemento disponibles."
+            print(f"DEBUG: Bot reply: '{reply}'")
 
         else:
+            print("DEBUG: No material keyword detected, using elicebot_reply")
             reply = elicebot_reply(content)
+            print(f"DEBUG: Bot reply: '{reply}'")
 
-        # Save bot message
-        Message.objects.create(
-            conversation=conversation,
-            sender=other_user,
-            content=reply,
-            timestamp=timezone.now()
-        )
-        
-        # Store the reply to return to frontend
+        try:
+            Message.objects.create(
+                conversation=conversation,
+                sender=other_user,
+                content=reply,
+                timestamp=timezone.now()
+            )
+            print("DEBUG: Bot message sent to conversation")
+        except Exception as e:
+            print(f"DEBUG: Error sending bot message: {e}")
+
         bot_reply_content = reply
 
-    # Return success AND bot reply if any
     response_data = {"success": True}
     if bot_reply_content:
         response_data["bot_reply"] = bot_reply_content
-    
+
     return JsonResponse(response_data)
+
 
 @login_required
 def get_users(request):
-    """Get users for sidebar - clients only see suppliers (plus the bot)"""
+
     current_user = request.user
     current_profile = current_user.userprofile
 
     users = User.objects.exclude(id=current_user.id)
 
     if current_profile.role == 'client':
-        # Get all supplier users
-        supplier_ids = UserProfile.objects.filter(role='supplier').values_list('user_id', flat=True)
 
-        # Get the bot user
+        supplier_ids = UserProfile.objects.filter(
+            role='supplier'
+        ).values_list('user_id', flat=True)
+
         bot_user = User.objects.filter(username='elicebot').first()
 
         user_filter = Q(id__in=supplier_ids)
@@ -321,6 +360,7 @@ def get_users(request):
     users_data = []
 
     for user in users:
+
         profile = UserProfile.objects.filter(user=user).first()
 
         conversation = Conversation.objects.filter(
@@ -330,19 +370,22 @@ def get_users(request):
         ).first()
 
         last_message = None
+
         if conversation:
             last_msg = conversation.messages.last()
             if last_msg:
-                last_message = last_msg.content[:50] + '...' if len(last_msg.content) > 50 else last_msg.content
+                last_message = last_msg.content[:50]
 
-        # Get product categories for suppliers
         categories = []
+
         if profile and profile.role == 'supplier':
-            # Use the top-level Product import
-            categories = list(Product.objects.filter(
-                supplier=user,
-                is_active=True
-            ).values_list('category__name', flat=True).distinct())
+
+            categories = list(
+                Product.objects.filter(
+                    supplier=user,
+                    is_active=True
+                ).values_list('category__name', flat=True).distinct()
+            )
 
         if user.username == 'elicebot' and not profile:
             role = 'bot'
@@ -369,6 +412,7 @@ def get_users(request):
 
     return JsonResponse({'users': users_data})
 
+
 @login_required
 def get_conversation_by_id(request, conversation_id):
     conversation = get_object_or_404(
@@ -379,19 +423,11 @@ def get_conversation_by_id(request, conversation_id):
 
     other_user = conversation.participants.exclude(id=request.user.id).first()
 
-    messages = conversation.messages.all().order_by("timestamp")
+    # TRAER SOLO LOS ÚLTIMOS 15 MENSAJES
+    messages = conversation.messages.all().order_by("-timestamp")[:15]  # últimos 15 más recientes
+    messages = list(reversed(messages))  # invertir para mostrar del más antiguo al más reciente
 
-    messages_data = [
-        {
-            "id": msg.id,
-            "sender": msg.sender.username,
-            "sender_id": msg.sender.id,
-            "content": msg.content,
-            "timestamp": msg.timestamp.strftime("%I:%M %p • %b %d"),
-            "is_sent": msg.sender == request.user,
-        }
-        for msg in messages
-    ]
+    messages_data = [serialize_message(msg, request.user) for msg in messages]
 
     profile = UserProfile.objects.filter(user=other_user).first()
 
@@ -407,151 +443,6 @@ def get_conversation_by_id(request, conversation_id):
         },
         "messages": messages_data,
     })
-
-
-    
-
-
-def elicebot_reply(user_message):
-
-    text = user_message.lower().strip()
-
-    if any(word in text for word in ["hi", "hello", "hola"]):
-        return (
-            "Hola 👋 Soy Elice.\n\n"
-            "Escribe 'quote' o 'cotización' para comenzar una solicitud."
-        )
-
-    if any(word in text for word in ["quote", "cotización"]):
-        return (
-            "Perfecto 👍\n\n"
-            "¿Qué material necesitas?\n"
-            "• Pintura\n"
-            "• Acero\n"
-            "• Cemento"
-        )
-
-    return (
-        "Puedo ayudarte con cotizaciones.\n"
-        "Escribe 'quote' para comenzar."
-    )
-
-
-
-
-def send_supplier_notification(supplier, client, material):
-    """Send email notification to supplier about new quote request"""
-    
-    subject = f"Nueva solicitud de cotización - {material}"
-    
-    html_message = render_to_string('emails/new_quote_notification.html', {
-        'supplier': supplier,
-        'client': client,
-        'material': material,
-        'date': timezone.now().strftime("%d/%m/%Y %H:%M"),
-        'chat_link': f"http://127.0.0.1:8000/chat/?conversation={conversation.id}"
-    })
-    
-    plain_message = strip_tags(html_message)
-    
-    send_mail(
-        subject,
-        plain_message,
-        DEFAULT_FROM_EMAIL,
-        [supplier.email],
-        html_message=html_message,
-        fail_silently=False,
-    )
-
-
-def get_supplier_greeting(material):
-    """Return appropriate greeting based on material type"""
-    greetings = {
-        'pintura': """Hola 👋 Somos tu proveedor de pintura.
-
-**¿Cómo puedo ayudarte hoy?**
-
-• Para ver nuestros productos disponibles, haz clic en el icono **📋** en la esquina superior derecha
-• Ahí encontrarás: colores, acabados y precios
-• Selecciona el producto, especifica cantidad y envíanos tu solicitud
-
-¡Estamos listos para cotizarte! 🎨""",
-        
-        'acero': """Hola 👋 Somos tu proveedor de acero.
-
-**¿Cómo puedo ayudarte hoy?**
-
-• Para ver nuestros productos disponibles, haz clic en el icono **📋** en la esquina superior derecha
-• Ahí encontrarás: varillas, perfiles y más
-• Selecciona el producto, especifica medidas y envíanos tu solicitud
-
-¡Estamos listos para cotizarte! 🔩""",
-        
-        'cemento': """Hola 👋 Somos tu proveedor de cemento.
-
-**¿Cómo puedo ayudarte hoy?**
-
-• Para ver nuestros productos disponibles, haz clic en el icono **📋** en la esquina superior derecha
-• Ahí encontrarás: cemento, blocks, mortero y más
-• Selecciona el producto, especifica cantidad y envíanos tu solicitud
-
-¡Estamos listos para cotizarte! 🏗️"""
-    }
-    
-    return greetings.get(material, "Hola 👋 ¿En qué podemos ayudarte?")
-
-
-@login_required
-def chat_with_user(request, username):
-    """
-    Handles redirect to chat with another user.
-    - Clients cannot chat directly with suppliers; must go through Elice bot first.
-    - Ensures UserProfile exists for both users.
-    """
-    # Get the target user
-    target_user = get_object_or_404(User, username=username)
-
-    # Ensure both users have a profile
-    profile, created = UserProfile.objects.get_or_create(
-        user=request.user,
-        defaults={'role': 'client'}
-    )
-    target_profile, created = UserProfile.objects.get_or_create(
-        user=target_user,
-        defaults={'role': 'client'}
-    )
-
-    # 🚫 Block direct client → supplier chat
-    if profile.role == "client" and target_profile.role == "supplier":
-        messages.error(
-            request,
-            "Debes solicitar una cotización primero a través de Elice."
-        )
-        return redirect('home:chat_with_user', username="elicebot")
-
-    # Get or create conversation
-    conversation = Conversation.objects.filter(
-        participants=request.user
-    ).filter(
-        participants=target_user
-    ).first()
-
-    if not conversation:
-        conversation = Conversation.objects.create()
-        conversation.participants.add(request.user, target_user)
-        conversation.save()
-
-        # Auto-greeting from Elice bot (only for new conversation)
-        if target_user.username == "elicebot":
-            Message.objects.create(
-                conversation=conversation,
-                sender=target_user,
-                content="Hola 👋 Soy Elice, el asistente de Elice Construcción. ¿En qué puedo ayudarte hoy?",
-                timestamp=timezone.now()
-            )
-
-    # Redirect to chat page with conversation
-    return redirect(f"/chat/?conversation={conversation.id}")
 
 
 @login_required
@@ -595,46 +486,10 @@ def get_quote_form(request, supplier_id):
         categories[cat_name].append(product_data)
     
     # Convert to list for template
-    for cat_name, products in categories.items():
+    for cat_name, products_list in categories.items():
         form_data['categories'].append({
             'name': cat_name,
-            'products': products
+            'products': products_list
         })
     
     return JsonResponse(form_data)
-
-def get_supplier_greeting(material):
-    """Return appropriate greeting based on material type"""
-    greetings = {
-        'pintura': """Hola 👋 Somos tu proveedor de pintura.
-
-**¿Cómo puedo ayudarte hoy?**
-
-• Para ver nuestros productos disponibles, haz clic en el icono **📋** en la esquina superior derecha
-• Ahí encontrarás: colores, acabados y precios
-• Selecciona el producto, especifica cantidad y envíanos tu solicitud
-
-¡Estamos listos para cotizarte! 🎨""",
-        
-        'acero': """Hola 👋 Somos tu proveedor de acero.
-
-**¿Cómo puedo ayudarte hoy?**
-
-• Para ver nuestros productos disponibles, haz clic en el icono **📋** en la esquina superior derecha
-• Ahí encontrarás: varillas, perfiles y más
-• Selecciona el producto, especifica medidas y envíanos tu solicitud
-
-¡Estamos listos para cotizarte! 🔩""",
-        
-        'cemento': """Hola 👋 Somos tu proveedor de cemento.
-
-**¿Cómo puedo ayudarte hoy?**
-
-• Para ver nuestros productos disponibles, haz clic en el icono **📋** en la esquina superior derecha
-• Ahí encontrarás: cemento, blocks, mortero y más
-• Selecciona el producto, especifica cantidad y envíanos tu solicitud
-
-¡Estamos listos para cotizarte! 🏗️"""
-    }
-    
-    return greetings.get(material, "Hola 👋 ¿En qué podemos ayudarte?")

@@ -2,6 +2,13 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth import logout
+from ..forms import UserRegisterForm
+from ..forms import UserProfileForm
+from ..models import UserProfile
+from django.shortcuts import get_object_or_404
+
 
 # Auth Views
 def custom_login(request):
