@@ -1,98 +1,13 @@
-from django.shortcuts import render
-from django.core.mail import send_mail
-from django.template.loader import render_to_string
-from django.utils.html import strip_tags
-
-import json
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from .models import Order, OrderItem
-
-from django.shortcuts import redirect, get_object_or_404
-from .models import QuoteRequest
-
-
-
-from .models import Conversation
-
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.utils import timezone
-from .models import Conversation, Message, UserProfile
-
-# home/views.py
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, authenticate, logout
-from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.http import JsonResponse
-from .forms import UserRegisterForm, UserProfileForm
-from .models import UserProfile
-import json
-from home.models import Conversation, Message, UserProfile, ProductCategory, Product, ProductOption, QuoteRequest
-from django.db.models import Q
-
-
-
-def home(request):
-    return render(request, "home/home.html")
-
-def productos(request):
-    return render(request, "home/productos.html")
-
-def industrias(request):
-    return render(request, "home/industrias.html")
-
-def nosotros(request):
-    return render(request, "home/nosotros.html")
-
-def contacto(request):
-    return render(request, "home/contacto.html")
-
-def cemento(request):
-    return render(request, "home/cemento.html")
-
-def pintura(request):
-    return render(request, "home/pintura.html")
-
-def andamios(request):
-    return render(request, "home/andamios.html")
-
-def materiales(request):
-    """Materiales page"""
-    return render(request, "home/materiales.html")
-
-
-
-
-
-@csrf_exempt
-def create_order(request):
-    if request.method == "POST":
-        data = json.loads(request.body)
-
-        order = Order.objects.create(
-            name=data["name"],
-            email=data["email"],
-            phone=data["phone"],
-            total=data["total"]
-        )
-
-        for item in data["items"]:
-            OrderItem.objects.create(
-                order=order,
-                product_name=item["name"],
-                price=item["price"]
-            )
-
-        return JsonResponse({"success": True})
-
-
-
-
-
-
+from home.models import Conversation, Message, UserProfile, QuoteRequest, Product
+from django.db.models import Q  # or whatever you need from db.models
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
 @login_required
 def chat(request):
@@ -109,7 +24,6 @@ def chat(request):
         "conversations": conversations,
         "selected_conversation": selected_conversation,
     })
-
 
 @login_required
 def get_conversation(request, user_id):
@@ -194,8 +108,6 @@ def get_conversation(request, user_id):
             "last_name": other_user.last_name,
         }
     })
-
-
 
 
 
@@ -384,61 +296,54 @@ def send_message(request):
     
     return JsonResponse(response_data)
 
-
-
-
-
-
-
 @login_required
 def get_users(request):
     """Get users for sidebar - clients only see suppliers (plus the bot)"""
     current_user = request.user
     current_profile = current_user.userprofile
-    
+
     users = User.objects.exclude(id=current_user.id)
-    
+
     if current_profile.role == 'client':
         # Get all supplier users
         supplier_ids = UserProfile.objects.filter(role='supplier').values_list('user_id', flat=True)
-        
+
         # Get the bot user
         bot_user = User.objects.filter(username='elicebot').first()
-        
+
         user_filter = Q(id__in=supplier_ids)
-        
+
         if bot_user:
             user_filter = user_filter | Q(id=bot_user.id)
-        
+
         users = users.filter(user_filter)
-    
+
     users_data = []
-    
+
     for user in users:
         profile = UserProfile.objects.filter(user=user).first()
-        
+
         conversation = Conversation.objects.filter(
             participants=current_user
         ).filter(
             participants=user
         ).first()
-        
+
         last_message = None
         if conversation:
             last_msg = conversation.messages.last()
             if last_msg:
                 last_message = last_msg.content[:50] + '...' if len(last_msg.content) > 50 else last_msg.content
-        
+
         # Get product categories for suppliers
         categories = []
         if profile and profile.role == 'supplier':
-            # Get all categories for this supplier's products
-            from .models import Product
+            # Use the top-level Product import
             categories = list(Product.objects.filter(
-                supplier=user, 
+                supplier=user,
                 is_active=True
             ).values_list('category__name', flat=True).distinct())
-        
+
         if user.username == 'elicebot' and not profile:
             role = 'bot'
             company = 'Asistente Elice'
@@ -447,7 +352,7 @@ def get_users(request):
             role = profile.role if profile else 'client'
             company = profile.company if profile else ''
             avatar_color = profile.avatar_color if profile else '#fbbf24'
-        
+
         users_data.append({
             'id': user.id,
             'username': user.username,
@@ -459,170 +364,10 @@ def get_users(request):
             'avatar_color': avatar_color,
             'last_message': last_message,
             'is_bot': user.username == 'elicebot',
-            'categories': categories,  # Now categories are included!
+            'categories': categories,
         })
-    
+
     return JsonResponse({'users': users_data})
-
-
-
-
-# Auth Views
-def custom_login(request):
-    if request.user.is_authenticated:
-        return redirect('home:home')
-    
-    if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
-        if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                login(request, user)
-                messages.success(request, f'¡Bienvenido {username}!')
-                
-                # Redirect to next page or home
-                next_page = request.GET.get('next', 'home:home')
-                return redirect(next_page)
-        else:
-            messages.error(request, 'Usuario o contraseña incorrectos.')
-    else:
-        form = AuthenticationForm()
-    
-    return render(request, 'home/login.html', {'form': form})
-
-def custom_logout(request):
-    logout(request)
-    messages.info(request, 'Has cerrado sesión exitosamente.')
-    return redirect('home:home')
-
-def register(request):
-    if request.user.is_authenticated:
-        return redirect('home:home')
-    
-    if request.method == 'POST':
-        form = UserRegisterForm(request.POST)
-        if form.is_valid():
-            user = form.save()  # Only save User
-            # <-- REMOVE UserProfile.objects.create(...) here
-            
-            # Optionally, log in the user automatically
-            login(request, user)
-            messages.success(request, f'¡Cuenta creada para {user.username}!')
-            return redirect('home:home')
-    else:
-        form = UserRegisterForm()
-    
-    return render(request, 'home/register.html', {'form': form})
-
-
-@login_required
-def profile(request):
-    profile = get_object_or_404(UserProfile, user=request.user)
-    
-    if request.method == 'POST':
-        form = UserProfileForm(request.POST, instance=profile)
-        if form.is_valid():
-            form.save()
-            
-            # Update user info
-            request.user.first_name = form.cleaned_data.get('first_name', '')
-            request.user.last_name = form.cleaned_data.get('last_name', '')
-            request.user.email = form.cleaned_data.get('email', '')
-            request.user.save()
-            
-            messages.success(request, 'Perfil actualizado exitosamente.')
-            return redirect('home:profile')
-    else:
-        form = UserProfileForm(initial={
-            'first_name': request.user.first_name,
-            'last_name': request.user.last_name,
-            'email': request.user.email,
-            'role': profile.role,
-            'company': profile.company,
-            'phone': profile.phone,
-        })
-    
-    return render(request, 'home/profile.html', {'form': form, 'profile': profile})
-
-@login_required
-def password_change(request):
-    if request.method == 'POST':
-        form = PasswordChangeForm(request.user, request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Tu contraseña ha sido actualizada.')
-            return redirect('home:profile')
-    else:
-        form = PasswordChangeForm(request.user)
-    
-    return render(request, 'home/password_change.html', {'form': form})
-
-
-
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.contrib.auth.models import User
-from .models import UserProfile, Conversation
-
-@login_required
-def chat_with_user(request, username):
-    """
-    Handles redirect to chat with another user.
-    - Clients cannot chat directly with suppliers; must go through Elice bot first.
-    - Ensures UserProfile exists for both users.
-    """
-    # Get the target user
-    target_user = get_object_or_404(User, username=username)
-
-    # Ensure both users have a profile
-    profile, created = UserProfile.objects.get_or_create(
-        user=request.user,
-        defaults={'role': 'client'}
-    )
-    target_profile, created = UserProfile.objects.get_or_create(
-        user=target_user,
-        defaults={'role': 'client'}
-    )
-
-    # 🚫 Block direct client → supplier chat
-    if profile.role == "client" and target_profile.role == "supplier":
-        messages.error(
-            request,
-            "Debes solicitar una cotización primero a través de Elice."
-        )
-        return redirect('home:chat_with_user', username="elicebot")
-
-    # Get or create conversation
-    conversation = Conversation.objects.filter(
-        participants=request.user
-    ).filter(
-        participants=target_user
-    ).first()
-
-    if not conversation:
-        conversation = Conversation.objects.create()
-        conversation.participants.add(request.user, target_user)
-        conversation.save()
-
-        # Auto-greeting from Elice bot (only for new conversation)
-        if target_user.username == "elicebot":
-            Message.objects.create(
-                conversation=conversation,
-                sender=target_user,
-                content="Hola 👋 Soy Elice, el asistente de Elice Construcción. ¿En qué puedo ayudarte hoy?",
-                timestamp=timezone.now()
-            )
-
-    # Redirect to chat page with conversation
-    return redirect(f"/chat/?conversation={conversation.id}")
-
-
-
-
-
 
 @login_required
 def get_conversation_by_id(request, conversation_id):
@@ -717,6 +462,96 @@ def send_supplier_notification(supplier, client, material):
         html_message=html_message,
         fail_silently=False,
     )
+
+
+def get_supplier_greeting(material):
+    """Return appropriate greeting based on material type"""
+    greetings = {
+        'pintura': """Hola 👋 Somos tu proveedor de pintura.
+
+**¿Cómo puedo ayudarte hoy?**
+
+• Para ver nuestros productos disponibles, haz clic en el icono **📋** en la esquina superior derecha
+• Ahí encontrarás: colores, acabados y precios
+• Selecciona el producto, especifica cantidad y envíanos tu solicitud
+
+¡Estamos listos para cotizarte! 🎨""",
+        
+        'acero': """Hola 👋 Somos tu proveedor de acero.
+
+**¿Cómo puedo ayudarte hoy?**
+
+• Para ver nuestros productos disponibles, haz clic en el icono **📋** en la esquina superior derecha
+• Ahí encontrarás: varillas, perfiles y más
+• Selecciona el producto, especifica medidas y envíanos tu solicitud
+
+¡Estamos listos para cotizarte! 🔩""",
+        
+        'cemento': """Hola 👋 Somos tu proveedor de cemento.
+
+**¿Cómo puedo ayudarte hoy?**
+
+• Para ver nuestros productos disponibles, haz clic en el icono **📋** en la esquina superior derecha
+• Ahí encontrarás: cemento, blocks, mortero y más
+• Selecciona el producto, especifica cantidad y envíanos tu solicitud
+
+¡Estamos listos para cotizarte! 🏗️"""
+    }
+    
+    return greetings.get(material, "Hola 👋 ¿En qué podemos ayudarte?")
+
+
+@login_required
+def chat_with_user(request, username):
+    """
+    Handles redirect to chat with another user.
+    - Clients cannot chat directly with suppliers; must go through Elice bot first.
+    - Ensures UserProfile exists for both users.
+    """
+    # Get the target user
+    target_user = get_object_or_404(User, username=username)
+
+    # Ensure both users have a profile
+    profile, created = UserProfile.objects.get_or_create(
+        user=request.user,
+        defaults={'role': 'client'}
+    )
+    target_profile, created = UserProfile.objects.get_or_create(
+        user=target_user,
+        defaults={'role': 'client'}
+    )
+
+    # 🚫 Block direct client → supplier chat
+    if profile.role == "client" and target_profile.role == "supplier":
+        messages.error(
+            request,
+            "Debes solicitar una cotización primero a través de Elice."
+        )
+        return redirect('home:chat_with_user', username="elicebot")
+
+    # Get or create conversation
+    conversation = Conversation.objects.filter(
+        participants=request.user
+    ).filter(
+        participants=target_user
+    ).first()
+
+    if not conversation:
+        conversation = Conversation.objects.create()
+        conversation.participants.add(request.user, target_user)
+        conversation.save()
+
+        # Auto-greeting from Elice bot (only for new conversation)
+        if target_user.username == "elicebot":
+            Message.objects.create(
+                conversation=conversation,
+                sender=target_user,
+                content="Hola 👋 Soy Elice, el asistente de Elice Construcción. ¿En qué puedo ayudarte hoy?",
+                timestamp=timezone.now()
+            )
+
+    # Redirect to chat page with conversation
+    return redirect(f"/chat/?conversation={conversation.id}")
 
 
 @login_required

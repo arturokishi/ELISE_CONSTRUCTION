@@ -1,51 +1,47 @@
 # home/urls.py
-from django.urls import path, include
-from django.contrib.auth import views as auth_views
-from . import views
-
-# home/urls.py
 from django.urls import path
-from . import views
-
-# Add this line:
-app_name = 'home'  # ← This creates the 'home' namespace
+from .views.pages import home, productos, cemento, industrias, nosotros, contacto, pintura, andamios, materiales
+from .views.auth_views import custom_login, custom_logout, register, profile, password_change
+from .views.chat_views import (
+    chat,
+    get_conversation,
+    send_message,
+    get_users,
+    chat_with_user,
+    get_conversation_by_id,
+    get_quote_form
+)
+from .views.order_views import create_order
+app_name = 'home'
 
 urlpatterns = [
-    path("", views.home, name="home"),
-    path("productos/", views.productos, name="productos"),
-    path("productos/cemento/", views.cemento, name="cemento"),
-    path("industrias/", views.industrias, name="industrias"),
-    path("nosotros/", views.nosotros, name="nosotros"),
-    path("contacto/", views.contacto, name="contacto"),
-    path("api/create-order/", views.create_order, name="create_order"),
-    path("productos/pintura/", views.pintura, name="pintura"),
-    path("productos/andamios/", views.andamios, name="andamios"),
-    path('materiales/', views.materiales, name="materiales"),
-    
-    # Auth URLs
-    path("login/", views.custom_login, name="login"),
-    path("logout/", views.custom_logout, name="logout"),
-    path("register/", views.register, name="register"),
-    path("profile/", views.profile, name="profile"),
-    path("password-change/", views.password_change, name="password_change"),
-    
-    # Chat URLs
-    path("chat/", views.chat, name="chat"),
-    path("chat/conversation/<int:user_id>/", views.get_conversation, name="get_conversation"),
-    path("chat/send/", views.send_message, name="send_message"),
-    path("chat/users/", views.get_users, name="get_users"),
-    path("chat/with/<str:username>/", views.chat_with_user, name="chat_with_user"),
-    path(
-    "chat/conversation/by-id/<int:conversation_id>/",
-    views.get_conversation_by_id,
-    name="get_conversation_by_id",
-    ),
-    path('chat/quote-form/<int:supplier_id>/', views.get_quote_form, name='quote_form'),
+    # Main pages
+    path("", home, name="home"),
+    path("productos/", productos, name="productos"),
+    path("productos/cemento/", cemento, name="cemento"),
+    path("industrias/", industrias, name="industrias"),
+    path("nosotros/", nosotros, name="nosotros"),
+    path("contacto/", contacto, name="contacto"),
+    path("productos/pintura/", pintura, name="pintura"),
+    path("productos/andamios/", andamios, name="andamios"),
+    path("materiales/", materiales, name="materiales"),
 
+    # Orders / API
+    path("api/create-order/", create_order, name="create_order"),
 
+    # Auth
+    path("login/", custom_login, name="login"),
+    path("logout/", custom_logout, name="logout"),
+    path("register/", register, name="register"),
+    path("profile/", profile, name="profile"),
+    path("password-change/", password_change, name="password_change"),
+
+    # Chat
+    path("chat/", chat, name="chat"),
+    path("chat/conversation/<int:user_id>/", get_conversation, name="get_conversation"),
+    path("chat/send/", send_message, name="send_message"),
+    path("chat/users/", get_users, name="get_users"),
+    path("chat/with/<str:username>/", chat_with_user, name="chat_with_user"),
+    path("chat/conversation/by-id/<int:conversation_id>/", get_conversation_by_id, name="get_conversation_by_id"),
+    path("chat/quote-form/<int:supplier_id>/", get_quote_form, name="quote_form"),
 ]
-
-
-
-
-
