@@ -138,6 +138,8 @@ def get_conversation(request, user_id):
             "username": other_user.username,
             "first_name": other_user.first_name,
             "last_name": other_user.last_name,
+            "role": other_profile.role if other_profile else "client",
+            "company": other_profile.company if other_profile else "",
         }
     })
 

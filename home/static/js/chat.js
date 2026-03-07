@@ -8,6 +8,7 @@
         let currentConversationId = null;
         let csrftoken = null;
         let messageRefreshInterval = null;
+        let conversationBlocked = false;
         
         let usersList,
             messagesContainer,
@@ -334,6 +335,12 @@
         ================================ */
         async function selectUser(userId) {
             if (!userId) return;
+
+            // Limpiar estado anterior
+            currentChatUser = null;
+            currentConversationId = null;
+            messagesContainer.innerHTML = '';
+            setConversationState(true);
             
             // Clear any existing refresh interval
             if (messageRefreshInterval) {
@@ -357,8 +364,15 @@
                         if (messageInputContainer) {
                             messageInputContainer.style.display = 'none';
                         }
+
+                        currentChatUser = null;
+                        currentConversationId = null;
+                        setConversationState(true);
+
                         return;
                     }
+
+
                     throw new Error(`HTTP error! status: ${res.status}`);
                 }
                 
@@ -380,14 +394,21 @@
                 }
         
                 // Enable quote, call, video buttons
+                setConversationState(false);
+
+                console.log('DEBUG selectUser success:');
+                console.log('  other_user:', data.other_user);
+                console.log('  role:', data.other_user.role);
+                console.log('  conversationBlocked:', conversationBlocked);
+
                 const quoteBtn = document.getElementById('quoteBtn');
-                const callBtn = document.getElementById('callBtn');
-                const videoBtn = document.getElementById('videoBtn');
-                
-                if (quoteBtn) quoteBtn.disabled = false;
-                if (callBtn) callBtn.disabled = false;
-                if (videoBtn) videoBtn.disabled = false;
-                
+                if (quoteBtn) {
+                    const isSupplier = data.other_user.role === 'supplier';
+                    console.log('  isSupplier:', isSupplier);
+                    console.log('  quoteBtn.disabled will be:', !isSupplier);
+                    quoteBtn.disabled = !isSupplier;
+                }
+                                
                 // Start periodic refresh for new messages (every 5 seconds)
                 startMessageRefresh();
         
@@ -765,10 +786,35 @@ if (data.bot_reply) {
             });
         });
 
+        function setConversationState(blocked) {
+            conversationBlocked = blocked;
+            const quoteBtn = document.getElementById('quoteBtn');
+            const callBtn = document.getElementById('callBtn');
+            const videoBtn = document.getElementById('videoBtn');
+            const sendBtn = document.getElementById('sendBtn');
+            const messageInput = document.getElementById('messageInput');
+
+            if (blocked) {
+                if (quoteBtn) quoteBtn.disabled = true;
+                if (callBtn) callBtn.disabled = true;
+                if (videoBtn) videoBtn.disabled = true;
+                if (sendBtn) sendBtn.disabled = true;
+                if (messageInput) messageInput.disabled = true;
+                if (messageInputContainer) messageInputContainer.style.display = 'none';
+            } else {
+                if (quoteBtn) quoteBtn.disabled = false;
+                if (callBtn) callBtn.disabled = false;
+                if (videoBtn) videoBtn.disabled = false;
+                if (sendBtn) sendBtn.disabled = false;
+                if (messageInput) messageInput.disabled = false;
+                if (messageInputContainer) messageInputContainer.style.display = 'flex';
+            }
+        }
+
         // Open quote modal
         function openQuoteModal() {
-            if (!currentChatUser) {
-                alert('Selecciona un usuario para enviar una cotización');
+            if (conversationBlocked || !currentChatUser || !currentConversationId) {
+                alert('❌ No puedes cotizar en esta conversación.\nHabla con el chatbot para conectarte con este proveedor.');
                 return;
             }
             loadQuoteForm();
