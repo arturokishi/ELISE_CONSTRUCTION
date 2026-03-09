@@ -3,18 +3,17 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.utils import timezone
-from home.models import Conversation, Message, UserProfile, QuoteRequest, Product
+from home.models import Conversation, Message, UserProfile, QuoteRequest, Product, SupplierCategory
 from django.db.models import Q
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
 import json
-
 import unicodedata
 
+
 def remove_accents(text):
-    """Quita tildes de una palabra"""
     return ''.join(
         c for c in unicodedata.normalize('NFD', text)
         if unicodedata.category(c) != 'Mn'
@@ -47,33 +46,115 @@ def serialize_message(msg, current_user):
     }
 
 
-# ---------------- VIEWS ---------------- #
+# ---------------- MATERIAL CONFIG ---------------- #
+
+MATERIAL_CONFIG = {
+    "pintura":   {"slug": "paint",    "emoji": "🎨", "keywords": ["pintura", "paint"],            "productos": "pinturas, barnices y más"},
+    "acero":     {"slug": "steel",    "emoji": "🔩", "keywords": ["acero", "steel"],              "productos": "varillas, perfiles y más"},
+    "cemento":   {"slug": "cement",   "emoji": "🏗️", "keywords": ["cemento", "cement"],           "productos": "cemento, mortero y más"},
+    "aluminio":  {"slug": "aluminum", "emoji": "🪟", "keywords": ["aluminio", "aluminum"],        "productos": "perfiles, láminas y más"},
+    "vidrio":    {"slug": "glass",    "emoji": "🪞", "keywords": ["vidrio", "glass", "cristal"],  "productos": "vidrio, cristal y más"},
+}
+
 
 def get_supplier_greeting(material):
-    greetings = {
-        "pintura": (
-            "Hola 👋 Somos tu proveedor de pintura. **¿Cómo puedo ayudarte hoy?**\n\n"
-            "• Para ver nuestros productos disponibles, haz clic en el icono **📋** en la esquina superior derecha\n"
-            "• Ahí encontrarás: pinturas, barnices y más\n"
-            "• Selecciona el producto, especifica medidas y envíanos tu solicitud\n\n"
-            "¡Estamos listos para cotizarte! 🎨"
-        ),
-        "acero": (
-            "Hola 👋 Somos tu proveedor de acero. **¿Cómo puedo ayudarte hoy?**\n\n"
-            "• Para ver nuestros productos disponibles, haz clic en el icono **📋** en la esquina superior derecha\n"
-            "• Ahí encontrarás: varillas, perfiles y más\n"
-            "• Selecciona el producto, especifica medidas y envíanos tu solicitud\n\n"
-            "¡Estamos listos para cotizarte! 🔩"
-        ),
-        "cemento": (
-            "Hola 👋 Somos tu proveedor de cemento. **¿Cómo puedo ayudarte hoy?**\n\n"
-            "• Para ver nuestros productos disponibles, haz clic en el icono **📋** en la esquina superior derecha\n"
-            "• Ahí encontrarás: cemento, mortero y más\n"
-            "• Selecciona el producto, especifica medidas y envíanos tu solicitud\n\n"
-            "¡Estamos listos para cotizarte! 🏗️"
-        ),
-    }
-    return greetings.get(material, "Hola 👋 ¿En qué te puedo ayudar hoy?")
+    config = MATERIAL_CONFIG.get(material)
+    if not config:
+        return "Hola 👋 ¿En qué te puedo ayudar hoy?"
+    return (
+        f"Hola 👋 Somos tu proveedor de {material}. **¿Cómo puedo ayudarte hoy?**\n\n"
+        f"• Para ver nuestros productos disponibles, haz clic en el icono **📋** en la esquina superior derecha\n"
+        f"• Ahí encontrarás: {config['productos']}\n"
+        f"• Selecciona el producto, especifica medidas y envíanos tu solicitud\n\n"
+        f"¡Estamos listos para cotizarte! {config['emoji']}"
+    )
+
+
+def detect_material(text):
+    """Returns material name (e.g. 'acero') if a keyword is found in text, else None."""
+    clean = remove_accents(text.lower().strip())
+    for material, config in MATERIAL_CONFIG.items():
+        if any(kw in clean for kw in config["keywords"]):
+            return material
+    return None
+
+
+def connect_client_to_suppliers(client, material):
+    """
+    Finds all suppliers for a given material slug via ManyToMany,
+    creates QuoteRequests and sends greeting messages.
+    Returns (suppliers_count, reply_message).
+    """
+    config = MATERIAL_CONFIG[material]
+    slug = config["slug"]
+    emoji = config["emoji"]
+
+    suppliers = User.objects.filter(
+        userprofile__role="supplier",
+        userprofile__material_categories__slug=slug
+    ).distinct()
+
+    print(f"DEBUG: Found {suppliers.count()} {material} suppliers")
+
+    if not suppliers.exists():
+        return 0, f"No hay proveedores de {material} disponibles por el momento."
+
+    for supplier in suppliers:
+        try:
+            quote, created = QuoteRequest.objects.get_or_create(
+                client=client,
+                supplier=supplier,
+                defaults={"status": "pending"}
+            )
+            supplier_convo = get_or_create_conversation(client, supplier)
+            Message.objects.create(
+                conversation=supplier_convo,
+                sender=supplier,
+                content=get_supplier_greeting(material),
+                timestamp=timezone.now()
+            )
+            print(f"DEBUG: Connected {client.username} with {supplier.username} ({material})")
+        except Exception as e:
+            print(f"DEBUG: Error connecting to supplier {supplier.username}: {e}")
+
+    count = suppliers.count()
+    return count, f"✅ Te he conectado con {count} proveedor(es) de {material}. {emoji}"
+
+
+# ---------------- VIEWS ---------------- #
+
+def elicebot_reply(message, user=None):
+    print(f"DEBUG: elicebot_reply called with: {message}")
+    text = remove_accents(message.lower().strip())
+
+    # SALUDOS
+    greetings = ["hola", "buenos dias", "buenas tardes", "buenas", "hi", "hello"]
+    if any(greet in text for greet in greetings):
+        username = user.username if user else ""
+        return (
+            f"¡Hola {username}! 😊 Puedo ayudarte a conectar con proveedores de materiales.\n\n"
+            f"¿Qué material necesitas?\n"
+            f"• Acero 🔩\n"
+            f"• Pintura 🎨\n"
+            f"• Cemento 🏗️\n"
+            f"• Aluminio 🪟\n"
+            f"• Vidrio 🪞"
+        )
+
+    # COTIZACION
+    if "cotizacion" in text or "quote" in text:
+        return (
+            "💡 Para solicitar cotización, dime el material que necesitas:\n"
+            "acero, pintura, cemento, aluminio o vidrio."
+        )
+
+    # FALLBACK
+    print("DEBUG: No keyword detected, using fallback")
+    return (
+        "No entendí tu mensaje 😅. Puedes escribirme el nombre del material:\n"
+        "acero, pintura, cemento, aluminio o vidrio."
+    )
+
 
 @login_required
 def chat(request):
@@ -124,15 +205,12 @@ def get_conversation(request, user_id):
 
     conversation = get_or_create_conversation(request.user, other_user)
 
-    # TRAER SOLO LOS ÚLTIMOS 15 MENSAJES
-    messages = conversation.messages.all().order_by("-timestamp")[:15]  # últimos 15 más recientes
-    messages = list(reversed(messages))  # invertir para mostrar del más antiguo al más reciente
+    messages = conversation.messages.all().order_by("-timestamp")[:15]
+    messages = list(reversed(messages))
 
     return JsonResponse({
         "conversation_id": conversation.id,
-        "messages": [
-            serialize_message(msg, request.user) for msg in messages
-        ],
+        "messages": [serialize_message(msg, request.user) for msg in messages],
         "other_user": {
             "id": other_user.id,
             "username": other_user.username,
@@ -143,46 +221,11 @@ def get_conversation(request, user_id):
         }
     })
 
-def elicebot_reply(message, user=None):
-    print(f"DEBUG: elicebot_reply called with: {message}")
-    text = remove_accents(message.lower().strip())  # <- quitar tildes
-
-    # SALUDOS
-    greetings = ["hola", "buenos días", "buenas tardes", "buenas", "hi", "hello"]
-    if any(greet in text for greet in greetings):
-        username = user.username if user else ""
-        return f"¡Hola {username}! 😊 Puedo ayudarte a conectar con proveedores de materiales como acero, pintura o cemento. ¿Qué necesitas hoy?"
-    
-    # COTIZACION
-    if "cotizacion" in text or "quote" in text:
-        return "💡 Para ver proveedores y solicitar cotización, dime el material que necesitas: acero, pintura o cemento."
-
-    # MATERIALES
-    materials = {
-        "acero": "🔩",
-        "steel": "🔩",
-        "pintura": "🎨",
-        "paint": "🎨",
-        "cemento": "🏗️",
-        "cement": "🏗️"
-    }
-
-    for keyword, emoji in materials.items():
-        if keyword in text:
-            print(f"DEBUG: Keyword '{keyword}' detected")
-            return f"✅ Te he conectado con proveedores de {keyword}. {emoji}"
-
-    # FALLO / OTRO MENSAJE
-    print("DEBUG: No keyword detected, using fallback")
-    return "No entendí tu mensaje 😅. Puedes escribirme el nombre del material o decir 'cotización' para ver proveedores disponibles."
-
 
 @login_required
 def send_message(request):
-
     bot_reply_id = None
     bot_reply_content = None
-
 
     if request.method != "POST":
         return JsonResponse({"error": "Invalid method"}, status=405)
@@ -192,157 +235,31 @@ def send_message(request):
     content = data.get("content")
 
     other_user = get_object_or_404(User, id=user_id)
-
     text = content.lower().strip()
     print(f"DEBUG: Received message from {request.user.username}: '{text}'")
 
     conversation = get_or_create_conversation(request.user, other_user)
 
     msg = Message.objects.create(
-    conversation=conversation,
-    sender=request.user,
-    content=content,
-    timestamp=timezone.now()
-)
+        conversation=conversation,
+        sender=request.user,
+        content=content,
+        timestamp=timezone.now()
+    )
 
     if other_user.username == "elicebot":
         print("DEBUG: Message is to the bot")
 
-        if any(word in text for word in ["quote", "cotización"]):
-            print("DEBUG: Keyword 'quote' detected")
-            reply = elicebot_reply(content)
-            print(f"DEBUG: Bot reply: '{reply}'")
+        material = detect_material(text)
 
-        elif "pintura" in text or "paint" in text:
-            print("DEBUG: Keyword 'pintura' detected")
-            suppliers = User.objects.filter(
-                userprofile__role="supplier",
-                userprofile__material_category="paint"
-            )
-            print(f"DEBUG: Found {suppliers.count()} paint suppliers")
-
-            if suppliers.exists():
-                for supplier in suppliers:
-                    try:
-                        quote, created = QuoteRequest.objects.get_or_create(
-                            client=request.user,
-                            supplier=supplier,
-                            defaults={"status": "pending"}
-                        )
-                        supplier_convo = get_or_create_conversation(request.user, supplier)
-                        Message.objects.create(
-                            conversation=supplier_convo,
-                            sender=supplier,
-                            content=get_supplier_greeting("pintura"),
-                            timestamp=timezone.now()
-                        )
-                        print(f"DEBUG: Sent greeting to paint supplier {supplier.username}")
-                        try:
-                            send_supplier_notification(
-                                supplier=supplier,
-                                client=request.user,
-                                material="pintura",
-                                conversation_id=supplier_convo.id,
-                                quote_id=quote.id
-                            )
-                        except Exception as e:
-                            print(f"Email error {e}")
-                    except Exception as e:
-                        print(f"DEBUG: Error creating paint supplier message: {e}")
-
-                reply = f"✅ Te he conectado con {suppliers.count()} proveedor(es) de pintura. 🎨"
-            else:
-                reply = "No hay proveedores de pintura disponibles."
-            print(f"DEBUG: Bot reply: '{reply}'")
-
-        elif "acero" in text or "steel" in text:
-            print("DEBUG: Keyword 'acero' detected")
-            suppliers = User.objects.filter(
-                userprofile__role="supplier",
-                userprofile__material_category="steel"
-            )
-            print(f"DEBUG: Found {suppliers.count()} steel suppliers")
-
-            if suppliers.exists():
-                for supplier in suppliers:
-                    try:
-                        quote, created = QuoteRequest.objects.get_or_create(
-                            client=request.user,
-                            supplier=supplier,
-                            defaults={"status": "pending"}
-                        )
-                        supplier_convo = get_or_create_conversation(request.user, supplier)
-                        Message.objects.create(
-                            conversation=supplier_convo,
-                            sender=supplier,
-                            content=get_supplier_greeting("acero"),
-                            timestamp=timezone.now()
-                        )
-                        print(f"DEBUG: Sent greeting to steel supplier {supplier.username}")
-                        try:
-                            send_supplier_notification(
-                                supplier=supplier,
-                                client=request.user,
-                                material="acero",
-                                conversation_id=supplier_convo.id,
-                                quote_id=quote.id
-                            )
-                        except Exception as e:
-                            print(f"Email error {e}")
-                    except Exception as e:
-                        print(f"DEBUG: Error creating steel supplier message: {e}")
-
-                reply = f"✅ Te he conectado con {suppliers.count()} proveedor(es) de acero. 🔩"
-            else:
-                reply = "No hay proveedores de acero disponibles."
-            print(f"DEBUG: Bot reply: '{reply}'")
-
-        elif "cemento" in text:
-            print("DEBUG: Keyword 'cemento' detected")
-            suppliers = User.objects.filter(
-                userprofile__role="supplier",
-                userprofile__material_category="cement"
-            )
-            print(f"DEBUG: Found {suppliers.count()} cement suppliers")
-
-            if suppliers.exists():
-                for supplier in suppliers:
-                    try:
-                        quote, created = QuoteRequest.objects.get_or_create(
-                            client=request.user,
-                            supplier=supplier,
-                            defaults={"status": "pending"}
-                        )
-                        supplier_convo = get_or_create_conversation(request.user, supplier)
-                        Message.objects.create(
-                            conversation=supplier_convo,
-                            sender=supplier,
-                            content=get_supplier_greeting("cemento"),
-                            timestamp=timezone.now()
-                        )
-                        print(f"DEBUG: Sent greeting to cement supplier {supplier.username}")
-                        try:
-                            send_supplier_notification(
-                                supplier=supplier,
-                                client=request.user,
-                                material="cemento",
-                                conversation_id=supplier_convo.id,
-                                quote_id=quote.id
-                            )
-                        except Exception as e:
-                            print(f"Email error {e}")
-                    except Exception as e:
-                        print(f"DEBUG: Error creating cement supplier message: {e}")
-
-                reply = f"✅ Te he conectado con {suppliers.count()} proveedor(es) de cemento. 🏗️"
-            else:
-                reply = "No hay proveedores de cemento disponibles."
-            print(f"DEBUG: Bot reply: '{reply}'")
-
+        if material:
+            print(f"DEBUG: Material detected: {material}")
+            count, reply = connect_client_to_suppliers(request.user, material)
         else:
-            print("DEBUG: No material keyword detected, using elicebot_reply")
-            reply = elicebot_reply(content)
-            print(f"DEBUG: Bot reply: '{reply}'")
+            print("DEBUG: No material detected, using elicebot_reply")
+            reply = elicebot_reply(content, user=request.user)
+
+        print(f"DEBUG: Bot reply: '{reply}'")
 
         try:
             bot_msg = Message.objects.create(
@@ -351,38 +268,33 @@ def send_message(request):
                 content=reply,
                 timestamp=timezone.now()
             )
-            print("DEBUG: Bot message sent to conversation")
+            print("DEBUG: Bot message saved")
             bot_reply_content = reply
             bot_reply_id = bot_msg.id
         except Exception as e:
-            print(f"DEBUG: Error sending bot message: {e}")
-
-            bot_reply_id = None
+            print(f"DEBUG: Error saving bot message: {e}")
 
     response_data = {"success": True, "message_id": msg.id}
     if bot_reply_content:
-            response_data["bot_reply"] = bot_reply_content
-            response_data["bot_reply_id"] = bot_reply_id
+        response_data["bot_reply"] = bot_reply_content
+        response_data["bot_reply_id"] = bot_reply_id
 
     return JsonResponse(response_data)
 
 
 @login_required
 def get_users(request):
-
     current_user = request.user
     current_profile = current_user.userprofile
 
     users = User.objects.exclude(id=current_user.id)
 
     if current_profile.role == 'client':
-
         supplier_ids = UserProfile.objects.filter(
             role='supplier'
         ).values_list('user_id', flat=True)
 
         bot_user = User.objects.filter(username='elicebot').first()
-
         user_filter = Q(id__in=supplier_ids)
 
         if bot_user:
@@ -393,7 +305,6 @@ def get_users(request):
     users_data = []
 
     for user in users:
-
         profile = UserProfile.objects.filter(user=user).first()
 
         conversation = Conversation.objects.filter(
@@ -403,21 +314,16 @@ def get_users(request):
         ).first()
 
         last_message = None
-
         if conversation:
             last_msg = conversation.messages.last()
             if last_msg:
                 last_message = last_msg.content[:50]
 
         categories = []
-
         if profile and profile.role == 'supplier':
-
+            # Use ManyToMany SupplierCategory
             categories = list(
-                Product.objects.filter(
-                    supplier=user,
-                    is_active=True
-                ).values_list('category__name', flat=True).distinct()
+                profile.material_categories.values_list('name', flat=True)
             )
 
         if user.username == 'elicebot' and not profile:
@@ -456,10 +362,8 @@ def get_conversation_by_id(request, conversation_id):
 
     other_user = conversation.participants.exclude(id=request.user.id).first()
 
-    # TRAER SOLO LOS ÚLTIMOS 15 MENSAJES
-    messages = conversation.messages.all().order_by("-timestamp")[:15]  # últimos 15 más recientes
-    messages = list(reversed(messages))  # invertir para mostrar del más antiguo al más reciente
-
+    messages = conversation.messages.all().order_by("-timestamp")[:15]
+    messages = list(reversed(messages))
     messages_data = [serialize_message(msg, request.user) for msg in messages]
 
     profile = UserProfile.objects.filter(user=other_user).first()
@@ -480,10 +384,9 @@ def get_conversation_by_id(request, conversation_id):
 
 @login_required
 def get_quote_form(request, supplier_id):
-    """Return the quote form structure for a specific supplier"""
     supplier = get_object_or_404(User, id=supplier_id)
     products = Product.objects.filter(supplier=supplier, is_active=True).select_related('category')
-    
+
     form_data = {
         'supplier': {
             'id': supplier.id,
@@ -491,14 +394,13 @@ def get_quote_form(request, supplier_id):
         },
         'categories': []
     }
-    
-    # Group by category
+
     categories = {}
     for product in products:
         cat_name = product.category.name if product.category else 'Otros'
         if cat_name not in categories:
             categories[cat_name] = []
-        
+
         product_data = {
             'id': product.id,
             'name': product.name,
@@ -507,22 +409,20 @@ def get_quote_form(request, supplier_id):
             'unit': product.unit,
             'options': []
         }
-        
-        # Add product options
+
         for option in product.options.all():
             product_data['options'].append({
                 'name': option.name,
                 'options': option.get_options_list(),
                 'required': option.required
             })
-        
+
         categories[cat_name].append(product_data)
-    
-    # Convert to list for template
+
     for cat_name, products_list in categories.items():
         form_data['categories'].append({
             'name': cat_name,
             'products': products_list
         })
-    
+
     return JsonResponse(form_data)

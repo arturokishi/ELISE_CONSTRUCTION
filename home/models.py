@@ -61,6 +61,26 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return self.product_name
+    
+    # ── Modelo independiente para categorías de proveedor ──────────
+class SupplierCategory(models.Model):
+    CATEGORY_CHOICES = (
+        ('paint', 'Pintura'),
+        ('steel', 'Acero'),
+        ('cement', 'Cemento'),
+        ('aluminum', 'Aluminio'),
+        ('glass', 'Vidrio'),
+    )
+
+    slug = models.CharField(max_length=50, choices=CATEGORY_CHOICES, unique=True)
+    name = models.CharField(max_length=100)
+
+    class Meta:
+        verbose_name = "Categoría de Proveedor"
+        verbose_name_plural = "Categorías de Proveedores"
+
+    def __str__(self):
+        return self.name
 
 
 # models.py
@@ -84,12 +104,11 @@ class UserProfile(models.Model):
     phone = models.CharField(max_length=20, blank=True)
     avatar_color = models.CharField(max_length=7, default='#fbbf24')
 
-    # ✅ Add this field (for supplier material assignment)
-    material_category = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True
-    )
+    material_categories = models.ManyToManyField(
+    SupplierCategory,
+    blank=True,
+    related_name='suppliers'
+)
 
     def __str__(self):
         return f"{self.user.username} ({self.get_role_display()})"
