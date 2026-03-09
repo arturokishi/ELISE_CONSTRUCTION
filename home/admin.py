@@ -35,6 +35,16 @@ class UserProfileInline(admin.StackedInline):
     model = UserProfile
     can_delete = False
     verbose_name_plural = 'Perfil de Usuario'
+    extra = 0
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs
+
+    def has_add_permission(self, request, obj=None):
+        if obj is not None:
+            return not UserProfile.objects.filter(user=obj).exists()
+        return False
 
 # Extend User admin
 class UserAdmin(BaseUserAdmin):

@@ -85,6 +85,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # settings.py
 
+#Media
+
+# Media files (uploads)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 # Authentication settings
 LOGIN_URL = 'home:login'
 LOGIN_REDIRECT_URL = 'home:home'

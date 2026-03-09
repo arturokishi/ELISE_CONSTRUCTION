@@ -401,12 +401,28 @@
                 console.log('  role:', data.other_user.role);
                 console.log('  conversationBlocked:', conversationBlocked);
 
-                const quoteBtn = document.getElementById('quoteBtn');
+            const quoteBtn = document.getElementById('quoteBtn');
                 if (quoteBtn) {
                     const isSupplier = data.other_user.role === 'supplier';
                     console.log('  isSupplier:', isSupplier);
                     console.log('  quoteBtn.disabled will be:', !isSupplier);
                     quoteBtn.disabled = !isSupplier;
+                }
+
+                // WhatsApp button
+                const whatsappBtn = document.getElementById('whatsappBtn');
+                if (whatsappBtn) {
+                    const hasWhatsapp = data.other_user.role === 'supplier' && data.other_user.whatsapp;
+                    whatsappBtn.disabled = !hasWhatsapp;
+                    whatsappBtn.dataset.whatsapp = data.other_user.whatsapp || '';
+                }
+
+                // Catalog button
+                const catalogBtn = document.getElementById('catalogBtn');
+                if (catalogBtn) {
+                    const hasCatalog = data.other_user.role === 'supplier' && data.other_user.has_catalog;
+                    catalogBtn.style.display = hasCatalog ? 'inline-block' : 'none';
+                    catalogBtn.disabled = !hasCatalog;
                 }
                                 
                 // Start periodic refresh for new messages (every 5 seconds)
@@ -789,22 +805,21 @@ if (data.bot_reply) {
         function setConversationState(blocked) {
             conversationBlocked = blocked;
             const quoteBtn = document.getElementById('quoteBtn');
-            const callBtn = document.getElementById('callBtn');
-            const videoBtn = document.getElementById('videoBtn');
+            const whatsappBtn = document.getElementById('whatsappBtn');
+            const catalogBtn = document.getElementById('catalogBtn');
             const sendBtn = document.getElementById('sendBtn');
             const messageInput = document.getElementById('messageInput');
 
             if (blocked) {
                 if (quoteBtn) quoteBtn.disabled = true;
-                if (callBtn) callBtn.disabled = true;
-                if (videoBtn) videoBtn.disabled = true;
+                if (whatsappBtn) whatsappBtn.disabled = true;
+                if (catalogBtn) catalogBtn.disabled = true;
                 if (sendBtn) sendBtn.disabled = true;
                 if (messageInput) messageInput.disabled = true;
                 if (messageInputContainer) messageInputContainer.style.display = 'none';
             } else {
                 if (quoteBtn) quoteBtn.disabled = false;
-                if (callBtn) callBtn.disabled = false;
-                if (videoBtn) videoBtn.disabled = false;
+                if (whatsappBtn) whatsappBtn.disabled = false;
                 if (sendBtn) sendBtn.disabled = false;
                 if (messageInput) messageInput.disabled = false;
                 if (messageInputContainer) messageInputContainer.style.display = 'flex';
@@ -940,24 +955,25 @@ if (data.bot_reply) {
                 quoteBtn.addEventListener('click', openQuoteModal);
             }
         
-            // Handle call/video buttons if needed
-            const callBtn = document.getElementById('callBtn');
-            const videoBtn = document.getElementById('videoBtn');
-            
-            if (callBtn) {
-                callBtn.addEventListener('click', () => {
-                    if (currentChatUser) {
-                        alert(`Llamada a ${currentChatUser.username} (simulada)`);
+            // WhatsApp button
+            const whatsappBtn = document.getElementById('whatsappBtn');
+            if (whatsappBtn) {
+                whatsappBtn.addEventListener('click', () => {
+                    if (!currentChatUser || conversationBlocked) return;
+                    const number = whatsappBtn.dataset.whatsapp;
+                    if (!number) {
+                        alert('Este proveedor no ha registrado su número de WhatsApp.');
+                        return;
                     }
+                    const message = encodeURIComponent('Hola, te contacto desde Elice');
+                    window.open(`https://wa.me/${number}?text=${message}`, '_blank');
                 });
             }
-            
-            if (videoBtn) {
-                videoBtn.addEventListener('click', () => {
-                    if (currentChatUser) {
-                        alert(`Videollamada a ${currentChatUser.username} (simulada)`);
-                    }
-                });
+
+            // Catalog button
+            const catalogBtn = document.getElementById('catalogBtn');
+            if (catalogBtn) {
+                catalogBtn.addEventListener('click', openCatalogModal);
             }
         }
         
@@ -968,3 +984,48 @@ if (data.bot_reply) {
                 sendMessage();
             }
         };
+
+        async function openCatalogModal() {
+            if (!currentChatUser || conversationBlocked) return;
+
+            const modal = document.getElementById('catalogModal');
+            const content = document.getElementById('catalog-content');
+            const downloadBtn = document.getElementById('catalog-download-btn');
+
+            modal.style.display = 'flex';
+            content.innerHTML = '<div class="loader"></div><p style="text-align:center">Cargando catálogo...</p>';
+            downloadBtn.style.display = 'none';
+
+            try {
+                const res = await fetch(`/chat/supplier-catalog/${currentChatUser.id}/`);
+                const data = await res.json();
+
+                if (!data.has_catalog) {
+                    content.innerHTML = `
+                        <div style="text-align:center; padding:30px; color:#9ca3af;">
+                            <div style="font-size:40px; margin-bottom:10px;">📭</div>
+                            <p>Este proveedor no ha subido un catálogo todavía.</p>
+                        </div>`;
+                    return;
+                }
+
+                content.innerHTML = `
+                    <embed src="${data.catalog_url}" 
+                           type="application/pdf"
+                           style="width:100%; height:500px; border:1px solid #e5e7eb; border-radius:5px;">
+                    <p style="text-align:center; margin-top:10px; color:#6b7280; font-size:13px;">
+                        Si no se visualiza el PDF, usa el botón de descarga ⬇️
+                    </p>`;
+
+                downloadBtn.href = data.catalog_url;
+                downloadBtn.style.display = 'inline-block';
+
+            } catch (error) {
+                content.innerHTML = `<p style="color:#ef4444; text-align:center;">❌ Error al cargar el catálogo: ${error.message}</p>`;
+            }
+        }
+
+        function closeCatalogModal() {
+            const modal = document.getElementById('catalogModal');
+            if (modal) modal.style.display = 'none';
+        }

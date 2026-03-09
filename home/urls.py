@@ -8,7 +8,8 @@ from .views.chat_views import (
     send_message,
     get_users,
     get_conversation_by_id,
-    get_quote_form
+    get_quote_form,
+    get_supplier_catalog
 )
 from .views.order_views import create_order
 app_name = 'home'
@@ -42,4 +43,5 @@ urlpatterns = [
     path("chat/users/", get_users, name="get_users"),
     path("chat/conversation/by-id/<int:conversation_id>/", get_conversation_by_id, name="get_conversation_by_id"),
     path("chat/quote-form/<int:supplier_id>/", get_quote_form, name="quote_form"),
+    path('chat/supplier-catalog/<int:supplier_id>/', get_supplier_catalog, name='supplier_catalog'),
 ]

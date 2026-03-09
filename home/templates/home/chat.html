@@ -549,11 +549,12 @@
                         <p id="currentUserInfo">Para comenzar una conversación</p>
                     </div>
                 </div>
+
+
                 <div class="chat-actions">
-                    <!-- Step 1: Add Quote Button -->
                     <button class="chat-btn" title="Solicitar Cotización" id="quoteBtn" disabled>📋</button>
-                    <button class="chat-btn" title="Llamada" id="callBtn" disabled>📞</button>
-                    <button class="chat-btn" title="Video" id="videoBtn" disabled>📹</button>
+                    <button class="chat-btn" title="WhatsApp" id="whatsappBtn" disabled>💬</button>
+                    <button class="chat-btn" title="Ver Catálogo" id="catalogBtn" disabled style="display:none;">📄</button>
                     <body data-user-role="{{ request.user.userprofile.role }}">
                 </div>
             </div>
@@ -637,6 +638,32 @@
             </div>
         </div>
     </div>
+
+    <!-- CATALOG MODAL -->
+<div class="modal" id="catalogModal">
+    <div class="modal-content" style="max-width: 700px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0;">📄 Catálogo del Proveedor</h3>
+            <button onclick="closeCatalogModal()" 
+                    style="background:none;border:none;font-size:24px;cursor:pointer;color:#6b7280;">✕</button>
+        </div>
+        <div id="catalog-content">
+        </div>
+        <div style="display:flex; justify-content:flex-end; margin-top:15px; gap:10px;">
+            <a id="catalog-download-btn" href="#" download 
+               style="background:#1f2933;color:white;padding:10px 20px;border-radius:5px;
+                      text-decoration:none;display:none;">
+                ⬇️ Descargar PDF
+            </a>
+            <button onclick="closeCatalogModal()" 
+                    style="background:#6b7280;color:white;border:none;padding:10px 20px;
+                           border-radius:5px;cursor:pointer;">
+                Cerrar
+            </button>
+        </div>
+    </div>
+</div>
+
     {% load static %}
     <!-- External JS (if you have one) -->
     <script src="{% static 'js/chat.js' %}"></script>

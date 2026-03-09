@@ -62,11 +62,12 @@ def get_supplier_greeting(material):
     if not config:
         return "Hola 👋 ¿En qué te puedo ayudar hoy?"
     return (
-        f"Hola 👋 Somos tu proveedor de {material}. **¿Cómo puedo ayudarte hoy?**\n\n"
-        f"• Para ver nuestros productos disponibles, haz clic en el icono **📋** en la esquina superior derecha\n"
-        f"• Ahí encontrarás: {config['productos']}\n"
-        f"• Selecciona el producto, especifica medidas y envíanos tu solicitud\n\n"
-        f"¡Estamos listos para cotizarte! {config['emoji']}"
+        f"Hola 👋 Somos tu proveedor de {material}. {config['emoji']}\n\n"
+        f"Puedes usar los botones en la parte superior para:\n\n"
+        f"• 📄 Ver o descargar nuestro catálogo de productos\n"
+        f"• 📋 Solicitar una cotización personalizada\n"
+        f"• 💬 Conectar directamente con nosotros por WhatsApp\n\n"
+        f"¡Estamos listos para atenderte!"
     )
 
 
@@ -209,17 +210,19 @@ def get_conversation(request, user_id):
     messages = list(reversed(messages))
 
     return JsonResponse({
-        "conversation_id": conversation.id,
-        "messages": [serialize_message(msg, request.user) for msg in messages],
-        "other_user": {
-            "id": other_user.id,
-            "username": other_user.username,
-            "first_name": other_user.first_name,
-            "last_name": other_user.last_name,
-            "role": other_profile.role if other_profile else "client",
-            "company": other_profile.company if other_profile else "",
-        }
-    })
+            "conversation_id": conversation.id,
+            "messages": [serialize_message(msg, request.user) for msg in messages],
+            "other_user": {
+                "id": other_user.id,
+                "username": other_user.username,
+                "first_name": other_user.first_name,
+                "last_name": other_user.last_name,
+                "role": other_profile.role if other_profile else "client",
+                "company": other_profile.company if other_profile else "",
+                "whatsapp": other_profile.whatsapp_number if other_profile else "",
+                "has_catalog": bool(other_profile.catalog_pdf) if other_profile else False,
+            }
+        })
 
 
 @login_required
@@ -347,6 +350,8 @@ def get_users(request):
             'last_message': last_message,
             'is_bot': user.username == 'elicebot',
             'categories': categories,
+            'whatsapp': profile.whatsapp_number if profile else '',
+            'has_catalog': bool(profile.catalog_pdf) if profile else False,
         })
 
     return JsonResponse({'users': users_data})
@@ -426,3 +431,17 @@ def get_quote_form(request, supplier_id):
         })
 
     return JsonResponse(form_data)
+
+@login_required
+def get_supplier_catalog(request, supplier_id):
+    supplier = get_object_or_404(User, id=supplier_id)
+    profile = get_object_or_404(UserProfile, user=supplier)
+    
+    if not profile.catalog_pdf:
+        return JsonResponse({"has_catalog": False})
+    
+    return JsonResponse({
+        "has_catalog": True,
+        "catalog_url": profile.catalog_pdf.url,
+        "supplier_name": supplier.get_full_name() or supplier.username,
+    })

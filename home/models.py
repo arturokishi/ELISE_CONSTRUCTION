@@ -108,7 +108,20 @@ class UserProfile(models.Model):
     SupplierCategory,
     blank=True,
     related_name='suppliers'
-)
+    )
+
+    whatsapp_number = models.CharField(
+            max_length=20, 
+            blank=True, 
+            help_text="Número internacional sin espacios ni símbolos, ej: 521234567890"
+        )
+    catalog_pdf = models.FileField(
+            upload_to='catalogs/', 
+            blank=True, 
+            null=True,
+            help_text="Catálogo del proveedor en PDF (opcional)"
+        )
+    
 
     def __str__(self):
         return f"{self.user.username} ({self.get_role_display()})"
