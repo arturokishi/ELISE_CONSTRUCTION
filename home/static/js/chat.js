@@ -722,7 +722,28 @@ if (data.bot_reply) {
                 // Check if we have categories
                 if (!data.categories || data.categories.length === 0) {
                     console.warn('⚠️ No categories or products found');
-                    loading.innerHTML = '<p style="color: #f59e0b;">⚠️ Este proveedor no tiene productos disponibles.</p>';
+                    loading.innerHTML = `
+                        <div style="text-align:center; padding:20px;">
+                            <div style="font-size:36px; margin-bottom:12px;">📋</div>
+                            <p style="font-weight:600; color:#1f2933; margin-bottom:10px;">
+                                Este proveedor cotiza directamente por chat o WhatsApp.
+                            </p>
+                            <p style="color:#6b7280; font-size:14px; margin-bottom:20px;">
+                                No tiene productos configurados en la plataforma, pero puedes:
+                            </p>
+                            <div style="text-align:left; display:inline-block; margin-bottom:20px;">
+                                <p style="margin-bottom:8px;">📄 Revisa su catálogo presionando el botón <strong>📄</strong> en la parte superior</p>
+                                <p style="margin-bottom:8px; margin-top:12px;"><strong>¿Listo para cotizar?</strong></p>
+                                <p style="margin-bottom:8px;">1. 🗨️ Escríbele directamente en este chat</p>
+                                <p style="margin-bottom:8px;">2. 💬 Contáctalo por WhatsApp con el botón <strong>💬</strong> arriba</p>
+                            </div>
+                            <br>
+                            <button onclick="closeQuoteModal()" 
+                                style="background:#1f2933;color:white;border:none;padding:10px 24px;
+                                       border-radius:5px;cursor:pointer;font-size:14px;">
+                                ← Volver al chat
+                            </button>
+                        </div>`;
                     return;
                 }
                 
@@ -1009,16 +1030,8 @@ if (data.bot_reply) {
                     return;
                 }
 
-                content.innerHTML = `
-                    <embed src="${data.catalog_url}" 
-                           type="application/pdf"
-                           style="width:100%; height:500px; border:1px solid #e5e7eb; border-radius:5px;">
-                    <p style="text-align:center; margin-top:10px; color:#6b7280; font-size:13px;">
-                        Si no se visualiza el PDF, usa el botón de descarga ⬇️
-                    </p>`;
-
-                downloadBtn.href = data.catalog_url;
-                downloadBtn.style.display = 'inline-block';
+                window.open(data.catalog_url, '_blank');
+                closeCatalogModal();
 
             } catch (error) {
                 content.innerHTML = `<p style="color:#ef4444; text-align:center;">❌ Error al cargar el catálogo: ${error.message}</p>`;

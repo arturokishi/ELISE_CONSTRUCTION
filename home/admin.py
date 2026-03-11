@@ -36,6 +36,7 @@ class UserProfileInline(admin.StackedInline):
     can_delete = False
     verbose_name_plural = 'Perfil de Usuario'
     extra = 0
+    filter_horizontal = ('material_categories',)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
