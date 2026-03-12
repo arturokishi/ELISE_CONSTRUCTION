@@ -49,11 +49,11 @@ def serialize_message(msg, current_user):
 # ---------------- MATERIAL CONFIG ---------------- #
 
 MATERIAL_CONFIG = {
-    "pintura":   {"slug": "paint",    "emoji": "🎨", "keywords": ["pintura", "paint"],            "productos": "pinturas, barnices y más"},
-    "acero":     {"slug": "steel",    "emoji": "🔩", "keywords": ["acero", "steel"],              "productos": "varillas, perfiles y más"},
-    "cemento":   {"slug": "cement",   "emoji": "🏗️", "keywords": ["cemento", "cement"],           "productos": "cemento, mortero y más"},
-    "aluminio":  {"slug": "aluminum", "emoji": "🪟", "keywords": ["aluminio", "aluminum"],        "productos": "perfiles, láminas y más"},
-    "vidrio":    {"slug": "glass",    "emoji": "🪞", "keywords": ["vidrio", "glass", "cristal"],  "productos": "vidrio, cristal y más"},
+    "pintura":   {"slug": "paint",     "keywords": ["pintura", "paint"],            "productos": "pinturas, barnices y más"},
+    "acero":     {"slug": "steel",     "keywords": ["acero", "steel"],              "productos": "varillas, perfiles y más"},
+    "cemento":   {"slug": "cement",    "keywords": ["cemento", "cement"],           "productos": "cemento, mortero y más"},
+    "aluminio":  {"slug": "aluminum",  "keywords": ["aluminio", "aluminum"],        "productos": "perfiles, láminas y más"},
+    "vidrio":    {"slug": "glass",     "keywords": ["vidrio", "glass", "cristal"],  "productos": "vidrio, cristal y más"},
 }
 
 
@@ -62,7 +62,7 @@ def get_supplier_greeting(material):
     if not config:
         return "Hola 👋 ¿En qué te puedo ayudar hoy?"
     return (
-        f"Hola 👋 Somos tu proveedor de {material}. {config['emoji']}\n\n"
+        f"Hola 👋 Somos tu proveedor de {material}.\n\n"
         f"Puedes usar los botones en la parte superior para:\n\n"
         f"• 📄 Ver o descargar nuestro catálogo de productos\n"
         f"• 📋 Solicitar una cotización personalizada\n"
@@ -135,11 +135,11 @@ def elicebot_reply(message, user=None):
         return (
             f"¡Hola {username}! 😊 Puedo ayudarte a conectar con proveedores de materiales.\n\n"
             f"¿Qué material necesitas?\n"
-            f"• Acero 🔩\n"
-            f"• Pintura 🎨\n"
-            f"• Cemento 🏗️\n"
-            f"• Aluminio 🪟\n"
-            f"• Vidrio 🪞"
+            f"• Acero \n"
+            f"• Pintura \n"
+            f"• Cemento \n"
+            f"• Aluminio \n"
+            f"• Vidrio "
         )
 
     # COTIZACION

@@ -45,7 +45,7 @@ class UserProfileInline(admin.StackedInline):
     def has_add_permission(self, request, obj=None):
         if obj is not None:
             return not UserProfile.objects.filter(user=obj).exists()
-        return False
+        return False 
 
 # Extend User admin
 class UserAdmin(BaseUserAdmin):
@@ -97,6 +97,10 @@ def open_chat(self, obj):
 class ProductOptionInline(admin.TabularInline):
     model = ProductOption
     extra = 1
+    fields = ['name', 'options', 'required']
+    help_texts = {
+        'options': 'Escribe las opciones separadas por comas. Ej: Pequeño, Mediano, Grande'
+    }
 
 @admin.register(ProductCategory)
 class ProductCategoryAdmin(admin.ModelAdmin):

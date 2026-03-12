@@ -388,6 +388,19 @@
         
                 updateChatHeader(data.other_user);
                 displayMessages(data.messages || []);
+
+                // Mensaje de bienvenida del bot al abrir por primera vez
+                const isBot = data.other_user.username === 'elicebot';
+                const noMessages = !data.messages || data.messages.length === 0;
+                if (isBot && noMessages) {
+                    setTimeout(() => {
+                        appendMessage({
+                            content: "Hola 👋 soy el chatbot de Elice 🤖\n\nAquí puedo ayudarte a conectar con proveedores de materiales de construcción.\n\nSolo escríbeme el material que necesitas y te conecto:\n• Vidrio\n• Aluminio\n• Acero\n• Pintura\n• Cemento",
+                            is_sent: false,
+                            timestamp: formatTime()
+                        });
+                    }, 500);
+                }
         
                 if (messageInputContainer) {
                     messageInputContainer.style.display = 'flex';
