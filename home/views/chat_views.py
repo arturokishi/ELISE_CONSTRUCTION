@@ -49,11 +49,11 @@ def serialize_message(msg, current_user):
 # ---------------- MATERIAL CONFIG ---------------- #
 
 MATERIAL_CONFIG = {
-    "pintura":   {"slug": "paint",     "keywords": ["pintura", "paint"],            "productos": "pinturas, barnices y más"},
-    "acero":     {"slug": "steel",     "keywords": ["acero", "steel"],              "productos": "varillas, perfiles y más"},
-    "cemento":   {"slug": "cement",    "keywords": ["cemento", "cement"],           "productos": "cemento, mortero y más"},
-    "aluminio":  {"slug": "aluminum",  "keywords": ["aluminio", "aluminum"],        "productos": "perfiles, láminas y más"},
-    "vidrio":    {"slug": "glass",     "keywords": ["vidrio", "glass", "cristal"],  "productos": "vidrio, cristal y más"},
+    "pintura":   {"slug": "paint",    "emoji": "🎨", "keywords": ["pintura", "paint"],            "productos": "pinturas, barnices y más"},
+    "acero":     {"slug": "steel",    "emoji": "🔩", "keywords": ["acero", "steel"],              "productos": "varillas, perfiles y más"},
+    "cemento":   {"slug": "cement",   "emoji": "🏗️", "keywords": ["cemento", "cement"],           "productos": "cemento, mortero y más"},
+    "aluminio":  {"slug": "aluminum", "emoji": "🪟", "keywords": ["aluminio", "aluminum"],        "productos": "perfiles, láminas y más"},
+    "vidrio":    {"slug": "glass",    "emoji": "🪞", "keywords": ["vidrio", "glass", "cristal"],  "productos": "vidrio, cristal y más"},
 }
 
 
