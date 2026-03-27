@@ -1,0 +1,226 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block title %}{{ product.name }} | ELISE Construction{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+    --primary: #1f2933;
+    --accent: #f59e0b;
+    --light: #f8f9fa;
+    --dark: #111827;
+}
+
+.detail-container {
+    max-width: 900px;
+    margin: auto;
+    padding: 40px 20px;
+}
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 30px;
+    font-size: 0.9rem;
+    color: #6b7280;
+}
+
+.breadcrumb a { color: var(--accent); text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+.breadcrumb span { color: #9ca3af; }
+
+.product-header {
+    background: white;
+    border-radius: 10px;
+    padding: 30px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+    margin-bottom: 25px;
+}
+
+.product-header h1 {
+    color: var(--primary);
+    margin-top: 0;
+}
+
+.product-header p {
+    color: #4b5563;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.price-note {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #047857;
+    margin: 15px 0;
+}
+
+.tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.tag {
+    font-size: 0.8rem;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.specs-card {
+    background: white;
+    border-radius: 10px;
+    padding: 30px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+    margin-bottom: 25px;
+}
+
+.specs-card h2 {
+    color: var(--primary);
+    margin-top: 0;
+    font-size: 1.1rem;
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.spec-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 0.95rem;
+}
+
+.spec-row:last-child { border-bottom: none; }
+.spec-label { color: #6b7280; }
+.spec-value { color: var(--dark); font-weight: 500; }
+
+.quote-btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    text-align: center;
+    text-decoration: none;
+    margin-top: 10px;
+}
+
+.quote-btn:hover {
+    background: #111827;
+    color: white;
+    text-decoration: none;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-container">
+
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+        <a href="{% url 'home:productos' %}">Catálogo</a>
+        {% for crumb in breadcrumb %}
+            <span>›</span>
+            <a href="{% url 'home:categoria' crumb.slug %}">{{ crumb.name }}</a>
+        {% endfor %}
+        <span>›</span>
+        <strong>{{ product.name }}</strong>
+    </nav>
+
+    <!-- Imagen principal -->
+    {% if product.main_image %}
+    <img src="{{ product.main_image.url }}"
+         alt="{{ product.name }}"
+         style="width:100%; max-height:320px; object-fit:cover; border-radius:10px; margin-bottom:25px;">
+    {% endif %}
+
+    <!-- Info principal -->
+    <div class="product-header">
+        <h1>{{ product.name }}</h1>
+        {% if product.description %}
+        <p>{{ product.description }}</p>
+        {% endif %}
+
+        {% if product.base_price %}
+        <div class="price-note">Desde ${{ product.base_price }} / {{ product.unit }}</div>
+        {% else %}
+        <div class="price-note">Precio a consultar</div>
+        {% endif %}
+
+        <!-- Proveedores -->
+        {% with suppliers=product.suppliers.all %}
+        {% if suppliers %}
+        <div class="tag-row">
+            {% for supplier in suppliers %}
+            <span class="tag">🏭 {{ supplier.user.userprofile.company|default:supplier.user.username }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <!-- Marcas -->
+        {% with brands=product.brands.all %}
+        {% if brands %}
+        <div class="tag-row">
+            {% for brand in brands %}
+            <span class="tag">🏷️ {{ brand.name }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        {% if product.technical_sheet %}
+        <a href="{{ product.technical_sheet.url }}"
+        target="_blank"
+        style="display:inline-block; margin-top:15px; padding: 10px 18px;
+                background: #f59e0b; color: #111827; font-weight: bold;
+                font-size:0.9rem; border-radius: 6px; text-decoration: none;">
+            Ver más detalles
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Especificaciones dinámicas -->
+    {% if specs %}
+    <div class="specs-card">
+        <h2>Especificaciones</h2>
+        {% for spec in specs %}
+        <div class="spec-row">
+            <span class="spec-label">{{ spec.field.name }}{% if spec.field.unit %} ({{ spec.field.unit }}){% endif %}</span>
+            <span class="spec-value">{{ spec.value }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Galería adicional -->
+    {% with images=product.images.all %}
+    {% if images %}
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:25px;">
+        {% for img in images %}
+        <img src="{{ img.image.url }}"
+             alt="{{ img.caption|default:product.name }}"
+             style="width:100%; height:150px; object-fit:cover; border-radius:8px;">
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <a href="{% url 'home:chat' %}" class="quote-btn">
+        💬 Solicitar cotización
+    </a>
+
+</div>
+{% endblock %}

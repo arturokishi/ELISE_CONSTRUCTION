@@ -1,0 +1,325 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block title %}{{ category.name }} | ELISE Construction{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+    --primary: #1f2933;
+    --accent: #f59e0b;
+    --light: #f8f9fa;
+    --dark: #111827;
+}
+
+.catalog-container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 40px 20px;
+}
+
+/* ── Breadcrumb ── */
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 30px;
+    font-size: 0.9rem;
+    color: #6b7280;
+}
+
+.breadcrumb a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.breadcrumb span {
+    color: #9ca3af;
+}
+
+/* ── Header ── */
+.category-header {
+    margin-bottom: 40px;
+}
+
+.category-header h1 {
+    color: var(--primary);
+    margin-bottom: 8px;
+}
+
+.category-header p {
+    color: #4b5563;
+    font-size: 1.05rem;
+    max-width: 700px;
+}
+
+/* ── Grid ── */
+.catalog-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 25px;
+}
+
+.product-card {
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.product-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 28px rgba(0,0,0,0.12);
+}
+
+.product-card h3 {
+    margin-top: 0;
+    color: var(--primary);
+}
+
+.product-card p {
+    color: #4b5563;
+    font-size: 0.95rem;
+    flex-grow: 1;
+}
+
+.badge {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    border-radius: 20px;
+    margin-bottom: 15px;
+    width: fit-content;
+}
+
+.badge-supplier {
+    background: #1f2933;
+}
+
+.card-icon {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.price-note {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #047857;
+    margin-top: 15px;
+}
+
+.quote-btn {
+    margin-top: 20px;
+    padding: 12px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    text-align: center;
+    text-decoration: none;
+    display: block;
+}
+
+.quote-btn:hover {
+    background: #111827;
+    color: white;
+    text-decoration: none;
+}
+
+/* ── Product card extras ── */
+.suppliers-list {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.brands-list {
+    margin-top: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.tag {
+    font-size: 0.75rem;
+    padding: 3px 8px;
+    border-radius: 12px;
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #9ca3af;
+}
+
+.empty-state .empty-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 0.95rem;
+    margin-bottom: 20px;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 900px) {
+    .catalog-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 520px) {
+    .catalog-grid { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="catalog-container">
+
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+        <a href="{% url 'home:productos' %}">Catálogo</a>
+        {% for crumb in breadcrumb %}
+            <span>›</span>
+            {% if not forloop.last %}
+                <a href="{% url 'home:categoria' crumb.slug %}">{{ crumb.name }}</a>
+            {% else %}
+                <strong>{{ crumb.name }}</strong>
+            {% endif %}
+        {% endfor %}
+    </nav>
+
+    <!-- Header de la categoría -->
+    <div class="category-header">
+    {% if category.image %}
+    <img src="{{ category.image.url }}"
+         alt="{{ category.name }}"
+         style="width:100%; max-height:250px; object-fit:cover; border-radius:10px; margin-bottom:20px;">
+    {% endif %}
+    {% if category.icon %}<div style="font-size:2.5rem;">{{ category.icon }}</div>{% endif %}
+    <h1>{{ category.name }}</h1>
+        {% if category.description %}
+        <p>{{ category.description }}</p>
+        {% endif %}
+    </div>
+
+    <!-- CASO 1: tiene subcategorías → muestra cartas de subcategorías -->
+    {% if children %}
+    <div class="catalog-grid">
+        {% for child in children %}
+        <div class="product-card">
+            {% if child.image %}
+            <img src="{{ child.image.url }}"
+                alt="{{ child.name }}"
+                style="width:100%; height:160px; object-fit:cover; border-radius:6px; margin-bottom:15px;">
+            {% elif child.icon %}
+            <div class="card-icon">{{ child.icon }}</div>
+            {% endif %}
+            <span class="badge">
+                {% with count=child.children.count %}
+                    {% if count > 0 %}
+                        {{ count }} subcategoría{{ count|pluralize:"s" }}
+                    {% else %}
+                        {% with pcount=child.products.count %}
+                            {{ pcount }} producto{{ pcount|pluralize:"s" }}
+                        {% endwith %}
+                    {% endif %}
+                {% endwith %}
+            </span>
+            <h3>{{ child.name }}</h3>
+            <p>{{ child.description|default:"Explora los productos de esta subcategoría." }}</p>
+            <a href="{% url 'home:categoria' child.slug %}" class="quote-btn">
+                Ver más
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- CASO 2: no tiene hijos → muestra productos -->
+    {% elif products %}
+    <div class="catalog-grid">
+        {% for product in products %}
+        <div class="product-card">
+            {% if product.main_image %}
+            <img src="{{ product.main_image.url }}"
+                 alt="{{ product.name }}"
+                 style="width:100%; height:160px; object-fit:cover; border-radius:6px; margin-bottom:15px;">
+            {% endif %}
+
+            <span class="badge">{{ product.unit }}</span>
+            <h3>{{ product.name }}</h3>
+            <p>{{ product.description|default:"" }}</p>
+
+            {% if product.base_price %}
+            <div class="price-note">Desde ${{ product.base_price }} / {{ product.unit }}</div>
+            {% else %}
+            <div class="price-note">Precio a consultar</div>
+            {% endif %}
+
+            <!-- Proveedores -->
+            {% with suppliers=product.suppliers.all %}
+            {% if suppliers %}
+            <div class="suppliers-list">
+                {% for supplier in suppliers %}
+                <span class="tag">🏭 {{ supplier.user.userprofile.company|default:supplier.user.username }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <!-- Marcas -->
+            {% with brands=product.brands.all %}
+            {% if brands %}
+            <div class="brands-list">
+                {% for brand in brands %}
+                <span class="tag">🏷️ {{ brand.name }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <a href="{% url 'home:producto_detalle' product.slug %}" class="quote-btn">
+                Ver detalle
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- CASO 3: categoría vacía -->
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📦</div>
+        <h3>Sin productos por el momento</h3>
+        <p>Estamos trabajando para agregar productos a esta categoría.</p>
+        <a href="{% url 'home:productos' %}" class="quote-btn" style="display:inline-block; margin-top:20px; padding: 10px 24px;">
+            ← Volver al catálogo
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
