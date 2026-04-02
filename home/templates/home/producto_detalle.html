@@ -4,223 +4,468 @@
 {% block title %}{{ product.name }} | ELISE Construction{% endblock %}
 
 {% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&display=swap" rel="stylesheet">
 <style>
 :root {
-    --primary: #1f2933;
-    --accent: #f59e0b;
-    --light: #f8f9fa;
-    --dark: #111827;
+    --primary:       #0f172a;
+    --primary-soft:  #1e293b;
+    --accent:        #f59e0b;
+    --accent-dark:   #d97706;
+    --accent-light:  #fef3c7;
+    --text:          #0f172a;
+    --text-muted:    #64748b;
+    --text-light:    #94a3b8;
+    --surface:       #ffffff;
+    --surface-2:     #f8fafc;
+    --surface-3:     #f1f5f9;
+    --border:        #e2e8f0;
+    --radius-sm:     8px;
+    --radius-md:     12px;
+    --radius-lg:     20px;
+    --shadow-sm:     0 1px 3px rgba(0,0,0,0.07);
+    --shadow-md:     0 4px 16px rgba(0,0,0,0.08);
+    --shadow-lg:     0 20px 40px rgba(0,0,0,0.12);
 }
 
-.detail-container {
-    max-width: 900px;
-    margin: auto;
-    padding: 40px 20px;
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
+    background: var(--surface-2);
+    color: var(--text);
 }
 
+.detail-wrap {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+    animation: fadeUp 0.4s ease both;
+}
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── BREADCRUMB ── */
 .breadcrumb {
     display: flex;
     align-items: center;
-    gap: 8px;
     flex-wrap: wrap;
-    margin-bottom: 30px;
-    font-size: 0.9rem;
-    color: #6b7280;
+    gap: 6px;
+    margin-bottom: 28px;
+    font-size: 0.82rem;
+    color: var(--text-light);
 }
 
-.breadcrumb a { color: var(--accent); text-decoration: none; }
-.breadcrumb a:hover { text-decoration: underline; }
-.breadcrumb span { color: #9ca3af; }
-
-.product-header {
-    background: white;
-    border-radius: 10px;
-    padding: 30px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
-    margin-bottom: 25px;
+.breadcrumb a {
+    color: var(--accent-dark);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.15s;
 }
 
-.product-header h1 {
+.breadcrumb a:hover { color: var(--accent); }
+.breadcrumb .sep { color: var(--border); }
+.breadcrumb strong { color: var(--text-muted); font-weight: 600; }
+
+/* ── HERO IMAGE ── */
+.hero-img-wrap {
+    width: 100%;
+    height: 380px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 32px;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+}
+
+.hero-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.4s ease;
+}
+
+.hero-img-wrap:hover .hero-img { transform: scale(1.02); }
+
+/* ── MAIN LAYOUT ── */
+.detail-layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 28px;
+    align-items: start;
+}
+
+/* ── LEFT: info panel ── */
+.info-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    box-shadow: var(--shadow-sm);
+}
+
+.product-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent-light);
+    color: var(--accent-dark);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 100px;
+    border: 1px solid rgba(245,158,11,0.25);
+    margin-bottom: 16px;
+}
+
+.product-name {
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    font-weight: 800;
     color: var(--primary);
-    margin-top: 0;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+    margin-bottom: 14px;
 }
 
-.product-header p {
-    color: #4b5563;
-    font-size: 1rem;
-    line-height: 1.6;
+.product-desc {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    margin-bottom: 24px;
 }
 
-.price-note {
-    font-size: 1.1rem;
-    font-weight: bold;
-    color: #047857;
-    margin: 15px 0;
-}
-
-.tag-row {
+/* Price */
+.price-block {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 12px;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 24px;
+    padding: 16px 20px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: var(--radius-md);
 }
+
+.price-amount {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #047857;
+    letter-spacing: -0.02em;
+}
+
+.price-unit {
+    font-size: 0.85rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.price-consult {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    padding: 14px 20px;
+    background: var(--surface-3);
+    border-radius: var(--radius-md);
+    margin-bottom: 24px;
+}
+
+/* Tags */
+.tag-section { margin-bottom: 20px; }
+
+.tag-section-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-light);
+    margin-bottom: 8px;
+}
+
+.tag-row { display: flex; flex-wrap: wrap; gap: 6px; }
 
 .tag {
-    font-size: 0.8rem;
-    padding: 4px 10px;
-    border-radius: 12px;
-    background: #f3f4f6;
-    color: #374151;
+    font-size: 0.78rem;
+    padding: 5px 12px;
+    border-radius: 100px;
+    background: var(--surface-3);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    font-weight: 500;
 }
 
+/* Technical sheet */
+.tech-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: var(--surface-3);
+    color: var(--text);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.15s;
+    margin-top: 4px;
+}
+
+.tech-btn:hover {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+    text-decoration: none;
+}
+
+/* ── RIGHT: specs + CTA ── */
+.sidebar-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Specs card */
 .specs-card {
-    background: white;
-    border-radius: 10px;
-    padding: 30px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
-    margin-bottom: 25px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
 }
 
-.specs-card h2 {
-    color: var(--primary);
-    margin-top: 0;
-    font-size: 1.1rem;
+.specs-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-light);
+    margin-bottom: 16px;
+    padding-bottom: 12px;
     border-bottom: 2px solid var(--accent);
-    padding-bottom: 10px;
-    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .spec-row {
     display: flex;
     justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
     padding: 10px 0;
-    border-bottom: 1px solid #f3f4f6;
-    font-size: 0.95rem;
+    border-bottom: 1px solid var(--surface-3);
+    font-size: 0.85rem;
 }
 
 .spec-row:last-child { border-bottom: none; }
-.spec-label { color: #6b7280; }
-.spec-value { color: var(--dark); font-weight: 500; }
 
-.quote-btn {
-    display: block;
-    width: 100%;
-    padding: 14px;
+.spec-label { color: var(--text-muted); flex-shrink: 0; }
+.spec-value { color: var(--text); font-weight: 600; text-align: right; }
+
+/* CTA card */
+.cta-card {
     background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 1rem;
-    text-align: center;
-    text-decoration: none;
-    margin-top: 10px;
+    border-radius: var(--radius-lg);
+    padding: 28px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    position: relative;
+    overflow: hidden;
 }
 
-.quote-btn:hover {
-    background: #111827;
-    color: white;
+.cta-card::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    background: rgba(245,158,11,0.1);
+    pointer-events: none;
+}
+
+.cta-card-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.01em;
+}
+
+.cta-card-sub {
+    font-size: 0.82rem;
+    color: #94a3b8;
+    line-height: 1.5;
+}
+
+.cta-btn-primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 13px 20px;
+    background: var(--accent);
+    color: var(--primary);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 700;
     text-decoration: none;
+    transition: background 0.15s, transform 0.15s;
+}
+
+.cta-btn-primary:hover {
+    background: var(--accent-dark);
+    color: var(--primary);
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+
+/* ── GALLERY ── */
+.gallery {
+    margin-top: 28px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+}
+
+.gallery-item {
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    height: 160px;
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.gallery-item:hover { transform: scale(1.02); box-shadow: var(--shadow-md); }
+
+.gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 760px) {
+    .detail-layout { grid-template-columns: 1fr; }
+    .hero-img-wrap { height: 260px; }
+    .detail-wrap { padding: 24px 16px 60px; }
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="detail-container">
+<div class="detail-wrap">
 
-    <!-- Breadcrumb -->
+    <!-- BREADCRUMB -->
     <nav class="breadcrumb">
         <a href="{% url 'home:productos' %}">Catálogo</a>
         {% for crumb in breadcrumb %}
-            <span>›</span>
+            <span class="sep">›</span>
             <a href="{% url 'home:categoria' crumb.slug %}">{{ crumb.name }}</a>
         {% endfor %}
-        <span>›</span>
+        <span class="sep">›</span>
         <strong>{{ product.name }}</strong>
     </nav>
 
-    <!-- Imagen principal -->
+    <!-- HERO IMAGE -->
     {% if product.main_image %}
-    <img src="{{ product.main_image.url }}"
-         alt="{{ product.name }}"
-         style="width:100%; max-height:320px; object-fit:cover; border-radius:10px; margin-bottom:25px;">
-    {% endif %}
-
-    <!-- Info principal -->
-    <div class="product-header">
-        <h1>{{ product.name }}</h1>
-        {% if product.description %}
-        <p>{{ product.description }}</p>
-        {% endif %}
-
-        {% if product.base_price %}
-        <div class="price-note">Desde ${{ product.base_price }} / {{ product.unit }}</div>
-        {% else %}
-        <div class="price-note">Precio a consultar</div>
-        {% endif %}
-
-        <!-- Proveedores -->
-        {% with suppliers=product.suppliers.all %}
-        {% if suppliers %}
-        <div class="tag-row">
-            {% for supplier in suppliers %}
-            <span class="tag">🏭 {{ supplier.user.userprofile.company|default:supplier.user.username }}</span>
-            {% endfor %}
-        </div>
-        {% endif %}
-        {% endwith %}
-
-        <!-- Marcas -->
-        {% with brands=product.brands.all %}
-        {% if brands %}
-        <div class="tag-row">
-            {% for brand in brands %}
-            <span class="tag">🏷️ {{ brand.name }}</span>
-            {% endfor %}
-        </div>
-        {% endif %}
-        {% endwith %}
-
-        {% if product.technical_sheet %}
-        <a href="{{ product.technical_sheet.url }}"
-        target="_blank"
-        style="display:inline-block; margin-top:15px; padding: 10px 18px;
-                background: #f59e0b; color: #111827; font-weight: bold;
-                font-size:0.9rem; border-radius: 6px; text-decoration: none;">
-            Ver más detalles
-        </a>
-        {% endif %}
-    </div>
-
-    <!-- Especificaciones dinámicas -->
-    {% if specs %}
-    <div class="specs-card">
-        <h2>Especificaciones</h2>
-        {% for spec in specs %}
-        <div class="spec-row">
-            <span class="spec-label">{{ spec.field.name }}{% if spec.field.unit %} ({{ spec.field.unit }}){% endif %}</span>
-            <span class="spec-value">{{ spec.value }}</span>
-        </div>
-        {% endfor %}
+    <div class="hero-img-wrap">
+        <img class="hero-img" src="{{ product.main_image.url }}" alt="{{ product.name }}">
     </div>
     {% endif %}
 
-    <!-- Galería adicional -->
+    <!-- MAIN LAYOUT -->
+    <div class="detail-layout">
+
+        <!-- LEFT: info -->
+        <div class="info-card">
+            <div class="product-eyebrow">📦 {{ product.unit }}</div>
+            <h1 class="product-name">{{ product.name }}</h1>
+
+            {% if product.description %}
+            <p class="product-desc">{{ product.description }}</p>
+            {% endif %}
+
+            {% if product.base_price %}
+            <div class="price-block">
+                <span class="price-amount">${{ product.base_price }}</span>
+                <span class="price-unit">/ {{ product.unit }}</span>
+            </div>
+            {% else %}
+            <div class="price-consult">💬 Precio a consultar — contáctanos para obtener tu cotización</div>
+            {% endif %}
+
+            <!-- Suppliers -->
+            {% with suppliers=product.suppliers.all %}{% if suppliers %}
+            <div class="tag-section">
+                <div class="tag-section-label">Proveedores</div>
+                <div class="tag-row">
+                    {% for s in suppliers %}<span class="tag">🏭 {{ s.user.userprofile.company|default:s.user.username }}</span>{% endfor %}
+                </div>
+            </div>
+            {% endif %}{% endwith %}
+
+            <!-- Brands -->
+            {% with brands=product.brands.all %}{% if brands %}
+            <div class="tag-section">
+                <div class="tag-section-label">Marcas</div>
+                <div class="tag-row">
+                    {% for b in brands %}<span class="tag">🏷️ {{ b.name }}</span>{% endfor %}
+                </div>
+            </div>
+            {% endif %}{% endwith %}
+
+            {% if product.technical_sheet %}
+            <a href="{{ product.technical_sheet.url }}" target="_blank" class="tech-btn">
+                📄 Ver ficha técnica
+            </a>
+            {% endif %}
+        </div>
+
+        <!-- RIGHT: specs + CTA -->
+        <div class="sidebar-stack">
+
+            {% if specs %}
+            <div class="specs-card">
+                <div class="specs-title">📐 Especificaciones</div>
+                {% for spec in specs %}
+                <div class="spec-row">
+                    <span class="spec-label">{{ spec.field.name }}{% if spec.field.unit %} ({{ spec.field.unit }}){% endif %}</span>
+                    <span class="spec-value">{{ spec.value }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="cta-card">
+                <div class="cta-card-title">¿Te interesa este producto?</div>
+                <div class="cta-card-sub">Habla con nuestro asistente y te conectamos con los mejores proveedores al mejor precio.</div>
+                <a href="{% url 'home:chat' %}" class="cta-btn-primary">
+                    💬 Solicitar cotización
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ADDITIONAL GALLERY -->
     {% with images=product.images.all %}
     {% if images %}
-    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:25px;">
+    <div class="gallery">
         {% for img in images %}
-        <img src="{{ img.image.url }}"
-             alt="{{ img.caption|default:product.name }}"
-             style="width:100%; height:150px; object-fit:cover; border-radius:8px;">
+        <div class="gallery-item">
+            <img src="{{ img.image.url }}" alt="{{ img.caption|default:product.name }}">
+        </div>
         {% endfor %}
     </div>
     {% endif %}
     {% endwith %}
-
-    <a href="{% url 'home:chat' %}" class="quote-btn">
-        💬 Solicitar cotización
-    </a>
 
 </div>
 {% endblock %}

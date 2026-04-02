@@ -339,6 +339,7 @@ class Product(models.Model):
  
     # Control
     is_active = models.BooleanField(default=True)
+    featured = models.BooleanField(default=False, help_text="Mostrar en la landing page")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
  

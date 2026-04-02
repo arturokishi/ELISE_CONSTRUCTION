@@ -3,7 +3,32 @@ from home.models import Category, Product, Supplier, Brand
  
  
 def home(request):
-    return render(request, "home/home.html")
+    featured_products = Product.objects.filter(
+        is_active=True, featured=True
+    ).prefetch_related('brands', 'suppliers')[:12]
+
+    if not featured_products.exists():
+        featured_products = Product.objects.filter(
+            is_active=True
+        ).prefetch_related('brands', 'suppliers').order_by('-created_at')[:12]
+
+    suppliers = Supplier.objects.filter(
+        is_active=True
+    ).select_related('user__userprofile').order_by('-is_verified', 'user__username')[:12]
+
+    brands = Brand.objects.filter(is_active=True).order_by('name')[:20]
+
+    root_categories = Category.objects.filter(
+        is_active=True, parent=None
+    ).order_by('order', 'name')[:8]
+
+    context = {
+        'featured_products': featured_products,
+        'suppliers': suppliers,
+        'brands': brands,
+        'root_categories': root_categories,
+    }
+    return render(request, 'home/landing.html', context)
  
  
 def industrias(request):

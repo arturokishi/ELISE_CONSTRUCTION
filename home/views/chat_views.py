@@ -419,7 +419,7 @@ def get_quote_form(request, supplier_id):
             'description': product.description,
             'base_price': float(product.base_price) if product.base_price else None,
             'unit': product.unit,
-            'specifications': []
+            'image_url': product.main_image.url if product.main_image else None,            'specifications': []
         }
  
         # Especificaciones dinámicas en lugar de ProductOption
@@ -455,4 +455,3 @@ def get_supplier_catalog(request, supplier_id):
         "catalog_url": profile.catalog_pdf.url,
         "supplier_name": supplier.get_full_name() or supplier.username,
     })
- 

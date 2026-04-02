@@ -1,674 +1,1315 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elice Construcción - Chat</title>
-    
-    <!-- CSRF Token for AJAX -->
-    <meta name="csrf-token" content="{{ csrf_token }}">
-   
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, Helvetica, sans-serif;
-        }
+{% extends "home/base.html" %}
+{% load static %}
 
-        body {
-            background-color: #f5f7fa;
-            color: #1f2933;
-            line-height: 1.6;
-        }
+{% block title %}Chat | ELISE Construction{% endblock %}
 
-        /* ---------- NAVBAR ---------- */
-        .navbar {
-            background: #1f2933;
-            padding: 16px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<meta name="csrf-token" content="{{ csrf_token }}">
+<style>
+/* ── Variables (match landing page) ── */
+:root {
+    --primary: #0f172a;
+    --primary-soft: #1e293b;
+    --accent: #f59e0b;
+    --accent-dark: #d97706;
+    --accent-light: #fef3c7;
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --text-light: #94a3b8;
+    --surface: #ffffff;
+    --surface-2: #f8fafc;
+    --surface-3: #f1f5f9;
+    --border: #e2e8f0;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.07);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+    --shadow-lg: 0 20px 40px rgba(0,0,0,0.12);
+    --bot-color: #6366f1;
+}
 
-        .navbar h1 {
-            color: #f9fafb;
-            font-size: 22px;
-            letter-spacing: 1px;
-        }
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .navbar a {
-            color: #d1d5db;
-            margin-left: 20px;
-            text-decoration: none;
-            font-weight: 500;
-        }
+body {
+    font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
+    background: var(--surface-2);
+    color: var(--text);
+    overflow: hidden;
+}
 
-        .navbar a:hover {
-            color: #fbbf24;
-        }
+/* ── LAYOUT ── */
+.chat-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr 0px;
+    height: 100dvh;
+    max-height: 100dvh;
+    transition: grid-template-columns 0.3s ease;
+}
 
-        /* ---------- CHAT CONTAINER ---------- */
-        .chat-container {
-            max-width: 1200px;
-            margin: 30px auto;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            overflow: hidden;
-            display: flex;
-            height: 80vh;
-        }
+.chat-layout.panel-open {
+    grid-template-columns: 280px 1fr 300px;
+}
 
-        /* ---------- SIDEBAR ---------- */
-        .sidebar {
-            width: 300px;
-            background: #f9fafb;
-            border-right: 1px solid #e5e7eb;
-            padding: 20px;
-            overflow-y: auto;
-        }
+/* ── SIDEBAR ── */
+.sidebar {
+    background: var(--primary);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-right: 1px solid rgba(255,255,255,0.06);
+}
 
-        .sidebar-header {
-            padding-bottom: 20px;
-            border-bottom: 1px solid #e5e7eb;
-            margin-bottom: 20px;
-        }
+.sidebar-header {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    flex-shrink: 0;
+}
 
-        .sidebar-header h2 {
-            color: #1f2933;
-            font-size: 20px;
-        }
+.sidebar-logo {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
 
-        .user-list {
-            margin-bottom: 30px;
-        }
+.sidebar-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+}
 
-        .user-list h3 {
-            color: #4b5563;
-            font-size: 16px;
-            margin-bottom: 15px;
-            padding-left: 10px;
-        }
+.sidebar-user {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 4px;
+}
 
-        .user-item {
-            display: flex;
-            align-items: center;
-            padding: 12px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background 0.3s;
-            margin-bottom: 5px;
-        }
+/* Bot pinned card */
+.bot-card {
+    margin: 12px 12px 0;
+    background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(99,102,241,0.08));
+    border: 1px solid rgba(99,102,241,0.3);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
 
-        .user-item:hover {
-            background: #e5e7eb;
-        }
+.bot-card:hover, .bot-card.active {
+    background: linear-gradient(135deg, rgba(99,102,241,0.35), rgba(99,102,241,0.15));
+    border-color: rgba(99,102,241,0.5);
+}
 
-        .user-item.active {
-            background: #1f2933;
-            color: white;
-        }
+.bot-card-inner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
 
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #fbbf24;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: #1f2933;
-            margin-right: 12px;
-        }
+.bot-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--bot-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
 
-        .user-info {
-            flex: 1;
-        }
+.bot-info-name {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #e2e8f0;
+}
 
-        .user-name {
-            font-weight: 600;
-            margin-bottom: 3px;
-        }
+.bot-info-sub {
+    font-size: 0.72rem;
+    color: #6366f1;
+    font-weight: 600;
+}
 
-        .user-role {
-            font-size: 12px;
-            color: #6b7280;
-        }
+.bot-badge {
+    margin-left: auto;
+    background: rgba(99,102,241,0.3);
+    color: #a5b4fc;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 100px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
 
-        .user-item.active .user-role {
-            color: #d1d5db;
-        }
+/* Suppliers section */
+.sidebar-section-label {
+    padding: 14px 16px 6px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #334155;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    flex-shrink: 0;
+}
 
-        .last-message {
-            font-size: 12px;
-            color: #9ca3af;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 180px;
-        }
+.users-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 8px 12px;
+}
 
-        /* ---------- CHAT MAIN ---------- */
-        .chat-main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
+.users-scroll::-webkit-scrollbar { width: 4px; }
+.users-scroll::-webkit-scrollbar-track { background: transparent; }
+.users-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
 
-        .chat-header {
-            padding: 20px 30px;
-            background: #1f2933;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
+.user-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.15s;
+    margin-bottom: 2px;
+}
 
-        .current-user-info {
-            display: flex;
-            align-items: center;
-        }
+.user-item:hover { background: rgba(255,255,255,0.05); }
+.user-item.active { background: rgba(245,158,11,0.12); }
 
-        .chat-header .user-avatar {
-            margin-right: 15px;
-        }
+.user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--primary);
+    flex-shrink: 0;
+}
 
-        .chat-actions {
-            display: flex;
-            gap: 15px;
-        }
+.user-info { flex: 1; min-width: 0; }
 
-        .chat-btn {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 20px;
-            cursor: pointer;
-            padding: 5px;
-            border-radius: 5px;
-        }
+.user-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
-        .chat-btn:hover {
-            background: rgba(255,255,255,0.1);
-        }
+.user-role {
+    font-size: 0.72rem;
+    color: #64748b;
+    margin-top: 1px;
+}
 
-        /* ---------- MESSAGES ---------- */
-        .messages-container {
-            flex: 1;
-            padding: 20px 30px;
-            overflow-y: auto;
-            background: #f9fafb;
-        }
+.user-item.active .user-name { color: var(--accent); }
+.user-item.active .user-role { color: #b45309; }
 
-        .message {
-            margin-bottom: 20px;
-            max-width: 70%;
-            clear: both;
-        }
+.last-msg {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    margin-top: 2px;
+}
 
-        .message.sent {
-            float: right;
-            text-align: right;
-        }
+/* Unread badge */
+.unread-badge {
+    min-width: 18px;
+    height: 18px;
+    border-radius: 100px;
+    background: var(--accent);
+    color: var(--primary);
+    font-size: 0.65rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+    flex-shrink: 0;
+    margin-left: auto;
+}
 
-        .message.received {
-            float: left;
-        }
+/* Sidebar search */
+.sidebar-search {
+    padding: 8px 12px 4px;
+    flex-shrink: 0;
+}
 
-        .message-content {
-            display: inline-block;
-            padding: 12px 18px;
-            border-radius: 18px;
-            position: relative;
-        }
+.sidebar-search-input {
+    width: 100%;
+    padding: 8px 12px 8px 34px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    color: #e2e8f0;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.15s, background 0.15s;
+    position: relative;
+}
 
-        .sent .message-content {
-            background: #fbbf24;
-            color: #1f2933;
-            border-bottom-right-radius: 5px;
-        }
+.sidebar-search-input::placeholder { color: #475569; }
+.sidebar-search-input:focus {
+    border-color: rgba(99,102,241,0.5);
+    background: rgba(255,255,255,0.1);
+}
 
-        .received .message-content {
-            background: white;
-            color: #1f2933;
-            border-bottom-left-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
+.sidebar-search-wrap {
+    position: relative;
+}
 
-        .message-time {
-            font-size: 11px;
-            color: #9ca3af;
-            margin-top: 5px;
-        }
+.sidebar-search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.8rem;
+    color: #475569;
+    pointer-events: none;
+}
 
-        .sent .message-time {
-            text-align: right;
-        }
+.cat-label {
+    padding: 10px 10px 4px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #f59e0b;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
 
-        /* ---------- MESSAGE INPUT ---------- */
-        .message-input-container {
-            padding: 20px 30px;
-            border-top: 1px solid #e5e7eb;
-            background: white;
-            display: flex;
-            gap: 15px;
-        }
+/* ── CHAT MAIN ── */
+.chat-main {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--surface-2);
+}
 
-        .message-input {
-            flex: 1;
-            padding: 15px 20px;
-            border: 2px solid #e5e7eb;
-            border-radius: 25px;
-            font-size: 16px;
-            outline: none;
-            transition: border-color 0.3s;
-        }
+/* Chat header */
+.chat-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
+}
 
-        .message-input:focus {
-            border-color: #fbbf24;
-        }
+.chat-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
 
-        .send-btn {
-            background: #1f2933;
-            color: white;
-            border: none;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            transition: background 0.3s;
-        }
+.chat-header-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--primary);
+    flex-shrink: 0;
+}
 
-        .send-btn:hover {
-            background: #fbbf24;
-        }
+.chat-header-avatar.bot-style {
+    background: var(--bot-color);
+    font-size: 1.1rem;
+}
 
-        /* ---------- FILE UPLOAD ---------- */
-        .file-btn {
-            background: #f9fafb;
-            color: #4b5563;
-            border: 2px solid #e5e7eb;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            transition: all 0.3s;
-        }
+.chat-header-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+}
 
-        .file-btn:hover {
-            background: #1f2933;
-            color: white;
-            border-color: #1f2933;
-        }
+.chat-header-sub {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 1px;
+}
 
-        /* ---------- MESSAGE TYPES ---------- */
-        .file-message {
-            display: flex;
-            align-items: center;
-            padding: 10px 15px;
-            background: white;
-            border-radius: 10px;
-            border: 1px solid #e5e7eb;
-            margin: 5px 0;
-            cursor: pointer;
-        }
+.chat-header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
 
-        .file-message:hover {
-            background: #f9fafb;
-        }
+.header-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    transition: all 0.15s;
+}
 
-        .file-icon {
-            font-size: 24px;
-            margin-right: 15px;
-            color: #1f2933;
-        }
+.header-btn:hover:not(:disabled) {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--surface-3);
+}
 
-        .file-info {
-            flex: 1;
-        }
+.header-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
 
-        .file-name {
-            font-weight: 600;
-            margin-bottom: 3px;
-        }
+.header-btn.accent {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--primary);
+}
 
-        .file-size {
-            font-size: 12px;
-            color: #6b7280;
-        }
+.header-btn.accent:hover:not(:disabled) {
+    background: var(--accent-dark);
+    border-color: var(--accent-dark);
+    color: var(--primary);
+}
 
-        /* ---------- STATUS INDICATORS ---------- */
-        .status-indicator {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            margin-left: 8px;
-        }
+/* ── BOT EMPTY STATE ── */
+.bot-welcome {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    text-align: center;
+    animation: fadeUp 0.4s ease;
+}
 
-        .status-online {
-            background: #10b981;
-        }
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 
-        .status-offline {
-            background: #9ca3af;
-        }
+.bot-welcome-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 32px rgba(99,102,241,0.3);
+}
 
-        /* ---------- RESPONSIVE ---------- */
-        @media (max-width: 768px) {
-            .chat-container {
-                flex-direction: column;
-                height: 90vh;
-                margin: 0;
-                border-radius: 0;
-            }
-            
-            .sidebar {
-                width: 100%;
-                height: 30%;
-            }
-            
-            .chat-main {
-                height: 70%;
-            }
-        }
+.bot-welcome h2 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 10px;
+    letter-spacing: -0.02em;
+}
 
-        /* ---------- MODAL STYLES ---------- */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal.show {
-            display: flex;
-        }
-        
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            animation: modalFadeIn 0.3s;
-        }
-        
-        @keyframes modalFadeIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .quote-message {
-            background: #f8fafc;
-            border-left: 4px solid #fbbf24;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 10px 0;
-        }
-        
-        .quote-message h4 {
-            margin: 0 0 10px 0;
-            color: #1f2933;
-        }
-        
-        .quote-detail {
-            display: flex;
-            margin-bottom: 5px;
-        }
-        
-        .quote-label {
-            font-weight: 600;
-            width: 120px;
-            color: #4b5563;
-        }
-        
-        .quote-value {
-            flex: 1;
-            color: #1f2933;
-        }
-        
-        .quote-actions {
-            margin-top: 15px;
-            display: flex;
-            gap: 10px;
-        }
-        
-        .quote-accept {
-            background: #10b981;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        
-        .quote-counter {
-            background: #f59e0b;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
+.bot-welcome p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    max-width: 400px;
+    margin-bottom: 28px;
+}
 
-        .form-group {
-            margin-bottom: 15px;
-        }
+.material-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 24px;
+}
 
-        .form-group label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 5px;
-            color: #1f2933;
-        }
+.material-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 100px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: var(--shadow-sm);
+}
 
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #fbbf24;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
+.material-chip:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
-</head>
-<body>
-    <!-- NAVBAR -->
-    <nav class="navbar">
-        <h1>Elice Construcción - Chat</h1>
-        <div>
-            <a href="{% url 'home:home' %}">Inicio</a>
-            <a href="#active-chat">Chat Activo</a>
-            <a href="#archivo">Archivos</a>
-            <a href="#configuracion">Configuración</a>
-            <span style="color: #fbbf24; margin-left: 20px;">
-                Hola, {{ request.user.username }}
-            </span>
-            <a href="{% url 'admin:logout' %}" style="color: #f59e0b;">Cerrar Sesión</a>
+.no-chat-selected {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    gap: 12px;
+    animation: fadeUp 0.3s ease;
+}
+
+.no-chat-selected-icon {
+    font-size: 3rem;
+    opacity: 0.3;
+}
+
+/* ── MESSAGES ── */
+.messages-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.messages-container::-webkit-scrollbar { width: 4px; }
+.messages-container::-webkit-scrollbar-track { background: transparent; }
+.messages-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.message {
+    display: flex;
+    flex-direction: column;
+    max-width: 68%;
+    animation: msgIn 0.2s ease;
+}
+
+@keyframes msgIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.message.sent { align-self: flex-end; align-items: flex-end; }
+.message.received { align-self: flex-start; align-items: flex-start; }
+.message.bot-msg { max-width: 78%; }
+
+.message-content {
+    padding: 11px 16px;
+    border-radius: 18px;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.sent .message-content {
+    background: var(--primary);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+}
+
+.received .message-content {
+    background: var(--surface);
+    color: var(--text);
+    border-bottom-left-radius: 4px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+}
+
+.bot-msg .message-content {
+    background: linear-gradient(135deg, #1e1b4b, #312e81);
+    color: #ede9fe;
+    border-bottom-left-radius: 4px;
+    border: 1px solid rgba(99,102,241,0.35);
+    box-shadow: 0 2px 12px rgba(99,102,241,0.18);
+    font-size: 0.9rem;
+}
+
+/* Online pulse dot in header */
+.online-pulse {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #10b981;
+    display: inline-block;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.online-pulse::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    border: 2px solid #10b981;
+    animation: pulseRing 2s infinite;
+    opacity: 0;
+}
+
+@keyframes pulseRing {
+    0% { transform: scale(0.8); opacity: 0.6; }
+    70% { transform: scale(1.4); opacity: 0; }
+    100% { opacity: 0; }
+}
+
+.message-time {
+    font-size: 0.68rem;
+    color: var(--text-light);
+    margin-top: 4px;
+    padding: 0 4px;
+}
+
+/* Quote card in messages */
+.quote-card-msg {
+    background: var(--surface);
+    border: 1.5px solid var(--accent);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    font-size: 0.85rem;
+    color: var(--text);
+    box-shadow: var(--shadow-sm);
+}
+
+.quote-card-msg-title {
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.quote-card-msg-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.82rem;
+}
+
+.quote-card-msg-row:last-child { border-bottom: none; }
+.quote-card-msg-label { color: var(--text-muted); }
+.quote-card-msg-value { font-weight: 600; }
+
+/* Supplier connection cards in bot messages */
+.supplier-connect-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.supplier-connect-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+    text-decoration: none;
+}
+
+.supplier-connect-card:hover {
+    background: rgba(255,255,255,0.14);
+}
+
+.supplier-connect-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: var(--primary);
+    flex-shrink: 0;
+}
+
+.supplier-connect-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #e2e8f0;
+}
+
+.supplier-connect-cta {
+    margin-left: auto;
+    font-size: 0.72rem;
+    color: var(--accent);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* ── TYPING INDICATOR ── */
+.typing-indicator {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 0 6px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    height: 22px;
+}
+.typing-indicator.visible { display: flex; }
+.typing-dots { display: flex; gap: 3px; align-items: center; }
+.typing-dots span {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--bot-color);
+    animation: typingBounce 1.2s infinite ease-in-out;
+}
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typingBounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-4px); opacity: 1; }
+}
+
+/* ── MESSAGE INPUT ── */
+.message-input-area {
+    padding: 10px 20px 16px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.04);
+}
+
+.quote-pill-btn {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent-light);
+    color: var(--accent-dark);
+    border: 1.5px solid var(--accent);
+    border-radius: 100px;
+    padding: 6px 14px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-bottom: 10px;
+    transition: all 0.15s;
+    width: fit-content;
+}
+
+.quote-pill-btn:hover {
+    background: var(--accent);
+    color: var(--primary);
+}
+
+/* Bot welcome — input siempre visible */
+.bot-welcome-hint {
+    font-size: 0.78rem;
+    color: var(--text-light);
+    margin-top: 4px;
+}
+
+/* quote pill visible fix */
+.quote-pill-btn { display: none; }
+.quote-pill-btn.visible { display: inline-flex; }
+
+.input-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    background: var(--surface-2);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 8px 8px 8px 14px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.input-row:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(245,158,11,0.1);
+    background: var(--surface);
+}
+
+.file-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1rem;
+    flex-shrink: 0;
+    transition: all 0.15s;
+    margin-bottom: 2px;
+}
+
+.file-btn:hover {
+    background: var(--surface-3);
+    color: var(--primary);
+}
+
+.message-input {
+    flex: 1;
+    padding: 4px 0;
+    border: none;
+    font-size: 0.92rem;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    background: transparent;
+    color: var(--text);
+    resize: none;
+    max-height: 120px;
+    min-height: 26px;
+    line-height: 1.55;
+    overflow-y: auto;
+}
+
+.message-input::placeholder { color: var(--text-light); }
+.message-input::-webkit-scrollbar { width: 3px; }
+.message-input::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.send-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--surface-3);
+    color: var(--text-light);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+    flex-shrink: 0;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    margin-bottom: 1px;
+    opacity: 0.5;
+}
+
+.send-btn.active {
+    background: var(--primary);
+    color: #fff;
+    cursor: pointer;
+    opacity: 1;
+}
+
+.send-btn.active:hover {
+    background: var(--accent);
+    color: var(--primary);
+    transform: scale(1.08);
+}
+
+/* ── PRODUCT PANEL (right) ── */
+.product-panel {
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.product-panel-header {
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+.panel-close {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.panel-close:hover { background: var(--surface-3); }
+
+.product-panel-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+}
+
+.product-panel-scroll::-webkit-scrollbar { width: 3px; }
+.product-panel-scroll::-webkit-scrollbar-thumb { background: var(--border); }
+
+.panel-product-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: box-shadow 0.15s, transform 0.15s;
+}
+
+.panel-product-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+
+.panel-product-img {
+    width: 100%;
+    height: 110px;
+    object-fit: cover;
+    display: block;
+    background: var(--surface-3);
+    transition: transform 0.2s ease;
+}
+
+.panel-product-card:hover .panel-product-img {
+    transform: scale(1.03);
+}
+
+.panel-product-placeholder {
+    width: 100%;
+    height: 110px;
+    background: var(--surface-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: var(--text-light);
+}
+
+.panel-product-body { padding: 10px 12px 12px; }
+
+.panel-product-name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+    line-height: 1.3;
+}
+
+.panel-product-price {
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: #047857;
+}
+
+.panel-product-unit {
+    font-size: 0.7rem;
+    color: var(--text-light);
+}
+
+.panel-quote-btn {
+    width: 100%;
+    margin-top: 8px;
+    padding: 7px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-family: 'DM Sans', sans-serif;
+}
+
+.panel-quote-btn:hover { background: var(--accent); color: var(--primary); }
+
+.panel-empty {
+    text-align: center;
+    padding: 30px 16px;
+    color: var(--text-light);
+    font-size: 0.82rem;
+}
+
+/* ── MODALS ── */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(2px);
+}
+
+.modal.show { display: flex; }
+
+.modal-content {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    max-width: 560px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+    animation: modalIn 0.25s ease;
+}
+
+@keyframes modalIn {
+    from { opacity: 0; transform: translateY(-12px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 22px;
+}
+
+.modal-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.modal-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: none;
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close:hover { background: var(--surface-3); }
+
+.form-group { margin-bottom: 16px; }
+
+.form-label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.88rem;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    background: var(--surface-2);
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+.form-control:focus { border-color: var(--accent); background: var(--surface); }
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.btn-cancel {
+    padding: 10px 20px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: none;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+}
+
+.btn-submit {
+    padding: 10px 24px;
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--primary);
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: background 0.15s;
+}
+
+.btn-submit:hover { background: var(--accent-dark); }
+
+.loader {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--surface-3);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 20px auto;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-left: 6px;
+}
+
+.status-online { background: #10b981; }
+.status-offline { background: #475569; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+    .chat-layout { grid-template-columns: 240px 1fr 0px; }
+    .chat-layout.panel-open { grid-template-columns: 240px 1fr 260px; }
+}
+
+@media (max-width: 640px) {
+    .chat-layout { grid-template-columns: 0px 1fr 0px; }
+    .sidebar { display: none; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<body data-user-role="{{ request.user.userprofile.role }}">
+
+<div class="chat-layout" id="chatLayout">
+
+    <!-- ═══ SIDEBAR ═══ -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">ELISE</div>
+            <div class="sidebar-title">Mensajes</div>
+            <div class="sidebar-user">{{ request.user.username }}
+                {% if request.user.userprofile %} · {{ request.user.userprofile.get_role_display }}{% endif %}
+            </div>
         </div>
-    </nav>
 
-    <!-- CHAT CONTAINER -->
-    <div class="chat-container">
-        <!-- SIDEBAR -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <h2>Conversaciones</h2>
-                <div style="margin-top: 10px; font-size: 14px; color: #6b7280;">
-                    Usuario: {{ request.user.username }}
-                    {% if user_profile %}
-                    <br><small>{{ user_profile.get_role_display }}</small>
-                    {% endif %}
+        <!-- Bot pinned -->
+        <div class="bot-card" id="botCard" onclick="selectBotFromCard()">
+            <div class="bot-card-inner">
+                <div class="bot-avatar">🤖</div>
+                <div>
+                    <div class="bot-info-name">EliceBot</div>
+                    <div class="bot-info-sub">Encuentra proveedores</div>
+                </div>
+                <span class="bot-badge">IA</span>
+            </div>
+        </div>
+
+        <div class="sidebar-section-label">Tus proveedores</div>
+
+        <!-- Search -->
+        <div class="sidebar-search">
+            <div class="sidebar-search-wrap">
+                <span class="sidebar-search-icon">🔍</span>
+                <input type="text" class="sidebar-search-input" id="sidebarSearch" placeholder="Buscar proveedor…">
+            </div>
+        </div>
+
+        <div class="users-scroll" id="usersList">
+            <div style="padding:16px;text-align:center;font-size:0.8rem;color:#334155;">
+                Cargando...
+            </div>
+        </div>
+    </aside>
+
+    <!-- ═══ CHAT MAIN ═══ -->
+    <main class="chat-main">
+
+        <!-- Header -->
+        <div class="chat-header" id="chatHeader">
+            <div class="chat-header-left">
+                <div class="chat-header-avatar" id="currentUserAvatar">?</div>
+                <div>
+                    <div class="chat-header-name" id="currentUserName">Selecciona una conversación</div>
+                    <div class="chat-header-sub" id="currentUserInfo" style="display:flex;align-items:center;gap:6px;">
+                        <span class="online-pulse" id="headerOnlineDot" style="display:none;"></span>
+                        <span id="currentUserInfoText">Elige un contacto para comenzar</span>
+                    </div>
                 </div>
             </div>
-            
-            <div class="user-list">
-                <h3>Usuarios Disponibles</h3>
-                <div id="usersList">
-                    <!-- Users will be loaded dynamically -->
-                    <div style="text-align: center; padding: 20px; color: #9ca3af;">
-                        Cargando usuarios...
-                    </div>
+            <div class="chat-header-actions">
+                <button class="header-btn" id="catalogBtn" disabled style="display:none;">
+                    📄 Catálogo
+                </button>
+                <button class="header-btn" id="whatsappBtn" disabled>
+                    💬 WhatsApp
+                </button>
+                <button class="header-btn accent" id="quoteBtn" disabled>
+                    📋 Cotizar
+                </button>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="messages-container" id="messagesContainer">
+            <!-- Bot welcome shown by default -->
+            <div class="bot-welcome" id="botWelcome">
+                <div class="bot-welcome-icon">🤖</div>
+                <h2>Hola, {{ request.user.first_name|default:request.user.username }}</h2>
+                <p>Soy EliceBot, tu asistente de materiales de construcción.<br>
+                Escríbeme el material que necesitas y te conecto con los mejores proveedores.</p>
+                <div class="material-chips">
+                    <div class="material-chip" onclick="sendMaterialChip('Acero')">🔩 Acero</div>
+                    <div class="material-chip" onclick="sendMaterialChip('Pintura')">🎨 Pintura</div>
+                    <div class="material-chip" onclick="sendMaterialChip('Cemento')">🏗️ Cemento</div>
+                    <div class="material-chip" onclick="sendMaterialChip('Aluminio')">🪟 Aluminio</div>
+                    <div class="material-chip" onclick="sendMaterialChip('Vidrio')">🪞 Vidrio</div>
                 </div>
             </div>
         </div>
 
-        <!-- CHAT MAIN -->
-        <div class="chat-main">
-            <!-- CHAT HEADER -->
-            <div class="chat-header" id="chatHeader">
-                <div class="current-user-info">
-                    <div class="user-avatar" id="currentUserAvatar">?</div>
-                    <div>
-                        <h3 id="currentUserName">Selecciona un usuario</h3>
-                        <p id="currentUserInfo">Para comenzar una conversación</p>
-                    </div>
-                </div>
-
-
-                <div class="chat-actions">
-                    <button class="chat-btn" title="Solicitar Cotización" id="quoteBtn" disabled>📋</button>
-                    <button class="chat-btn" title="WhatsApp" id="whatsappBtn" disabled>💬</button>
-                    <button class="chat-btn" title="Ver Catálogo" id="catalogBtn" disabled style="display:none;">📄</button>
-                    <body data-user-role="{{ request.user.userprofile.role }}">
-                </div>
-            </div>
-
-            <!-- MESSAGES CONTAINER -->
-                <div class="messages-container" id="messagesContainer">
-                    <!-- Django template for initial messages if conversation is selected -->
-                    {% if selected_conversation and messages_list %}
-                        {% for message in messages_list %}
-                            <div class="message {% if message.is_sent %}sent{% else %}received{% endif %}" data-message-id="{{ message.id }}">
-                                <div class="message-content">
-                                    {{ message.content }}
-                                </div>
-                                <div class="message-time">
-                                    {{ message.timestamp|date:"H:i" }}
-                                </div>
-                            </div>
-                        {% endfor %}
-                    {% else %}
-                        <div style="text-align: center; padding: 40px; color: #9ca3af;">
-                            <div style="font-size: 24px; margin-bottom: 10px;">💬</div>
-                            <h3>Selecciona un usuario para chatear</h3>
-                            <p>Elige un contacto de la lista para comenzar una conversación</p>
-                        </div>
-                    {% endif %}
-                </div>
-
-            <!-- MESSAGE INPUT -->
-            <div class="message-input-container" id="messageInputContainer" style="display: none;">
-                <button class="file-btn" id="fileBtn" title="Adjuntar archivo">📎</button>
-                <input type="text" class="message-input" id="messageInput" 
-                       placeholder="Escribe tu mensaje aquí..." 
-                       onkeypress="handleKeyPress(event)">
-                <button class="send-btn" id="sendBtn" title="Enviar mensaje">➤</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- FILE INPUT (hidden) -->
-    <input type="file" id="fileInput" style="display: none;">
-
-    <!-- Step 2: DYNAMIC QUOTE MODAL -->
-    <div class="modal" id="quoteModal">
-        <div class="modal-content">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3 style="margin: 0;">📋 Solicitar Cotización</h3>
-                <span style="font-size: 14px; color: #6b7280;" id="supplier-name"></span>
-            </div>
-            
-            <div id="quote-form-loading" style="text-align: center; padding: 40px;">
-                <div class="loader"></div>
-                <p>Cargando productos...</p>
-            </div>
-            
-            <div id="quote-form-container" style="display: none;">
-                <form id="dynamicQuoteForm">
-                    <div class="form-group">
-                        <label>Producto</label>
-                        <select id="quote-product" class="message-input" required>
-                            <option value="">Selecciona un producto</option>
-                        </select>
-                    </div>
-                    
-                    <div id="product-options-container"></div>
-                    
-                    <div class="form-group">
-                        <label>Cantidad</label>
-                        <input type="number" id="quote-quantity" class="message-input" min="1" value="1" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Notas adicionales</label>
-                        <textarea id="quote-notes" class="message-input" rows="3" placeholder="Detalles específicos..."></textarea>
-                    </div>
-                    
-                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-                        <button type="button" onclick="closeQuoteModal()" class="send-btn" style="background: #6b7280; width: auto; padding: 10px 20px; border-radius: 5px;">Cancelar</button>
-                        <button type="button" onclick="submitDynamicQuote()" class="send-btn" style="background: #fbbf24; color: #1f2933; width: auto; padding: 10px 20px; border-radius: 5px;">Enviar Cotización</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- CATALOG MODAL -->
-<div class="modal" id="catalogModal">
-    <div class="modal-content" style="max-width: 700px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h3 style="margin: 0;">📄 Catálogo del Proveedor</h3>
-            <button onclick="closeCatalogModal()" 
-                    style="background:none;border:none;font-size:24px;cursor:pointer;color:#6b7280;">✕</button>
-        </div>
-        <div id="catalog-content">
-        </div>
-        <div style="display:flex; justify-content:flex-end; margin-top:15px; gap:10px;">
-            <a id="catalog-download-btn" href="#" download 
-               style="background:#1f2933;color:white;padding:10px 20px;border-radius:5px;
-                      text-decoration:none;display:none;">
-                ⬇️ Descargar PDF
-            </a>
-            <button onclick="closeCatalogModal()" 
-                    style="background:#6b7280;color:white;border:none;padding:10px 20px;
-                           border-radius:5px;cursor:pointer;">
-                Cerrar
+        <!-- Input area -->
+        <div class="message-input-area" id="messageInputContainer" style="display:none;">
+            <button class="quote-pill-btn" id="quotePillBtn" onclick="openQuoteModal()">
+                📋 Solicitar cotización a este proveedor
             </button>
+            <!-- Typing indicator -->
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="typing-dots"><span></span><span></span><span></span></div>
+                <span id="typingLabel">EliceBot está escribiendo…</span>
+            </div>
+            <div class="input-row">
+                <button class="file-btn" id="fileBtn" title="Adjuntar archivo">📎</button>
+                <textarea class="message-input" id="messageInput"
+                       placeholder="Escribe tu mensaje…"
+                       rows="1"></textarea>
+                <button class="send-btn" id="sendBtn" title="Enviar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ═══ PRODUCT PANEL (right, hidden by default) ═══ -->
+    <aside class="product-panel" id="productPanel">
+        <div class="product-panel-header">
+            <span>Productos</span>
+            <button class="panel-close" onclick="closeProductPanel()">✕</button>
+        </div>
+        <div class="product-panel-scroll" id="productPanelContent">
+            <div class="panel-empty">Selecciona un proveedor para ver sus productos.</div>
+        </div>
+    </aside>
+
+</div>
+
+<!-- FILE INPUT -->
+<input type="file" id="fileInput" style="display:none;">
+
+<!-- ═══ QUOTE MODAL ═══ -->
+<div class="modal" id="quoteModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="modal-title">📋 Solicitar Cotización</span>
+            <button class="modal-close" onclick="closeQuoteModal()">✕</button>
+        </div>
+        <div id="quote-supplier-name" style="font-size:0.8rem;color:var(--text-muted);margin-bottom:16px;"></div>
+
+        <div id="quote-form-loading" style="text-align:center;padding:30px;">
+            <div class="loader"></div>
+            <p style="font-size:0.85rem;color:var(--text-muted);">Cargando productos...</p>
+        </div>
+
+        <div id="quote-form-container" style="display:none;">
+            <div class="form-group">
+                <label class="form-label">Producto</label>
+                <select id="quote-product" class="form-control" required>
+                    <option value="">Selecciona un producto</option>
+                </select>
+            </div>
+            <div id="product-options-container"></div>
+            <div class="form-group">
+                <label class="form-label">Cantidad</label>
+                <input type="number" id="quote-quantity" class="form-control" min="1" value="1" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Notas adicionales</label>
+                <textarea id="quote-notes" class="form-control" rows="3" placeholder="Detalles específicos, medidas, colores..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeQuoteModal()">Cancelar</button>
+                <button class="btn-submit" onclick="submitDynamicQuote()">Enviar cotización →</button>
+            </div>
         </div>
     </div>
 </div>
 
-    {% load static %}
-    <!-- External JS (if you have one) -->
-    <script src="{% static 'js/chat.js' %}"></script>
-    
+<!-- ═══ CATALOG MODAL ═══ -->
+<div class="modal" id="catalogModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="modal-title">📄 Catálogo del Proveedor</span>
+            <button class="modal-close" onclick="closeCatalogModal()">✕</button>
+        </div>
+        <div id="catalog-content"></div>
+        <div class="modal-actions" style="margin-top:16px;">
+            <a id="catalog-download-btn" href="#" download
+               style="display:none;padding:10px 20px;background:var(--primary);color:white;border-radius:var(--radius-sm);text-decoration:none;font-size:0.85rem;font-weight:600;">
+                ⬇️ Descargar PDF
+            </a>
+            <button class="btn-cancel" onclick="closeCatalogModal()">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+{% load static %}
+<script src="{% static 'js/chat.js' %}"></script>
+<script>
+// Fix chat height to account for any top navbar from base template
+function fixChatHeight() {
+    const layout = document.getElementById('chatLayout');
+    if (!layout) return;
+    // Find the top offset of the chat layout (i.e. navbar height)
+    const top = layout.getBoundingClientRect().top;
+    const availableHeight = window.innerHeight - top;
+    layout.style.height = availableHeight + 'px';
+    layout.style.maxHeight = availableHeight + 'px';
+}
+fixChatHeight();
+window.addEventListener('resize', fixChatHeight);
+</script>
 </body>
-</html>
-
-
+{% endblock %}

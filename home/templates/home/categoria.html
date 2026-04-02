@@ -4,207 +4,327 @@
 {% block title %}{{ category.name }} | ELISE Construction{% endblock %}
 
 {% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&display=swap" rel="stylesheet">
 <style>
 :root {
-    --primary: #1f2933;
-    --accent: #f59e0b;
-    --light: #f8f9fa;
-    --dark: #111827;
+    --primary:       #0f172a;
+    --primary-soft:  #1e293b;
+    --accent:        #f59e0b;
+    --accent-dark:   #d97706;
+    --accent-light:  #fef3c7;
+    --text:          #0f172a;
+    --text-muted:    #64748b;
+    --text-light:    #94a3b8;
+    --surface:       #ffffff;
+    --surface-2:     #f8fafc;
+    --surface-3:     #f1f5f9;
+    --border:        #e2e8f0;
+    --radius-sm:     8px;
+    --radius-md:     12px;
+    --radius-lg:     20px;
+    --shadow-sm:     0 1px 3px rgba(0,0,0,0.07);
+    --shadow-md:     0 4px 16px rgba(0,0,0,0.08);
+    --shadow-lg:     0 20px 40px rgba(0,0,0,0.12);
 }
 
-.catalog-container {
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
+    background: var(--surface-2);
+    color: var(--text);
+}
+
+.catalog-wrap {
     max-width: 1200px;
-    margin: auto;
-    padding: 40px 20px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
 }
 
-/* ── Breadcrumb ── */
+/* ── BREADCRUMB ── */
 .breadcrumb {
     display: flex;
     align-items: center;
-    gap: 8px;
     flex-wrap: wrap;
-    margin-bottom: 30px;
-    font-size: 0.9rem;
-    color: #6b7280;
+    gap: 6px;
+    margin-bottom: 32px;
+    font-size: 0.82rem;
+    color: var(--text-light);
 }
 
 .breadcrumb a {
-    color: var(--accent);
+    color: var(--accent-dark);
     text-decoration: none;
+    font-weight: 500;
+    transition: color 0.15s;
 }
 
-.breadcrumb a:hover {
-    text-decoration: underline;
+.breadcrumb a:hover { color: var(--accent); }
+.breadcrumb .sep { color: var(--border); }
+.breadcrumb strong { color: var(--text-muted); font-weight: 600; }
+
+/* ── CATEGORY HERO ── */
+.cat-hero {
+    background: var(--primary);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 48px;
+    position: relative;
+    min-height: 200px;
+    display: flex;
+    align-items: flex-end;
+    animation: fadeUp 0.4s ease both;
 }
 
-.breadcrumb span {
-    color: #9ca3af;
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Header ── */
-.category-header {
-    margin-bottom: 40px;
+.cat-hero-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.35;
 }
 
-.category-header h1 {
-    color: var(--primary);
+.cat-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(15,23,42,0.92) 0%, rgba(15,23,42,0.2) 100%);
+}
+
+.cat-hero-content {
+    position: relative;
+    z-index: 1;
+    padding: 32px 36px;
+}
+
+.cat-hero-icon { font-size: 2rem; margin-bottom: 8px; }
+
+.cat-hero-name {
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.025em;
     margin-bottom: 8px;
 }
 
-.category-header p {
-    color: #4b5563;
-    font-size: 1.05rem;
-    max-width: 700px;
+.cat-hero-desc {
+    color: #94a3b8;
+    font-size: 0.95rem;
+    max-width: 560px;
+    line-height: 1.6;
 }
 
-/* ── Grid ── */
+/* ── SECTION LABEL ── */
+.section-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-light);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+}
+
+/* ── GRID ── */
 .catalog-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 25px;
+    gap: 20px;
 }
 
-.product-card {
-    background: white;
-    border-radius: 10px;
-    padding: 25px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+/* ── PRODUCT / CHILD CARD ── */
+.item-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+    animation: fadeUp 0.4s ease both;
 }
 
-.product-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 14px 28px rgba(0,0,0,0.12);
+.item-card:nth-child(1) { animation-delay: 0.04s; }
+.item-card:nth-child(2) { animation-delay: 0.08s; }
+.item-card:nth-child(3) { animation-delay: 0.12s; }
+.item-card:nth-child(4) { animation-delay: 0.16s; }
+.item-card:nth-child(5) { animation-delay: 0.20s; }
+.item-card:nth-child(6) { animation-delay: 0.24s; }
+.item-card:nth-child(7) { animation-delay: 0.28s; }
+.item-card:nth-child(8) { animation-delay: 0.32s; }
+
+.item-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: rgba(245,158,11,0.3);
 }
 
-.product-card h3 {
-    margin-top: 0;
-    color: var(--primary);
+.item-img-wrap { overflow: hidden; height: 180px; flex-shrink: 0; }
+
+.item-img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
 }
 
-.product-card p {
-    color: #4b5563;
-    font-size: 0.95rem;
+.item-card:hover .item-img { transform: scale(1.05); }
+
+.item-placeholder {
+    height: 180px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-soft) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    flex-shrink: 0;
+}
+
+.item-body {
+    padding: 18px 20px 20px;
+    display: flex;
+    flex-direction: column;
     flex-grow: 1;
+    gap: 8px;
 }
 
-.badge {
-    display: inline-block;
-    background: var(--accent);
-    color: white;
-    padding: 6px 12px;
-    font-size: 0.8rem;
-    border-radius: 20px;
-    margin-bottom: 15px;
+.item-badge {
+    display: inline-flex;
+    align-items: center;
+    background: var(--surface-3);
+    color: var(--text-light);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 100px;
     width: fit-content;
 }
 
-.badge-supplier {
-    background: #1f2933;
+.item-name {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.35;
 }
 
-.card-icon {
-    font-size: 2rem;
-    margin-bottom: 10px;
+.item-desc {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    line-height: 1.5;
+    flex-grow: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
-.price-note {
+.item-price {
     font-size: 0.9rem;
-    font-weight: bold;
+    font-weight: 800;
     color: #047857;
-    margin-top: 15px;
 }
 
-.quote-btn {
-    margin-top: 20px;
-    padding: 12px;
-    background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.95rem;
-    text-align: center;
-    text-decoration: none;
-    display: block;
+.item-price-consult {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-light);
 }
 
-.quote-btn:hover {
-    background: #111827;
-    color: white;
-    text-decoration: none;
-}
-
-/* ── Product card extras ── */
-.suppliers-list {
-    margin-top: 10px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-}
-
-.brands-list {
-    margin-top: 6px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-}
+/* Tags */
+.tag-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 2px; }
 
 .tag {
-    font-size: 0.75rem;
+    font-size: 0.68rem;
     padding: 3px 8px;
-    border-radius: 12px;
-    background: #f3f4f6;
-    color: #374151;
+    border-radius: 100px;
+    background: var(--surface-3);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
 }
 
+/* CTA */
+.item-cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: var(--primary);
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none;
+    margin-top: 6px;
+    transition: background 0.15s, color 0.15s;
+}
+
+.item-cta:hover {
+    background: var(--accent);
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.item-cta-arrow { transition: transform 0.15s; }
+.item-card:hover .item-cta-arrow { transform: translateX(3px); }
+
+/* ── EMPTY STATE ── */
 .empty-state {
     text-align: center;
-    padding: 60px 20px;
-    color: #9ca3af;
+    padding: 80px 24px;
+    color: var(--text-light);
 }
 
-.empty-state .empty-icon {
-    font-size: 3rem;
-    margin-bottom: 15px;
-}
+.empty-icon { font-size: 3.5rem; margin-bottom: 16px; opacity: 0.35; }
+.empty-state h3 { font-size: 1.05rem; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; }
+.empty-state p { font-size: 0.88rem; margin-bottom: 24px; }
 
-.back-link {
+.empty-back {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    color: var(--accent);
+    padding: 10px 22px;
+    background: var(--primary);
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-weight: 700;
     text-decoration: none;
-    font-size: 0.95rem;
-    margin-bottom: 20px;
+    transition: background 0.15s;
 }
 
-.back-link:hover {
-    text-decoration: underline;
-}
+.empty-back:hover { background: var(--accent); color: var(--primary); text-decoration: none; }
 
+/* ── RESPONSIVE ── */
 @media (max-width: 900px) {
     .catalog-grid { grid-template-columns: repeat(2, 1fr); }
+    .cat-hero-content { padding: 24px; }
 }
 
 @media (max-width: 520px) {
     .catalog-grid { grid-template-columns: 1fr; }
+    .catalog-wrap { padding: 24px 16px 60px; }
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="catalog-container">
+<div class="catalog-wrap">
 
-    <!-- Breadcrumb -->
+    <!-- BREADCRUMB -->
     <nav class="breadcrumb">
         <a href="{% url 'home:productos' %}">Catálogo</a>
         {% for crumb in breadcrumb %}
-            <span>›</span>
+            <span class="sep">›</span>
             {% if not forloop.last %}
                 <a href="{% url 'home:categoria' crumb.slug %}">{{ crumb.name }}</a>
             {% else %}
@@ -213,111 +333,113 @@
         {% endfor %}
     </nav>
 
-    <!-- Header de la categoría -->
-    <div class="category-header">
-    {% if category.image %}
-    <img src="{{ category.image.url }}"
-         alt="{{ category.name }}"
-         style="width:100%; max-height:250px; object-fit:cover; border-radius:10px; margin-bottom:20px;">
-    {% endif %}
-    {% if category.icon %}<div style="font-size:2.5rem;">{{ category.icon }}</div>{% endif %}
-    <h1>{{ category.name }}</h1>
-        {% if category.description %}
-        <p>{{ category.description }}</p>
+    <!-- CATEGORY HERO -->
+    <div class="cat-hero">
+        {% if category.image %}
+        <img class="cat-hero-img" src="{{ category.image.url }}" alt="{{ category.name }}">
+        <div class="cat-hero-overlay"></div>
         {% endif %}
+        <div class="cat-hero-content">
+            {% if category.icon %}<div class="cat-hero-icon">{{ category.icon }}</div>{% endif %}
+            <div class="cat-hero-name">{{ category.name }}</div>
+            {% if category.description %}
+            <div class="cat-hero-desc">{{ category.description }}</div>
+            {% endif %}
+        </div>
     </div>
 
-    <!-- CASO 1: tiene subcategorías → muestra cartas de subcategorías -->
+    <!-- CASO 1: subcategorías -->
     {% if children %}
+    <div class="section-label">Subcategorías</div>
     <div class="catalog-grid">
         {% for child in children %}
-        <div class="product-card">
+        <div class="item-card">
+
             {% if child.image %}
-            <img src="{{ child.image.url }}"
-                alt="{{ child.name }}"
-                style="width:100%; height:160px; object-fit:cover; border-radius:6px; margin-bottom:15px;">
+            <div class="item-img-wrap">
+                <img class="item-img" src="{{ child.image.url }}" alt="{{ child.name }}">
+            </div>
             {% elif child.icon %}
-            <div class="card-icon">{{ child.icon }}</div>
+            <div class="item-placeholder">{{ child.icon }}</div>
+            {% else %}
+            <div class="item-placeholder">📦</div>
             {% endif %}
-            <span class="badge">
-                {% with count=child.children.count %}
-                    {% if count > 0 %}
-                        {{ count }} subcategoría{{ count|pluralize:"s" }}
-                    {% else %}
-                        {% with pcount=child.products.count %}
-                            {{ pcount }} producto{{ pcount|pluralize:"s" }}
-                        {% endwith %}
-                    {% endif %}
-                {% endwith %}
-            </span>
-            <h3>{{ child.name }}</h3>
-            <p>{{ child.description|default:"Explora los productos de esta subcategoría." }}</p>
-            <a href="{% url 'home:categoria' child.slug %}" class="quote-btn">
-                Ver más
-            </a>
+
+            <div class="item-body">
+                <span class="item-badge">
+                    {% with count=child.children.count %}
+                        {% if count > 0 %}{{ count }} subcategoría{{ count|pluralize:"s" }}
+                        {% else %}{% with pcount=child.products.count %}{{ pcount }} producto{{ pcount|pluralize:"s" }}{% endwith %}
+                        {% endif %}
+                    {% endwith %}
+                </span>
+                <div class="item-name">{{ child.name }}</div>
+                <div class="item-desc">{{ child.description|default:"Explora los productos de esta subcategoría." }}</div>
+                <a href="{% url 'home:categoria' child.slug %}" class="item-cta">
+                    Ver más <span class="item-cta-arrow">→</span>
+                </a>
+            </div>
+
         </div>
         {% endfor %}
     </div>
 
-    <!-- CASO 2: no tiene hijos → muestra productos -->
+    <!-- CASO 2: productos -->
     {% elif products %}
+    <div class="section-label">{{ products|length }} producto{{ products|length|pluralize:"s" }} disponible{{ products|length|pluralize:"s" }}</div>
     <div class="catalog-grid">
         {% for product in products %}
-        <div class="product-card">
+        <div class="item-card">
+
             {% if product.main_image %}
-            <img src="{{ product.main_image.url }}"
-                 alt="{{ product.name }}"
-                 style="width:100%; height:160px; object-fit:cover; border-radius:6px; margin-bottom:15px;">
-            {% endif %}
-
-            <span class="badge">{{ product.unit }}</span>
-            <h3>{{ product.name }}</h3>
-            <p>{{ product.description|default:"" }}</p>
-
-            {% if product.base_price %}
-            <div class="price-note">Desde ${{ product.base_price }} / {{ product.unit }}</div>
+            <div class="item-img-wrap">
+                <img class="item-img" src="{{ product.main_image.url }}" alt="{{ product.name }}">
+            </div>
             {% else %}
-            <div class="price-note">Precio a consultar</div>
+            <div class="item-placeholder">📦</div>
             {% endif %}
 
-            <!-- Proveedores -->
-            {% with suppliers=product.suppliers.all %}
-            {% if suppliers %}
-            <div class="suppliers-list">
-                {% for supplier in suppliers %}
-                <span class="tag">🏭 {{ supplier.user.userprofile.company|default:supplier.user.username }}</span>
-                {% endfor %}
+            <div class="item-body">
+                <span class="item-badge">{{ product.unit }}</span>
+                <div class="item-name">{{ product.name }}</div>
+                {% if product.description %}
+                <div class="item-desc">{{ product.description }}</div>
+                {% endif %}
+
+                {% if product.base_price %}
+                <div class="item-price">${{ product.base_price }} <span style="font-weight:500;font-size:0.75rem;color:var(--text-light);">/ {{ product.unit }}</span></div>
+                {% else %}
+                <div class="item-price-consult">Precio a consultar</div>
+                {% endif %}
+
+                {% with suppliers=product.suppliers.all %}{% if suppliers %}
+                <div class="tag-row">
+                    {% for s in suppliers %}<span class="tag">🏭 {{ s.user.userprofile.company|default:s.user.username }}</span>{% endfor %}
+                </div>
+                {% endif %}{% endwith %}
+
+                {% with brands=product.brands.all %}{% if brands %}
+                <div class="tag-row">
+                    {% for b in brands %}<span class="tag">🏷️ {{ b.name }}</span>{% endfor %}
+                </div>
+                {% endif %}{% endwith %}
+
+                <a href="{% url 'home:producto_detalle' product.slug %}" class="item-cta">
+                    Ver detalle <span class="item-cta-arrow">→</span>
+                </a>
             </div>
-            {% endif %}
-            {% endwith %}
 
-            <!-- Marcas -->
-            {% with brands=product.brands.all %}
-            {% if brands %}
-            <div class="brands-list">
-                {% for brand in brands %}
-                <span class="tag">🏷️ {{ brand.name }}</span>
-                {% endfor %}
-            </div>
-            {% endif %}
-            {% endwith %}
-
-            <a href="{% url 'home:producto_detalle' product.slug %}" class="quote-btn">
-                Ver detalle
-            </a>
         </div>
         {% endfor %}
     </div>
 
-    <!-- CASO 3: categoría vacía -->
+    <!-- CASO 3: vacío -->
     {% else %}
     <div class="empty-state">
         <div class="empty-icon">📦</div>
         <h3>Sin productos por el momento</h3>
         <p>Estamos trabajando para agregar productos a esta categoría.</p>
-        <a href="{% url 'home:productos' %}" class="quote-btn" style="display:inline-block; margin-top:20px; padding: 10px 24px;">
-            ← Volver al catálogo
-        </a>
+        <a href="{% url 'home:productos' %}" class="empty-back">← Volver al catálogo</a>
     </div>
     {% endif %}
 

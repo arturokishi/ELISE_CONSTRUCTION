@@ -1,1057 +1,1007 @@
+console.log("chat.js loaded");
 
-        console.log("JS LOADED");
-    
-        /* ===============================
-           GLOBAL STATE
-        ================================ */
-        let currentChatUser = null;
-        let currentConversationId = null;
-        let csrftoken = null;
-        let messageRefreshInterval = null;
-        let conversationBlocked = false;
-        
-        let usersList,
-            messagesContainer,
-            messageInput,
-            sendBtn,
-            fileBtn,
-            fileInput,
-            messageInputContainer,
-            currentUserName,
-            currentUserInfo,
-            currentUserAvatar;
-        
-        /* ===============================
-           INIT
-        ================================ */
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log("DOM fully loaded");
-            
-            // Get CSRF token
-            const metaTag = document.querySelector('meta[name="csrf-token"]');
-            if (metaTag) {
-                csrftoken = metaTag.getAttribute('content');
-            }
-        
-            // Cache DOM elements
-            usersList = document.getElementById('usersList');
-            messagesContainer = document.getElementById('messagesContainer');
-            messageInput = document.getElementById('messageInput');
-            sendBtn = document.getElementById('sendBtn');
-            fileBtn = document.getElementById('fileBtn');
-            fileInput = document.getElementById('fileInput');
-            messageInputContainer = document.getElementById('messageInputContainer');
-            currentUserName = document.getElementById('currentUserName');
-            currentUserInfo = document.getElementById('currentUserInfo');
-            currentUserAvatar = document.getElementById('currentUserAvatar');
-        
-            // Check if all elements exist
-            if (!usersList || !messagesContainer || !messageInput || !sendBtn) {
-                console.error("Critical DOM elements missing!");
-                return;
-            }
-        
-            wireEvents();
-            loadUsers();
-        
-            const conversationId = getQueryParam('conversation');
-            if (conversationId) {
-                selectConversationById(conversationId);
-            }
-        });
-        
-        /* ===============================
-           HELPERS
-        ================================ */
-        function getQueryParam(name) {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get(name);
-        }
-        
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        function formatTime(date = new Date()) {
-            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        }
-        
-        /* ===============================
-           LOAD USERS
-        ================================ */
-        async function loadUsers() {
-            try {
-                const res = await fetch('/chat/users/');
-                if (!res.ok) {
-                    throw new Error(`HTTP error! status: ${res.status}`);
-                }
-                const data = await res.json();
-        
-                if (!data.users || !data.users.length) {
-                    usersList.innerHTML = `
-                        <div style="padding:20px;color:#9ca3af;text-align:center">
-                            No hay otros usuarios registrados
-                        </div>`;
-                    return;
-                }
-        
-                displayUsers(data.users);
-        
-            } catch (error) {
-                console.error("Error loading users:", error);
-                usersList.innerHTML = `
-                    <div style="padding:20px;color:#ef4444;text-align:center">
-                        Error cargando usuarios: ${error.message}
-                    </div>`;
-            }
-        }
-        
-        /* ===============================
-           DISPLAY USERS - FIXED (NO DUPLICATES)
-        =============================== */
-        function displayUsers(users) {
-            if (!usersList) return;
-            usersList.innerHTML = '';
-            
-            // Define role groups in Spanish
-            const groups = {
-                'client': 'Clientes',
-                'supplier': 'Proveedores',
-                'admin': 'Administradores',
-                'staff': 'Personal'
-            };
-            
-            // Check current user role from the page
-            const isClient = document.body.dataset.userRole === 'client';
-            
-            if (isClient) {
-                // Separate bot from regular suppliers
-                const botUsers = users.filter(user => user.is_bot);
-                const supplierUsers = users.filter(user => !user.is_bot);
-                
-                // Remove duplicate suppliers by ID
-                const uniqueSuppliers = [];
-                const seenSupplierIds = new Set();
-                
-                supplierUsers.forEach(user => {
-                    if (!seenSupplierIds.has(user.id)) {
-                        seenSupplierIds.add(user.id);
-                        uniqueSuppliers.push(user);
-                    }
-                });
-                
-                console.log(`Original suppliers: ${supplierUsers.length}, Unique: ${uniqueSuppliers.length}`);
-                
-                // Display bot first (if exists) - also deduplicate bot
-                if (botUsers.length > 0) {
-                    const uniqueBot = [];
-                    const seenBotIds = new Set();
-                    
-                    botUsers.forEach(user => {
-                        if (!seenBotIds.has(user.id)) {
-                            seenBotIds.add(user.id);
-                            uniqueBot.push(user);
-                        }
-                    });
-                    
-                    if (uniqueBot.length > 0) {
-                        const botHeader = document.createElement('h3');
-                        botHeader.textContent = '🤖 Asistente';
-                        botHeader.style.marginTop = '0';
-                        botHeader.style.color = '#9ca3af';
-                        usersList.appendChild(botHeader);
-                        
-                        uniqueBot.forEach(user => {
-                            const userItem = createUserItem(user);
-                            usersList.appendChild(userItem);
-                        });
-                    }
-                }
-                
-                // Group suppliers by their product categories
-                const suppliersByCategory = {};
-                const categoryUserMap = new Map(); // Track which users are already in which category
-                
-                uniqueSuppliers.forEach(user => {
-                    if (user.categories && user.categories.length > 0) {
-                        // Remove duplicate categories for the same user
-                        const uniqueCategories = [...new Set(user.categories)];
-                        
-                        uniqueCategories.forEach(category => {
-                            if (!suppliersByCategory[category]) {
-                                suppliersByCategory[category] = [];
-                                categoryUserMap.set(category, new Set());
-                            }
-                            
-                            // Check if this user is already in this category
-                            if (!categoryUserMap.get(category).has(user.id)) {
-                                categoryUserMap.get(category).add(user.id);
-                                suppliersByCategory[category].push(user);
-                            }
-                        });
-                    } else {
-                        // Suppliers with no categories go to "Otros"
-                        const category = 'Otros';
-                        if (!suppliersByCategory[category]) {
-                            suppliersByCategory[category] = [];
-                            categoryUserMap.set(category, new Set());
-                        }
-                        
-                        if (!categoryUserMap.get(category).has(user.id)) {
-                            categoryUserMap.get(category).add(user.id);
-                            suppliersByCategory[category].push(user);
-                        }
-                    }
-                });
-                
-                // Display categories and their suppliers
-                Object.keys(suppliersByCategory).sort().forEach(category => {
-                    // Only show category if it has suppliers
-                    if (suppliersByCategory[category].length > 0) {
-                        const categoryHeader = document.createElement('h3');
-                        categoryHeader.textContent = category;
-                        categoryHeader.style.marginTop = '15px';
-                        categoryHeader.style.color = '#fbbf24';
-                        usersList.appendChild(categoryHeader);
-                        
-                        suppliersByCategory[category].forEach(user => {
-                            const userItem = createUserItem(user);
-                            usersList.appendChild(userItem);
-                        });
-                    }
-                });
-                
-            } else {
-                // For suppliers: Show all users grouped by role - with deduplication
-                const groupedUsers = {};
-                const seenUserIds = new Set();
-                
-                users.forEach(user => {
-                    if (!seenUserIds.has(user.id)) {
-                        seenUserIds.add(user.id);
-                        const role = user.role || 'client';
-                        if (!groupedUsers[role]) {
-                            groupedUsers[role] = [];
-                        }
-                        groupedUsers[role].push(user);
-                    }
-                });
-                
-                // Display each role group
-                Object.keys(groups).forEach(roleKey => {
-                    const roleUsers = groupedUsers[roleKey];
-                    if (!roleUsers || roleUsers.length === 0) return;
-                    
-                    const header = document.createElement('h3');
-                    header.textContent = groups[roleKey];
-                    usersList.appendChild(header);
-                    
-                    roleUsers.forEach(user => {
-                        const userItem = createUserItem(user);
-                        usersList.appendChild(userItem);
-                    });
-                });
-            }
-            
-            // Add click handlers
-            document.querySelectorAll('.user-item').forEach(item => {
-                item.addEventListener('click', function(e) {
-                    document.querySelectorAll('.user-item').forEach(i => {
-                        i.classList.remove('active');
-                    });
-                    this.classList.add('active');
-                    
-                    const userId = this.dataset.userId;
-                    if (userId) {
-                        selectUser(userId);
-                    }
-                });
-            });
-        }
-        
-        /* ===============================
-           CREATE USER ITEM - FIXED (NO DUPLICATE CATEGORIES)
-        =============================== */
-        function createUserItem(user) {
-            const name = (user.first_name && user.last_name)
-                ? `${user.first_name} ${user.last_name}`
-                : user.username;
-            
-            // Use different avatar color for bot
-            const avatarColor = user.is_bot ? '#9ca3af' : (user.avatar_color || '#fbbf24');
-            const initial = user.is_bot ? '🤖' : name.charAt(0).toUpperCase();
-            const role = user.is_bot ? 'Bot' : (user.role_display || user.role || 'Usuario');
-            const company = user.company ? `<div class="user-role">${user.company}</div>` : '';
-            
-            // Add category badges if they exist (for suppliers) - ensure no duplicates
-            let categoryHtml = '';
-            if (!user.is_bot && user.categories && user.categories.length > 0) {
-                // Remove duplicate categories
-                const uniqueCategories = [...new Set(user.categories)];
-                
-                categoryHtml = '<div style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px;">';
-                uniqueCategories.slice(0, 2).forEach(cat => {
-                    categoryHtml += `<span style="font-size: 10px; background: #fbbf24; color: #1f2933; padding: 2px 6px; border-radius: 10px;">${cat}</span>`;
-                });
-                if (uniqueCategories.length > 2) {
-                    categoryHtml += `<span style="font-size: 10px; color: #9ca3af;">+${uniqueCategories.length-2}</span>`;
-                }
-                categoryHtml += '</div>';
-            }
-            
-            // Add bot badge
-            let botBadge = '';
-            if (user.is_bot) {
-                botBadge = '<span style="font-size: 10px; background: #9ca3af; color: white; padding: 2px 6px; border-radius: 10px; margin-left: 5px;">Bot</span>';
-            }
-            
-            const item = document.createElement('div');
-            item.className = 'user-item';
-            item.dataset.userId = user.id;
-            
-            item.innerHTML = `
-                <div class="user-avatar" style="background:${avatarColor}">
-                    ${initial}
-                </div>
-                <div class="user-info">
-                    <div class="user-name">
-                        ${escapeHtml(name)}${botBadge}
-                        <span class="status-indicator ${user.is_bot ? 'status-offline' : 'status-online'}"></span>
-                    </div>
-                    <div class="user-role">${escapeHtml(role)}</div>
-                    ${company}
-                    ${categoryHtml}
-                </div>
-            `;
-            
-            return item;
-        }
-        
-        /* ===============================
-           SELECT USER - UPDATED WITH QUOTE BUTTON
-        ================================ */
-        async function selectUser(userId) {
-            if (!userId) return;
+/* ===============================
+   GLOBAL STATE
+================================ */
+let currentChatUser = null;
+let currentConversationId = null;
+let csrftoken = null;
+let messageRefreshInterval = null;
+let conversationBlocked = false;
+let currentPanelProducts = [];
 
-            // Limpiar estado anterior
-            currentChatUser = null;
-            currentConversationId = null;
-            messagesContainer.innerHTML = '';
-            setConversationState(true);
-            
-            // Clear any existing refresh interval
-            if (messageRefreshInterval) {
-                clearInterval(messageRefreshInterval);
-                messageRefreshInterval = null;
-            }
-            
-            try {
-                const res = await fetch(`/chat/conversation/${userId}/`);
-                if (!res.ok) {
-                    // Handle 403 Forbidden specifically
-                    if (res.status === 403) {
-                        const errorData = await res.json();
-                        messagesContainer.innerHTML = `
-                            <div style="text-align: center; padding: 40px; color: #ef4444;">
-                                <div style="font-size: 24px; margin-bottom: 10px;">🚫</div>
-                                <h3>No puedes chatear con este usuario</h3>
-                                <p>${errorData.error || 'Debes solicitar una cotización primero.'}</p>
-                            </div>
-                        `;
-                        if (messageInputContainer) {
-                            messageInputContainer.style.display = 'none';
-                        }
+let usersList,
+    messagesContainer,
+    messageInput,
+    sendBtn,
+    fileBtn,
+    fileInput,
+    messageInputContainer,
+    currentUserName,
+    currentUserInfo,
+    currentUserAvatar;
 
-                        currentChatUser = null;
-                        currentConversationId = null;
-                        setConversationState(true);
+/* ===============================
+   INIT
+================================ */
+document.addEventListener('DOMContentLoaded', () => {
+    const metaTag = document.querySelector('meta[name="csrf-token"]');
+    if (metaTag) csrftoken = metaTag.getAttribute('content');
 
-                        return;
-                    }
+    usersList           = document.getElementById('usersList');
+    messagesContainer   = document.getElementById('messagesContainer');
+    messageInput        = document.getElementById('messageInput');
+    sendBtn             = document.getElementById('sendBtn');
+    fileBtn             = document.getElementById('fileBtn');
+    fileInput           = document.getElementById('fileInput');
+    messageInputContainer = document.getElementById('messageInputContainer');
+    currentUserName     = document.getElementById('currentUserName');
+    currentUserInfo     = document.getElementById('currentUserInfo');
+    currentUserAvatar   = document.getElementById('currentUserAvatar');
 
-
-                    throw new Error(`HTTP error! status: ${res.status}`);
-                }
-                
-                const data = await res.json();
-        
-                if (!data.other_user) {
-                    console.error("No user data returned");
-                    return;
-                }
-        
-                currentChatUser = data.other_user;
-                currentConversationId = data.conversation_id;
-        
-                updateChatHeader(data.other_user);
-                displayMessages(data.messages || []);
-
-                // Mensaje de bienvenida del bot al abrir por primera vez
-                const isBot = data.other_user.username === 'elicebot';
-                const noMessages = !data.messages || data.messages.length === 0;
-                if (isBot && noMessages) {
-                    setTimeout(() => {
-                        appendMessage({
-                            content: "Hola 👋 soy el chatbot de Elice 🤖\n\nAquí puedo ayudarte a conectar con proveedores de materiales de construcción.\n\nSolo escríbeme el material que necesitas y te conecto:\n• Vidrio\n• Aluminio\n• Acero\n• Pintura\n• Cemento",
-                            is_sent: false,
-                            timestamp: formatTime()
-                        });
-                    }, 500);
-                }
-        
-                if (messageInputContainer) {
-                    messageInputContainer.style.display = 'flex';
-                }
-        
-                // Enable quote, call, video buttons
-                setConversationState(false);
-
-                console.log('DEBUG selectUser success:');
-                console.log('  other_user:', data.other_user);
-                console.log('  role:', data.other_user.role);
-                console.log('  conversationBlocked:', conversationBlocked);
-
-            const quoteBtn = document.getElementById('quoteBtn');
-                if (quoteBtn) {
-                    const isSupplier = data.other_user.role === 'supplier';
-                    console.log('  isSupplier:', isSupplier);
-                    console.log('  quoteBtn.disabled will be:', !isSupplier);
-                    quoteBtn.disabled = !isSupplier;
-                }
-
-                // WhatsApp button
-                const whatsappBtn = document.getElementById('whatsappBtn');
-                if (whatsappBtn) {
-                    const hasWhatsapp = data.other_user.role === 'supplier' && data.other_user.whatsapp;
-                    whatsappBtn.disabled = !hasWhatsapp;
-                    whatsappBtn.dataset.whatsapp = data.other_user.whatsapp || '';
-                }
-
-                // Catalog button
-                const catalogBtn = document.getElementById('catalogBtn');
-                if (catalogBtn) {
-                    const hasCatalog = data.other_user.role === 'supplier' && data.other_user.has_catalog;
-                    catalogBtn.style.display = hasCatalog ? 'inline-block' : 'none';
-                    catalogBtn.disabled = !hasCatalog;
-                }
-                                
-                // Start periodic refresh for new messages (every 5 seconds)
-                startMessageRefresh();
-        
-            } catch (error) {
-                console.error("Select user error:", error);
-                messagesContainer.innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: #ef4444;">
-                        <div style="font-size: 24px; margin-bottom: 10px;">❌</div>
-                        <h3>Error al cargar la conversación</h3>
-                        <p>${error.message}</p>
-                    </div>
-                `;
-            }
-        }
-        
-        /* ===============================
-           SELECT BY CONVERSATION ID
-        ================================ */
-        async function selectConversationById(conversationId) {
-            if (!conversationId) return;
-            
-            // Clear any existing refresh interval
-            if (messageRefreshInterval) {
-                clearInterval(messageRefreshInterval);
-                messageRefreshInterval = null;
-            }
-            
-            try {
-                const res = await fetch(`/chat/conversation/by-id/${conversationId}/`);
-                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                
-                const data = await res.json();
-        
-                if (!data.success) return;
-        
-                currentChatUser = data.other_user;
-                currentConversationId = conversationId;
-        
-                updateChatHeader(data.other_user);
-                displayMessages(data.messages || []);
-        
-                if (messageInputContainer) {
-                    messageInputContainer.style.display = 'flex';
-                }
-                
-                // Start periodic refresh for new messages
-                startMessageRefresh();
-        
-            } catch (error) {
-                console.error("Conversation load error:", error);
-            }
-        }
-        
-        
-        
-        /* ===============================
-           HEADER & MESSAGES
-        ================================ */
-        function updateChatHeader(user) {
-            if (!user) return;
-            
-            const name = (user.first_name && user.last_name)
-                ? `${user.first_name} ${user.last_name}`
-                : user.username;
-        
-            if (currentUserName) currentUserName.textContent = name;
-            if (currentUserAvatar) currentUserAvatar.textContent = name.charAt(0).toUpperCase();
-            
-            let infoText = user.role_display || user.role || '';
-            if (user.company) infoText += ` • ${user.company}`;
-            
-            if (currentUserInfo) currentUserInfo.innerHTML = escapeHtml(infoText);
-        }
-        
-        function displayMessages(messages) {
-            if (!messagesContainer) return;
-            
-            messagesContainer.innerHTML = '';
-        
-            if (!messages || messages.length === 0) {
-                messagesContainer.innerHTML = `
-                    <div style="padding:40px;text-align:center;color:#9ca3af">
-                        No hay mensajes. Comienza la conversación para conectar con proveedores!
-                    </div>`;
-                return;
-            }
-        
-            messages.forEach(msg => appendMessage(msg, false));
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-        
-        function appendMessage(message, shouldScroll = true) {
-    if (!messagesContainer) return;
-
-    // Check for duplicates by message ID if available, else fallback to content+sent
-    const existingMessages = messagesContainer.querySelectorAll('.message');
-    for (let i = 0; i < existingMessages.length; i++) {
-        const msgDiv = existingMessages[i];
-        const msgId = msgDiv.dataset.messageId;
-        const content = msgDiv.querySelector('.message-content')?.textContent;
-        const isSent = msgDiv.classList.contains('sent') === message.is_sent;
-
-        if ((message.id && msgId === String(message.id)) || (!message.id && content === message.content && isSent)) {
-            return; // Skip duplicate
-        }
+    if (!usersList || !messagesContainer || !messageInput || !sendBtn) {
+        console.error("Critical DOM elements missing!");
+        return;
     }
 
+    wireEvents();
+    loadUsers();
+
+    // Mostrar input desde la pantalla de bienvenida para que el usuario pueda escribir directamente
+    // El primer mensaje abrirá automáticamente la conversación con EliceBot
+    const conversationId = getQueryParam('conversation');
+    if (conversationId) {
+        selectConversationById(conversationId);
+    } else {
+        // Pre-mostrar el input en modo "bienvenida": al escribir se abre el bot
+        if (messageInputContainer) messageInputContainer.style.display = 'flex';
+        if (messageInput) {
+            messageInput.placeholder = 'Escríbeme un material o haz una pregunta…';
+            // Interceptar primer mensaje para abrir bot automáticamente
+            messageInput._welcomeMode = true;
+        }
+    }
+});
+
+/* ===============================
+   HELPERS
+================================ */
+function getQueryParam(name) {
+    return new URLSearchParams(window.location.search).get(name);
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
     const div = document.createElement('div');
-    div.className = `message ${message.is_sent ? 'sent' : 'received'}`;
-    if (message.id) div.dataset.messageId = message.id;
+    div.textContent = text;
+    return div.innerHTML;
+}
 
-    div.innerHTML = `
-        <div class="message-content">
-            ${escapeHtml(message.content)}
-        </div>
-        <div class="message-time">
-            ${message.timestamp || formatTime()}
-        </div>
-    `;
+function formatTime(date = new Date()) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
 
-    messagesContainer.appendChild(div);
+/* ===============================
+   LOAD USERS
+================================ */
+async function loadUsers() {
+    try {
+        const res = await fetch('/chat/users/');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
 
-    if (shouldScroll) {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        if (!data.users || !data.users.length) {
+            usersList.innerHTML = `<div style="padding:20px;color:#475569;text-align:center;font-size:0.82rem;">
+                Aún no tienes proveedores conectados.<br>Habla con EliceBot para comenzar.
+            </div>`;
+            return;
+        }
+        displayUsers(data.users);
+    } catch (error) {
+        console.error("Error loading users:", error);
+        usersList.innerHTML = `<div style="padding:16px;color:#ef4444;font-size:0.8rem;text-align:center;">
+            Error cargando contactos
+        </div>`;
     }
 }
 
-        /* ===============================
-           MESSAGE REFRESH
-        ================================ */
-        function startMessageRefresh() {
-            if (messageRefreshInterval) {
-                clearInterval(messageRefreshInterval);
-            }
-            // Refresh messages every 5 seconds
-            messageRefreshInterval = setInterval(refreshMessages, 5000);
+/* ===============================
+   DISPLAY USERS
+================================ */
+function displayUsers(users) {
+    if (!usersList) return;
+    usersList.innerHTML = '';
+
+    const isClient = document.body.dataset.userRole === 'client';
+
+    if (isClient) {
+        // Filter out bot — it's shown separately in the pinned card
+        const suppliers = users.filter(u => !u.is_bot);
+        const uniqueSuppliers = [...new Map(suppliers.map(u => [u.id, u])).values()];
+
+        if (uniqueSuppliers.length === 0) {
+            usersList.innerHTML = `<div style="padding:16px;color:#334155;font-size:0.78rem;text-align:center;line-height:1.6;">
+                Habla con EliceBot para conectarte con proveedores de materiales.
+            </div>`;
+        } else {
+            // Group by category
+            const byCategory = {};
+            const seenInCat = {};
+
+            uniqueSuppliers.forEach(user => {
+                const cats = (user.categories && user.categories.length > 0)
+                    ? [...new Set(user.categories)]
+                    : ['Otros'];
+
+                cats.forEach(cat => {
+                    if (!byCategory[cat]) { byCategory[cat] = []; seenInCat[cat] = new Set(); }
+                    if (!seenInCat[cat].has(user.id)) {
+                        seenInCat[cat].add(user.id);
+                        byCategory[cat].push(user);
+                    }
+                });
+            });
+
+            Object.keys(byCategory).sort().forEach(cat => {
+                if (!byCategory[cat].length) return;
+                const label = document.createElement('div');
+                label.className = 'cat-label';
+                label.textContent = cat;
+                usersList.appendChild(label);
+                byCategory[cat].forEach(u => usersList.appendChild(createUserItem(u)));
+            });
         }
-        
-        async function refreshMessages() {
-    if (!currentConversationId) return;
+    } else {
+        // Supplier/admin view — show all clients grouped by role
+        const groups = { client: 'Clientes', supplier: 'Proveedores', admin: 'Administradores' };
+        const grouped = {};
+        const seen = new Set();
+
+        users.forEach(u => {
+            if (seen.has(u.id)) return;
+            seen.add(u.id);
+            const r = u.role || 'client';
+            if (!grouped[r]) grouped[r] = [];
+            grouped[r].push(u);
+        });
+
+        Object.keys(groups).forEach(role => {
+            if (!grouped[role] || !grouped[role].length) return;
+            const label = document.createElement('div');
+            label.className = 'cat-label';
+            label.textContent = groups[role];
+            usersList.appendChild(label);
+            grouped[role].forEach(u => usersList.appendChild(createUserItem(u)));
+        });
+    }
+
+    // Wire click events
+    usersList.querySelectorAll('.user-item').forEach(item => {
+        item.addEventListener('click', function() {
+            usersList.querySelectorAll('.user-item').forEach(i => i.classList.remove('active'));
+            document.getElementById('botCard')?.classList.remove('active');
+            this.classList.add('active');
+            selectUser(this.dataset.userId);
+        });
+    });
+}
+
+/* ===============================
+   CREATE USER ITEM
+================================ */
+function createUserItem(user) {
+    const name = (user.first_name && user.last_name)
+        ? `${user.first_name} ${user.last_name}`
+        : user.username;
+    const avatarColor = user.avatar_color || '#f59e0b';
+    const initial = name.charAt(0).toUpperCase();
+
+    const item = document.createElement('div');
+    item.className = 'user-item';
+    item.dataset.userId = user.id;
+
+    const lastMsg = user.last_message
+        ? `<div class="last-msg">${escapeHtml(user.last_message)}</div>`
+        : '';
+
+    const company = user.company
+        ? `<div class="user-role">${escapeHtml(user.company)}</div>`
+        : `<div class="user-role">${escapeHtml(user.role || '')}</div>`;
+
+    const unreadBadge = user.unread_count
+        ? `<div class="unread-badge">${user.unread_count}</div>`
+        : '';
+
+    item.innerHTML = `
+        <div class="user-avatar" style="background:${avatarColor}; color:#0f172a;">${initial}</div>
+        <div class="user-info">
+            <div class="user-name">${escapeHtml(name)}<span class="status-dot status-online"></span></div>
+            ${company}
+            ${lastMsg}
+        </div>
+        ${unreadBadge}
+    `;
+    return item;
+}
+
+/* ===============================
+   BOT CARD CLICK
+================================ */
+function selectBotFromCard() {
+    document.getElementById('botCard')?.classList.add('active');
+    usersList.querySelectorAll('.user-item').forEach(i => i.classList.remove('active'));
+
+    // Find bot user id from users list data
+    fetch('/chat/users/')
+        .then(r => r.json())
+        .then(data => {
+            const bot = data.users.find(u => u.is_bot);
+            if (bot) selectUser(bot.id);
+        });
+}
+
+/* ===============================
+   SELECT USER
+================================ */
+async function selectUser(userId) {
+    if (!userId) return;
+
+    currentChatUser = null;
+    currentConversationId = null;
+
+    // Hide bot welcome
+    const welcome = document.getElementById('botWelcome');
+    if (welcome) welcome.style.display = 'none';
+
+    // Clear messages (keep welcome hidden)
+    messagesContainer.innerHTML = '';
+    setConversationState(true);
+
+    if (messageRefreshInterval) {
+        clearInterval(messageRefreshInterval);
+        messageRefreshInterval = null;
+    }
 
     try {
-        const res = await fetch(`/chat/conversation/by-id/${currentConversationId}/`);
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        const res = await fetch(`/chat/conversation/${userId}/`);
 
+        if (!res.ok) {
+            if (res.status === 403) {
+                const err = await res.json();
+                showChatPlaceholder('🚫', 'Sin acceso', err.error || 'Habla con EliceBot para conectarte con este proveedor.');
+                setConversationState(true);
+                return;
+            }
+            throw new Error(`HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        if (!data.other_user) return;
+
+        currentChatUser = data.other_user;
+        currentConversationId = data.conversation_id;
+
+        updateChatHeader(data.other_user);
+        displayMessages(data.messages || []);
+
+        // Bot welcome message if no history
+        const isBot = data.other_user.username === 'elicebot';
+        if (isBot && (!data.messages || !data.messages.length)) {
+            setTimeout(() => {
+                appendMessage({
+                    content: "Hola 👋 soy EliceBot.\n\nPuedo conectarte con proveedores de materiales de construcción. Solo escríbeme el material que necesitas:\n\n• 🔩 Acero\n• 🎨 Pintura\n• 🏗️ Cemento\n• 🪟 Aluminio\n• 🪞 Vidrio",
+                    is_sent: false,
+                    is_bot: true,
+                    timestamp: formatTime()
+                });
+            }, 400);
+        }
+
+        if (messageInputContainer) messageInputContainer.style.display = 'flex';
+        setConversationState(false);
+
+        // Quote pill & header button visibility
+        const isSupplier = data.other_user.role === 'supplier';
+        const quotePill = document.getElementById('quotePillBtn');
+        if (quotePill) quotePill.classList.toggle('visible', isSupplier);
+
+        const quoteBtn = document.getElementById('quoteBtn');
+        if (quoteBtn) quoteBtn.disabled = !isSupplier;
+
+        const whatsappBtn = document.getElementById('whatsappBtn');
+        if (whatsappBtn) {
+            whatsappBtn.disabled = !(isSupplier && data.other_user.whatsapp);
+            whatsappBtn.dataset.whatsapp = data.other_user.whatsapp || '';
+        }
+
+        const catalogBtn = document.getElementById('catalogBtn');
+        if (catalogBtn) {
+            const hasCatalog = isSupplier && data.other_user.has_catalog;
+            catalogBtn.style.display = hasCatalog ? 'inline-flex' : 'none';
+            catalogBtn.disabled = !hasCatalog;
+        }
+
+        // Load product panel if supplier
+        if (isSupplier) {
+            loadProductPanel(data.other_user.id);
+        } else {
+            closeProductPanel();
+        }
+
+        // Update bot card style
+        if (isBot) {
+            document.getElementById('botCard')?.classList.add('active');
+            document.getElementById('currentUserAvatar')?.classList.add('bot-style');
+        } else {
+            document.getElementById('botCard')?.classList.remove('active');
+            document.getElementById('currentUserAvatar')?.classList.remove('bot-style');
+        }
+
+        startMessageRefresh();
+
+    } catch (error) {
+        console.error("Select user error:", error);
+        showChatPlaceholder('❌', 'Error', error.message);
+    }
+}
+
+function showChatPlaceholder(icon, title, text) {
+    messagesContainer.innerHTML = `
+        <div class="no-chat-selected">
+            <div class="no-chat-selected-icon">${icon}</div>
+            <strong style="color:var(--text)">${title}</strong>
+            <span style="font-size:0.85rem;text-align:center;max-width:300px;">${escapeHtml(text)}</span>
+        </div>`;
+}
+
+/* ===============================
+   SELECT BY CONVERSATION ID
+================================ */
+async function selectConversationById(conversationId) {
+    if (!conversationId) return;
+
+    if (messageRefreshInterval) { clearInterval(messageRefreshInterval); messageRefreshInterval = null; }
+
+    try {
+        const res = await fetch(`/chat/conversation/by-id/${conversationId}/`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        currentChatUser = data.other_user;
+        currentConversationId = conversationId;
+
+        updateChatHeader(data.other_user);
+        displayMessages(data.messages || []);
+
+        if (messageInputContainer) messageInputContainer.style.display = 'flex';
+
+        const welcome = document.getElementById('botWelcome');
+        if (welcome) welcome.style.display = 'none';
+
+        startMessageRefresh();
+    } catch (error) {
+        console.error("Conversation load error:", error);
+    }
+}
+
+/* ===============================
+   HEADER UPDATE
+================================ */
+function updateChatHeader(user) {
+    if (!user) return;
+
+    const name = (user.first_name && user.last_name)
+        ? `${user.first_name} ${user.last_name}`
+        : user.username;
+
+    const isBot = user.username === 'elicebot';
+
+    if (currentUserName) currentUserName.textContent = isBot ? 'EliceBot' : name;
+
+    if (currentUserAvatar) {
+        currentUserAvatar.textContent = isBot ? '🤖' : name.charAt(0).toUpperCase();
+        currentUserAvatar.style.background = isBot ? '#6366f1' : (user.avatar_color || '#f59e0b');
+        currentUserAvatar.style.color = isBot ? '#fff' : '#0f172a';
+    }
+
+    let sub = '';
+    if (isBot) sub = 'Asistente de materiales • IA';
+    else {
+        sub = user.role || '';
+        if (user.company) sub += ` • ${user.company}`;
+    }
+
+    const infoText = document.getElementById('currentUserInfoText');
+    if (infoText) infoText.textContent = sub;
+    else if (currentUserInfo) currentUserInfo.textContent = sub;
+
+    const onlineDot = document.getElementById('headerOnlineDot');
+    if (onlineDot) onlineDot.style.display = 'inline-block';
+}
+
+/* ===============================
+   DISPLAY MESSAGES
+================================ */
+function displayMessages(messages) {
+    if (!messagesContainer) return;
+    messagesContainer.innerHTML = '';
+
+    if (!messages || messages.length === 0) return;
+
+    messages.forEach(msg => appendMessage(msg, false));
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+function appendMessage(message, shouldScroll = true) {
+    if (!messagesContainer) return;
+
+    // Dedup by ID
+    if (message.id) {
+        const existing = messagesContainer.querySelector(`[data-message-id="${message.id}"]`);
+        if (existing) return;
+    }
+
+    const isBot = currentChatUser && currentChatUser.username === 'elicebot' && !message.is_sent;
+    const isQuote = message.content && message.content.includes('SOLICITUD DE COTIZACIÓN');
+
+    const div = document.createElement('div');
+    div.className = `message ${message.is_sent ? 'sent' : 'received'}${isBot ? ' bot-msg' : ''}`;
+    if (message.id) div.dataset.messageId = String(message.id);
+
+    let contentHtml;
+    if (isQuote && !message.is_sent) {
+        contentHtml = renderQuoteCard(message.content);
+    } else {
+        contentHtml = `<div class="message-content">${escapeHtml(message.content)}</div>`;
+    }
+
+    div.innerHTML = `
+        ${contentHtml}
+        <div class="message-time">${message.timestamp || formatTime()}</div>
+    `;
+
+    messagesContainer.appendChild(div);
+    if (shouldScroll) messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+function renderQuoteCard(content) {
+    // Parse the formatted quote message into a visual card
+    const lines = content.split('\n').filter(l => l.trim() && !l.includes('━'));
+    const rows = lines.slice(1).filter(l => l.includes(':'));
+
+    let rowsHtml = rows.map(line => {
+        const [label, ...rest] = line.replace(/\*\*/g, '').split(':');
+        return `<div class="quote-card-msg-row">
+            <span class="quote-card-msg-label">${escapeHtml(label.trim())}</span>
+            <span class="quote-card-msg-value">${escapeHtml(rest.join(':').trim())}</span>
+        </div>`;
+    }).join('');
+
+    return `<div class="quote-card-msg">
+        <div class="quote-card-msg-title">📋 Solicitud de Cotización</div>
+        ${rowsHtml}
+    </div>`;
+}
+
+/* ===============================
+   MATERIAL CHIPS (bot welcome)
+================================ */
+function sendMaterialChip(material) {
+    // Find bot and open conversation, then send the message
+    fetch('/chat/users/')
+        .then(r => r.json())
+        .then(data => {
+            const bot = data.users.find(u => u.is_bot);
+            if (!bot) return;
+
+            // Select bot conversation first
+            document.getElementById('botCard')?.classList.add('active');
+
+            fetch(`/chat/conversation/${bot.id}/`)
+                .then(r => r.json())
+                .then(convData => {
+                    currentChatUser = convData.other_user;
+                    currentConversationId = convData.conversation_id;
+
+                    const welcome = document.getElementById('botWelcome');
+                    if (welcome) welcome.style.display = 'none';
+
+                    updateChatHeader(convData.other_user);
+                    displayMessages(convData.messages || []);
+                    if (messageInputContainer) messageInputContainer.style.display = 'flex';
+                    setConversationState(false);
+                    startMessageRefresh();
+
+                    // Send the chip message
+                    if (messageInput) {
+                        messageInput.value = material;
+                        sendMessage();
+                    }
+                });
+        });
+}
+
+/* ===============================
+   PRODUCT PANEL
+================================ */
+async function loadProductPanel(supplierId) {
+    const layout = document.getElementById('chatLayout');
+    const content = document.getElementById('productPanelContent');
+
+    if (!layout || !content) return;
+
+    content.innerHTML = '<div class="loader" style="margin:30px auto;"></div>';
+    layout.classList.add('panel-open');
+
+    try {
+        const res = await fetch(`/chat/quote-form/${supplierId}/`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        content.innerHTML = '';
+
+        if (!data.categories || !data.categories.length) {
+            content.innerHTML = `<div class="panel-empty">Este proveedor no tiene productos configurados aún.</div>`;
+            return;
+        }
+
+        let productCount = 0;
+        data.categories.forEach(cat => {
+            if (!cat.products || !cat.products.length) return;
+
+            const catLabel = document.createElement('div');
+            catLabel.style.cssText = 'font-size:0.7rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;padding:8px 4px 4px;';
+            catLabel.textContent = cat.name;
+            content.appendChild(catLabel);
+
+            cat.products.forEach(product => {
+                productCount++;
+                const card = document.createElement('div');
+                card.className = 'panel-product-card';
+                card.innerHTML = `
+                    ${product.image_url
+                        ? `<img class="panel-product-img" src="${product.image_url}" alt="${escapeHtml(product.name)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'panel-product-placeholder\\'>📦</div>'">`
+                        : `<div class="panel-product-placeholder">📦</div>`
+                    }
+                    <div class="panel-product-body">
+                        <div class="panel-product-name">${escapeHtml(product.name)}</div>
+                        <div>
+                            ${product.base_price
+                                ? `<span class="panel-product-price">$${product.base_price}</span>
+                                   <span class="panel-product-unit"> / ${escapeHtml(product.unit)}</span>`
+                                : `<span class="panel-product-unit">Precio a consultar</span>`
+                            }
+                        </div>
+                        <button class="panel-quote-btn" onclick='prefillQuote(${JSON.stringify({id:product.id, name:product.name, price:product.base_price, unit:product.unit})})'>
+                            📋 Cotizar este producto
+                        </button>
+                    </div>
+                `;
+                content.appendChild(card);
+            });
+        });
+
+        if (productCount === 0) {
+            content.innerHTML = `<div class="panel-empty">Sin productos activos.</div>`;
+        }
+
+    } catch (err) {
+        console.error('Panel load error:', err);
+        content.innerHTML = `<div class="panel-empty">Error cargando productos.</div>`;
+    }
+}
+
+function closeProductPanel() {
+    const layout = document.getElementById('chatLayout');
+    if (layout) layout.classList.remove('panel-open');
+}
+
+function prefillQuote(product) {
+    // Open quote modal pre-filled with this product
+    openQuoteModal();
+    setTimeout(() => {
+        const select = document.getElementById('quote-product');
+        if (!select) return;
+        for (let opt of select.options) {
+            try {
+                const val = JSON.parse(opt.value);
+                if (val.id === product.id) { select.value = opt.value; break; }
+            } catch(e) {}
+        }
+    }, 600);
+}
+
+/* ===============================
+   REFRESH MESSAGES
+================================ */
+function startMessageRefresh() {
+    if (messageRefreshInterval) clearInterval(messageRefreshInterval);
+    messageRefreshInterval = setInterval(refreshMessages, 5000);
+}
+
+async function refreshMessages() {
+    if (!currentConversationId) return;
+    try {
+        const res = await fetch(`/chat/conversation/by-id/${currentConversationId}/`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
 
         if (data.messages && messagesContainer) {
             const wasAtBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop <= messagesContainer.clientHeight + 100;
-
-            // Solo agrega mensajes nuevos, no limpiar todo
             data.messages.forEach(msg => appendMessage(msg, false));
-
-            if (wasAtBottom) {
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            }
+            if (wasAtBottom) messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
     } catch (error) {
         console.error("Refresh error:", error);
     }
 }
-        
-        /* ===============================
-           SEND MESSAGE - IMPROVED VERSION
-        ================================ */
-        async function sendMessage() {
-            if (!messageInput) return;
-            
-            const content = messageInput.value.trim();
-            if (!content || !currentChatUser) return;
-        
-            // Store the message to check for duplicates
-            const sentContent = content;
-        
-         const tempId = 'temp-' + Date.now();
-appendMessage({
-    id: tempId,
-    content: content,
-    is_sent: true,
-    timestamp: formatTime()
-});
 
-// Guarda referencia al elemento temporal
-const tempMsg = messagesContainer.querySelector(`[data-message-id="${tempId}"]`);
-        
-            messageInput.value = '';
-        
-            try {
-                const res = await fetch('/chat/send/', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': csrftoken
-    },
-    body: JSON.stringify({
-        user_id: currentChatUser.id,
-        content: content,
-        conversation_id: currentConversationId
-    })
-});
+/* ===============================
+   SEND MESSAGE
+================================ */
+async function sendMessage() {
+    if (!messageInput) return;
+    const content = messageInput.value.trim();
+    if (!content) return;
 
-if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.error || `HTTP error! status: ${res.status}`);
-}
+    // Si no hay conversación activa (welcome mode), abrir bot primero
+    if (!currentChatUser) {
+        if (messageInput._welcomeMode) {
+            messageInput._welcomeMode = false;
+            messageInput.placeholder = 'Escribe tu mensaje…';
+            // Abrir bot y luego enviar el mensaje
+            fetch('/chat/users/')
+                .then(r => r.json())
+                .then(data => {
+                    const bot = data.users?.find(u => u.is_bot);
+                    if (!bot) return;
+                    document.getElementById('botCard')?.classList.add('active');
+                    fetch(`/chat/conversation/${bot.id}/`)
+                        .then(r => r.json())
+                        .then(convData => {
+                            currentChatUser = convData.other_user;
+                            currentConversationId = convData.conversation_id;
+                            const welcome = document.getElementById('botWelcome');
+                            if (welcome) welcome.style.display = 'none';
+                            updateChatHeader(convData.other_user);
+                            displayMessages(convData.messages || []);
+                            setConversationState(false);
+                            startMessageRefresh();
+                            // Ahora sí enviamos
+                            messageInput.value = content;
+                            sendBtn?.classList.add('active');
+                            sendMessage();
+                        });
+                });
+        }
+        return;
+    }
 
-const data = await res.json();
+    const tempId = 'temp-' + Date.now();
+    appendMessage({ id: tempId, content, is_sent: true, timestamp: formatTime() });
+    const tempEl = messagesContainer.querySelector(`[data-message-id="${tempId}"]`);
 
-// ✅ Reemplaza el tempId con el ID real del servidor
-if (data.message_id && tempMsg) {
-    tempMsg.dataset.messageId = String(data.message_id);
-}
+    // Reset textarea
+    messageInput.value = '';
+    messageInput.style.height = 'auto';
+    sendBtn?.classList.remove('active');
 
-// If bot replied, show it after a short delay
-if (data.bot_reply) {
-    setTimeout(() => {
-        appendMessage({
-            id: data.bot_reply_id,
-            content: data.bot_reply,
-            is_sent: false,
-            timestamp: formatTime()
+    // Show typing indicator if bot
+    const isBot = currentChatUser?.username === 'elicebot';
+    if (isBot) showTypingIndicator();
+
+    try {
+        const res = await fetch('/chat/send/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+            body: JSON.stringify({ user_id: currentChatUser.id, content, conversation_id: currentConversationId })
         });
-    }, 500);
-}
-                
-                // Also refresh messages from server to ensure sync
-                // Short delay to let server process
-                // setTimeout(refreshMessages, 300);
-        
-            } catch (error) {
-                console.error("Send message error:", error);
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error || `HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        if (data.message_id && tempEl) tempEl.dataset.messageId = String(data.message_id);
+
+        if (data.bot_reply) {
+            setTimeout(() => {
+                hideTypingIndicator();
                 appendMessage({
-                    content: `❌ Error al enviar mensaje: ${error.message}`,
-                    is_sent: true,
+                    id: data.bot_reply_id,
+                    content: data.bot_reply,
+                    is_sent: false,
+                    is_bot: true,
                     timestamp: formatTime()
                 });
-            }
+                // Reload users after bot connects to new suppliers
+                setTimeout(loadUsers, 1000);
+            }, 600);
+        } else {
+            hideTypingIndicator();
         }
-        
-        /* ===============================
-           QUOTE FORM FUNCTIONS
-        ================================ */
-        
-        // Load dynamic quote form - ENHANCED DEBUG VERSION
-        async function loadQuoteForm() {
-            if (!currentChatUser) {
-                alert('Selecciona un usuario primero');
-                return;
-            }
-            
-            console.log('🔍 Loading quote form for user:', currentChatUser);
-            console.log('🔍 User ID:', currentChatUser.id);
-            console.log('🔍 User role:', currentChatUser.role);
-            
-            const modal = document.getElementById('quoteModal');
-            const loading = document.getElementById('quote-form-loading');
-            const container = document.getElementById('quote-form-container');
-            const supplierName = document.getElementById('supplier-name');
-            
-            if (!modal || !loading || !container || !supplierName) {
-                console.error('❌ Modal elements not found!');
-                alert('Error: Elementos del modal no encontrados');
-                return;
-            }
-            
-            modal.style.display = 'flex';
-            loading.style.display = 'block';
-            loading.innerHTML = '<div class="loader"></div><p>Cargando productos...</p>';
-            container.style.display = 'none';
-            
-            try {
-                const url = `/chat/quote-form/${currentChatUser.id}/`;
-                console.log('🔍 Fetching from:', url);
-                
-                const response = await fetch(url);
-                console.log('🔍 Response status:', response.status);
-                console.log('🔍 Response OK?', response.ok);
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('❌ Error response:', errorText);
-                    loading.innerHTML = `<p style="color: #ef4444;">❌ Error ${response.status}: ${errorText.substring(0, 100)}</p>`;
-                    return;
-                }
-                
-                const data = await response.json();
-                console.log('🔍 Received data:', data);
-                
-                if (data.error) {
-                    console.error('❌ API error:', data.error);
-                    loading.innerHTML = `<p style="color: #ef4444;">❌ Error: ${data.error}</p>`;
-                    return;
-                }
-                
-                // Check if we have categories
-                if (!data.categories || data.categories.length === 0) {
-                    console.warn('⚠️ No categories or products found');
-                    loading.innerHTML = `
-                        <div style="text-align:center; padding:20px;">
-                            <div style="font-size:36px; margin-bottom:12px;">📋</div>
-                            <p style="font-weight:600; color:#1f2933; margin-bottom:10px;">
-                                Este proveedor cotiza directamente por chat o WhatsApp.
-                            </p>
-                            <p style="color:#6b7280; font-size:14px; margin-bottom:20px;">
-                                No tiene productos configurados en la plataforma, pero puedes:
-                            </p>
-                            <div style="text-align:left; display:inline-block; margin-bottom:20px;">
-                                <p style="margin-bottom:8px;">📄 Revisa su catálogo presionando el botón <strong>📄</strong> en la parte superior</p>
-                                <p style="margin-bottom:8px; margin-top:12px;"><strong>¿Listo para cotizar?</strong></p>
-                                <p style="margin-bottom:8px;">1. 🗨️ Escríbele directamente en este chat</p>
-                                <p style="margin-bottom:8px;">2. 💬 Contáctalo por WhatsApp con el botón <strong>💬</strong> arriba</p>
-                            </div>
-                            <br>
-                            <button onclick="closeQuoteModal()" 
-                                style="background:#1f2933;color:white;border:none;padding:10px 24px;
-                                       border-radius:5px;cursor:pointer;font-size:14px;">
-                                ← Volver al chat
-                            </button>
-                        </div>`;
-                    return;
-                }
-                
-                console.log(`✅ Found ${data.categories.length} categories`);
-                
-                supplierName.textContent = `Proveedor: ${data.supplier.name}`;
-                
-                // Populate product dropdown
-                const productSelect = document.getElementById('quote-product');
-                if (!productSelect) {
-                    console.error('❌ Product select element not found');
-                    return;
-                }
-                
-                productSelect.innerHTML = '<option value="">Selecciona un producto</option>';
-                
-                let productCount = 0;
-                data.categories.forEach(category => {
-                    if (category.products && category.products.length > 0) {
-                        const optgroup = document.createElement('optgroup');
-                        optgroup.label = category.name;
-                        
-                        category.products.forEach(product => {
-                            productCount++;
-                            const option = document.createElement('option');
-                            option.value = JSON.stringify({
-                                id: product.id,
-                                name: product.name,
-                                price: product.base_price,
-                                unit: product.unit,
-                                options: product.options || []
-                            });
-                            option.textContent = `${product.name} - $${product.base_price} por ${product.unit}`;
-                            optgroup.appendChild(option);
-                        });
-                        
-                        productSelect.appendChild(optgroup);
-                    }
-                });
-        
-                if (productCount === 0) {
-                    console.warn('⚠️ No products found in categories');
-                    loading.innerHTML = '<p style="color: #f59e0b;">⚠️ Este proveedor no tiene productos activos.</p>';
-                    return;
-                }
-                
-                console.log(`✅ Loaded ${productCount} products`);
-                loading.style.display = 'none';
-                container.style.display = 'block';
-                
-            } catch (error) {
-                console.error('❌ Error loading form:', error);
-                loading.innerHTML = `<p style="color: #ef4444;">❌ Error: ${error.message}</p>`;
-            }
+    } catch (error) {
+        console.error("Send error:", error);
+        hideTypingIndicator();
+        if (tempEl) tempEl.querySelector('.message-content').style.opacity = '0.5';
+    }
+}
+
+/* ===============================
+   CONVERSATION STATE
+================================ */
+function setConversationState(blocked) {
+    conversationBlocked = blocked;
+    const ids = ['quoteBtn', 'whatsappBtn', 'catalogBtn', 'sendBtn'];
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = blocked;
+    });
+    if (messageInput) messageInput.disabled = blocked;
+    if (messageInputContainer) messageInputContainer.style.display = blocked ? 'none' : 'flex';
+}
+
+/* ===============================
+   QUOTE MODAL
+================================ */
+function openQuoteModal() {
+    if (conversationBlocked || !currentChatUser || !currentConversationId) {
+        alert('Habla con EliceBot para conectarte con este proveedor primero.');
+        return;
+    }
+    loadQuoteForm();
+}
+
+function closeQuoteModal() {
+    const modal = document.getElementById('quoteModal');
+    if (modal) modal.style.display = 'none';
+    document.getElementById('dynamicQuoteForm')?.reset();
+    const opts = document.getElementById('product-options-container');
+    if (opts) opts.innerHTML = '';
+}
+
+async function loadQuoteForm() {
+    const modal = document.getElementById('quoteModal');
+    const loading = document.getElementById('quote-form-loading');
+    const container = document.getElementById('quote-form-container');
+    const supplierName = document.getElementById('quote-supplier-name');
+
+    if (!modal) return;
+    modal.style.display = 'flex';
+    loading.style.display = 'block';
+    container.style.display = 'none';
+
+    if (supplierName) {
+        const name = (currentChatUser.first_name && currentChatUser.last_name)
+            ? `${currentChatUser.first_name} ${currentChatUser.last_name}`
+            : currentChatUser.username;
+        supplierName.textContent = `Proveedor: ${name}${currentChatUser.company ? ' · ' + currentChatUser.company : ''}`;
+    }
+
+    try {
+        const res = await fetch(`/chat/quote-form/${currentChatUser.id}/`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        if (!data.categories || !data.categories.length) {
+            loading.innerHTML = `
+                <div style="text-align:center;padding:20px;">
+                    <div style="font-size:2.5rem;margin-bottom:12px;">💬</div>
+                    <p style="font-weight:600;margin-bottom:8px;">Este proveedor cotiza por chat directo.</p>
+                    <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:16px;">Escríbele en el chat o contáctalo por WhatsApp.</p>
+                    <button onclick="closeQuoteModal()" style="padding:8px 20px;background:var(--primary);color:white;border:none;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;">
+                        ← Volver al chat
+                    </button>
+                </div>`;
+            return;
         }
-        
-        // Handle product selection change
-        document.getElementById('quote-product')?.addEventListener('change', function(e) {
-            const optionsContainer = document.getElementById('product-options-container');
-            optionsContainer.innerHTML = '';
-            
-            if (!this.value) return;
-            
-            const product = JSON.parse(this.value);
-            
-            product.options.forEach(opt => {
-                const div = document.createElement('div');
-                div.className = 'form-group';
-                div.innerHTML = `
-                    <label>${opt.name} ${opt.required ? '*' : ''}</label>
-                    <select id="opt-${opt.name}" class="message-input" ${opt.required ? 'required' : ''}>
-                        <option value="">Selecciona...</option>
-                        ${opt.options.map(o => `<option value="${o}">${o}</option>`).join('')}
-                    </select>
-                `;
-                optionsContainer.appendChild(div);
+
+        const select = document.getElementById('quote-product');
+        select.innerHTML = '<option value="">Selecciona un producto</option>';
+
+        let count = 0;
+        data.categories.forEach(cat => {
+            if (!cat.products || !cat.products.length) return;
+            const group = document.createElement('optgroup');
+            group.label = cat.name;
+            cat.products.forEach(p => {
+                count++;
+                const opt = document.createElement('option');
+                opt.value = JSON.stringify({ id: p.id, name: p.name, price: p.base_price, unit: p.unit, options: p.options || [] });
+                opt.textContent = `${p.name}${p.base_price ? ` — $${p.base_price}/${p.unit}` : ''}`;
+                group.appendChild(opt);
             });
+            select.appendChild(group);
         });
 
-        function setConversationState(blocked) {
-            conversationBlocked = blocked;
-            const quoteBtn = document.getElementById('quoteBtn');
-            const whatsappBtn = document.getElementById('whatsappBtn');
-            const catalogBtn = document.getElementById('catalogBtn');
-            const sendBtn = document.getElementById('sendBtn');
-            const messageInput = document.getElementById('messageInput');
-
-            if (blocked) {
-                if (quoteBtn) quoteBtn.disabled = true;
-                if (whatsappBtn) whatsappBtn.disabled = true;
-                if (catalogBtn) catalogBtn.disabled = true;
-                if (sendBtn) sendBtn.disabled = true;
-                if (messageInput) messageInput.disabled = true;
-                if (messageInputContainer) messageInputContainer.style.display = 'none';
-            } else {
-                if (quoteBtn) quoteBtn.disabled = false;
-                if (whatsappBtn) whatsappBtn.disabled = false;
-                if (sendBtn) sendBtn.disabled = false;
-                if (messageInput) messageInput.disabled = false;
-                if (messageInputContainer) messageInputContainer.style.display = 'flex';
-            }
+        if (!count) {
+            loading.innerHTML = `<p style="color:var(--text-muted);text-align:center;padding:20px;">Sin productos activos para cotizar.</p>`;
+            return;
         }
 
-        // Open quote modal
-        function openQuoteModal() {
-            if (conversationBlocked || !currentChatUser || !currentConversationId) {
-                alert('❌ No puedes cotizar en esta conversación.\nHabla con el chatbot para conectarte con este proveedor.');
-                return;
-            }
-            loadQuoteForm();
+        loading.style.display = 'none';
+        container.style.display = 'block';
+
+    } catch (err) {
+        loading.innerHTML = `<p style="color:#ef4444;text-align:center;">Error: ${err.message}</p>`;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('quote-product')?.addEventListener('change', function() {
+        const container = document.getElementById('product-options-container');
+        if (!container) return;
+        container.innerHTML = '';
+        if (!this.value) return;
+        const product = JSON.parse(this.value);
+        (product.options || []).forEach(opt => {
+            const div = document.createElement('div');
+            div.className = 'form-group';
+            div.innerHTML = `
+                <label class="form-label">${opt.name}${opt.required ? ' *' : ''}</label>
+                <select id="opt-${opt.name}" class="form-control" ${opt.required ? 'required' : ''}>
+                    <option value="">Selecciona...</option>
+                    ${(opt.options || []).map(o => `<option value="${o}">${o}</option>`).join('')}
+                </select>`;
+            container.appendChild(div);
+        });
+    });
+});
+
+async function submitDynamicQuote() {
+    const productSelect = document.getElementById('quote-product');
+    if (!productSelect.value) { alert('Selecciona un producto'); return; }
+
+    const product = JSON.parse(productSelect.value);
+    const quantity = document.getElementById('quote-quantity').value;
+    const notes = document.getElementById('quote-notes').value;
+
+    const options = {};
+    (product.options || []).forEach(opt => {
+        const el = document.getElementById(`opt-${opt.name}`);
+        if (el && el.value) options[opt.name] = el.value;
+    });
+
+    const quoteData = { product_id: product.id, product_name: product.name, quantity: parseInt(quantity), options, notes, estimated_total: (product.price || 0) * quantity };
+    const message = formatQuoteMessage(quoteData, currentChatUser);
+
+    try {
+        const res = await fetch('/chat/send/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+            body: JSON.stringify({ user_id: currentChatUser.id, content: message, conversation_id: currentConversationId })
+        });
+        if (res.ok) {
+            closeQuoteModal();
+            refreshMessages();
+        } else throw new Error('Error al enviar');
+    } catch (err) {
+        alert('❌ Error al enviar la cotización');
+    }
+}
+
+function formatQuoteMessage(data, supplier) {
+    const opts = Object.entries(data.options).map(([k, v]) => `  • ${k}: ${v}`).join('\n');
+    return `📋 SOLICITUD DE COTIZACIÓN\n` +
+        `━━━━━━━━━━━━━━━━━━━\n` +
+        `Producto: ${data.product_name}\n` +
+        `Cantidad: ${data.quantity}\n` +
+        `${opts ? `Especificaciones:\n${opts}\n` : ''}` +
+        `Total estimado: $${data.estimated_total}\n` +
+        `Notas: ${data.notes || 'Ninguna'}\n` +
+        `━━━━━━━━━━━━━━━━━━━`;
+}
+
+/* ===============================
+   CATALOG
+================================ */
+async function openCatalogModal() {
+    if (!currentChatUser || conversationBlocked) return;
+    const modal = document.getElementById('catalogModal');
+    const content = document.getElementById('catalog-content');
+    modal.style.display = 'flex';
+    content.innerHTML = '<div class="loader"></div>';
+
+    try {
+        const res = await fetch(`/chat/supplier-catalog/${currentChatUser.id}/`);
+        const data = await res.json();
+        if (!data.has_catalog) {
+            content.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-muted);">
+                <div style="font-size:2.5rem;margin-bottom:10px;">📭</div>
+                <p>Este proveedor no ha subido su catálogo aún.</p>
+            </div>`;
+            return;
         }
+        window.open(data.catalog_url, '_blank');
+        closeCatalogModal();
+    } catch (err) {
+        content.innerHTML = `<p style="color:#ef4444;text-align:center;">Error: ${err.message}</p>`;
+    }
+}
 
-        // Close quote modal
-        function closeQuoteModal() {
-            document.getElementById('quoteModal').style.display = 'none';
-            document.getElementById('dynamicQuoteForm').reset();
-            document.getElementById('product-options-container').innerHTML = '';
-        }
+function closeCatalogModal() {
+    const modal = document.getElementById('catalogModal');
+    if (modal) modal.style.display = 'none';
+}
 
-        // Submit dynamic quote
-        async function submitDynamicQuote() {
-            const productSelect = document.getElementById('quote-product');
-            if (!productSelect.value) {
-                alert('Selecciona un producto');
-                return;
+/* ===============================
+   EVENTS
+================================ */
+function wireEvents() {
+    sendBtn?.addEventListener('click', sendMessage);
+
+    messageInput?.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    });
+
+    // Auto-resize textarea
+    messageInput?.addEventListener('input', () => {
+        messageInput.style.height = 'auto';
+        messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + 'px';
+        // Toggle send button active state
+        const hasText = messageInput.value.trim().length > 0;
+        sendBtn?.classList.toggle('active', hasText);
+    });
+
+    fileBtn?.addEventListener('click', () => fileInput?.click());
+    fileInput?.addEventListener('change', function() {
+        if (!this.files || !this.files[0]) return;
+        if (messageInput) messageInput.value = `📎 Archivo: ${this.files[0].name}`;
+        sendBtn?.classList.add('active');
+        setTimeout(sendMessage, 100);
+    });
+
+    document.getElementById('quoteBtn')?.addEventListener('click', openQuoteModal);
+
+    document.getElementById('whatsappBtn')?.addEventListener('click', () => {
+        if (!currentChatUser || conversationBlocked) return;
+        const btn = document.getElementById('whatsappBtn');
+        const number = btn?.dataset.whatsapp;
+        if (!number) { alert('Este proveedor no ha registrado WhatsApp.'); return; }
+        window.open(`https://wa.me/${number}?text=${encodeURIComponent('Hola, te contacto desde Elice')}`, '_blank');
+    });
+
+    document.getElementById('catalogBtn')?.addEventListener('click', openCatalogModal);
+
+    // Sidebar search
+    document.getElementById('sidebarSearch')?.addEventListener('input', function() {
+        const q = this.value.toLowerCase().trim();
+        usersList?.querySelectorAll('.user-item').forEach(item => {
+            const name = (item.querySelector('.user-name')?.textContent || '').toLowerCase();
+            const role = (item.querySelector('.user-role')?.textContent || '').toLowerCase();
+            item.style.display = (!q || name.includes(q) || role.includes(q)) ? '' : 'none';
+        });
+        usersList?.querySelectorAll('.cat-label').forEach(label => {
+            // Show label if any sibling user-item after it is visible
+            let next = label.nextElementSibling;
+            let anyVisible = false;
+            while (next && !next.classList.contains('cat-label')) {
+                if (next.classList.contains('user-item') && next.style.display !== 'none') anyVisible = true;
+                next = next.nextElementSibling;
             }
-            
-            const productData = JSON.parse(productSelect.value);
-            const quantity = document.getElementById('quote-quantity').value;
-            const notes = document.getElementById('quote-notes').value;
-            
-            // Collect options
-            const options = {};
-            productData.options.forEach(opt => {
-                const select = document.getElementById(`opt-${opt.name}`);
-                if (select && select.value) {
-                    options[opt.name] = select.value;
-                }
-            });
-            
-            const quoteData = {
-                product_id: productData.id,
-                product_name: productData.name,
-                quantity: parseInt(quantity),
-                options: options,
-                notes: notes,
-                estimated_total: productData.price * quantity
-            };
-            
-            // Send to chat
-            const message = formatQuoteMessage(quoteData, currentChatUser);
-            
-            try {
-                const res = await fetch('/chat/send/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrftoken
-                    },
-                    body: JSON.stringify({
-                        user_id: currentChatUser.id,
-                        content: message,
-                        conversation_id: currentConversationId
-                    })
-                });
-                
-                if (res.ok) {
-                    alert('✅ Cotización enviada correctamente');
-                    closeQuoteModal();
-                    refreshMessages();
-                } else {
-                    throw new Error('Error al enviar');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('❌ Error al enviar la cotización');
-            }
-        }
+            label.style.display = anyVisible ? '' : 'none';
+        });
+    });
+}
 
-        function formatQuoteMessage(data, supplier) {
-            const options = Object.entries(data.options)
-                .map(([k, v]) => `  • ${k}: ${v}`).join('\n');
-            
-            return `📋 **NUEVA SOLICITUD DE COTIZACIÓN**\n` +
-                `━━━━━━━━━━━━━━━━━━━━━━━\n` +
-                `**Producto:** ${data.product_name}\n` +
-                `**Cantidad:** ${data.quantity}\n` +
-                `${options ? `**Especificaciones:**\n${options}\n` : ''}` +
-                `**Total estimado:** $${data.estimated_total}\n` +
-                `**Notas:** ${data.notes || 'Ninguna'}\n` +
-                `━━━━━━━━━━━━━━━━━━━━━━━\n` +
-                `_Enviado a: ${supplier.username}_`;
-        }
-        
-        /* ===============================
-           EVENTS - UPDATED WITH QUOTE BUTTON
-        ================================ */
-        function wireEvents() {
-            if (sendBtn) {
-                sendBtn.addEventListener('click', sendMessage);
-            }
-        
-            if (messageInput) {
-                messageInput.addEventListener('keypress', e => {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        sendMessage();
-                    }
-                });
-            }
-        
-            if (fileBtn && fileInput) {
-                fileBtn.addEventListener('click', () => fileInput.click());
-        
-                fileInput.addEventListener('change', function(e) {
-                    if (!this.files || !this.files[0]) return;
-                    
-                    const fileName = this.files[0].name;
-                    if (messageInput) {
-                        messageInput.value = `📎 Archivo: ${fileName}`;
-                    }
-                    // Optional: auto-send after brief delay
-                    setTimeout(sendMessage, 100);
-                });
-            }
-        
-            // Quote button
-            const quoteBtn = document.getElementById('quoteBtn');
-            if (quoteBtn) {
-                quoteBtn.addEventListener('click', openQuoteModal);
-            }
-        
-            // WhatsApp button
-            const whatsappBtn = document.getElementById('whatsappBtn');
-            if (whatsappBtn) {
-                whatsappBtn.addEventListener('click', () => {
-                    if (!currentChatUser || conversationBlocked) return;
-                    const number = whatsappBtn.dataset.whatsapp;
-                    if (!number) {
-                        alert('Este proveedor no ha registrado su número de WhatsApp.');
-                        return;
-                    }
-                    const message = encodeURIComponent('Hola, te contacto desde Elice');
-                    window.open(`https://wa.me/${number}?text=${message}`, '_blank');
-                });
-            }
+window.handleKeyPress = function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+};
 
-            // Catalog button
-            const catalogBtn = document.getElementById('catalogBtn');
-            if (catalogBtn) {
-                catalogBtn.addEventListener('click', openCatalogModal);
-            }
-        }
-        
-        // Make handleKeyPress available globally if used in onkeypress attribute
-        window.handleKeyPress = function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                sendMessage();
-            }
-        };
+/* ===============================
+   TYPING INDICATOR
+================================ */
+function showTypingIndicator() {
+    const indicator = document.getElementById('typingIndicator');
+    if (!indicator) return;
+    const label = document.getElementById('typingLabel');
+    const isBot = currentChatUser?.username === 'elicebot';
+    if (label) label.textContent = isBot ? 'EliceBot está escribiendo…' : 'Escribiendo…';
+    indicator.classList.add('visible');
+    if (messagesContainer) messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
 
-        async function openCatalogModal() {
-            if (!currentChatUser || conversationBlocked) return;
-
-            const modal = document.getElementById('catalogModal');
-            const content = document.getElementById('catalog-content');
-            const downloadBtn = document.getElementById('catalog-download-btn');
-
-            modal.style.display = 'flex';
-            content.innerHTML = '<div class="loader"></div><p style="text-align:center">Cargando catálogo...</p>';
-            downloadBtn.style.display = 'none';
-
-            try {
-                const res = await fetch(`/chat/supplier-catalog/${currentChatUser.id}/`);
-                const data = await res.json();
-
-                if (!data.has_catalog) {
-                    content.innerHTML = `
-                        <div style="text-align:center; padding:30px; color:#9ca3af;">
-                            <div style="font-size:40px; margin-bottom:10px;">📭</div>
-                            <p>Este proveedor no ha subido un catálogo todavía.</p>
-                        </div>`;
-                    return;
-                }
-
-                window.open(data.catalog_url, '_blank');
-                closeCatalogModal();
-
-            } catch (error) {
-                content.innerHTML = `<p style="color:#ef4444; text-align:center;">❌ Error al cargar el catálogo: ${error.message}</p>`;
-            }
-        }
-
-        function closeCatalogModal() {
-            const modal = document.getElementById('catalogModal');
-            if (modal) modal.style.display = 'none';
-        }
+function hideTypingIndicator() {
+    document.getElementById('typingIndicator')?.classList.remove('visible');
+}

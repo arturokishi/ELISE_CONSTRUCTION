@@ -1,0 +1,872 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block title %}ELISE Construction | Marketplace de Materiales{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Variables ── */
+:root {
+    --primary: #0f172a;
+    --primary-soft: #1e293b;
+    --accent: #f59e0b;
+    --accent-dark: #d97706;
+    --accent-light: #fef3c7;
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --text-light: #94a3b8;
+    --surface: #ffffff;
+    --surface-2: #f8fafc;
+    --surface-3: #f1f5f9;
+    --border: #e2e8f0;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+    --shadow-lg: 0 20px 40px rgba(0,0,0,0.10);
+}
+
+* { box-sizing: border-box; }
+
+body {
+    font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
+    color: var(--text);
+    background: var(--surface-2);
+    margin: 0;
+}
+
+/* ── HERO ── */
+.hero {
+    background: var(--primary);
+    padding: 70px 0 0;
+    overflow: hidden;
+    position: relative;
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -80px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.hero-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: end;
+}
+
+.hero-text { padding-bottom: 60px; }
+
+.hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(245,158,11,0.15);
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 100px;
+    margin-bottom: 20px;
+}
+
+.hero-eyebrow::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+}
+
+.hero h1 {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.15;
+    margin: 0 0 20px;
+    letter-spacing: -0.02em;
+}
+
+.hero h1 span {
+    color: var(--accent);
+}
+
+.hero-sub {
+    color: #94a3b8;
+    font-size: 1.05rem;
+    line-height: 1.65;
+    margin: 0 0 36px;
+    max-width: 460px;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 0.95rem;
+    padding: 14px 28px;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    transition: background 0.2s, transform 0.15s;
+}
+
+.btn-primary:hover {
+    background: var(--accent-dark);
+    color: var(--primary);
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 14px 28px;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    border: 1px solid rgba(255,255,255,0.15);
+    transition: background 0.2s;
+}
+
+.btn-ghost:hover {
+    background: rgba(255,255,255,0.14);
+    color: #fff;
+    text-decoration: none;
+}
+
+/* Hero product strip */
+.hero-strip {
+    display: flex;
+    gap: 16px;
+    overflow: hidden;
+    padding-bottom: 40px;
+    mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+}
+
+.hero-strip-card {
+    flex-shrink: 0;
+    width: 160px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: transform 0.2s;
+}
+
+.hero-strip-card:hover { transform: translateY(-4px); }
+
+.hero-strip-card img {
+    width: 100%;
+    height: 110px;
+    object-fit: cover;
+    display: block;
+}
+
+.hero-strip-card-placeholder {
+    width: 100%;
+    height: 110px;
+    background: rgba(255,255,255,0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+}
+
+.hero-strip-card-body {
+    padding: 10px 12px;
+}
+
+.hero-strip-card-name {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hero-strip-card-price {
+    font-size: 0.72rem;
+    color: var(--accent);
+    margin-top: 3px;
+}
+
+/* ── STATS BAR ── */
+.stats-bar {
+    background: var(--accent);
+    padding: 18px 24px;
+}
+
+.stats-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.stat-item {
+    text-align: center;
+    color: var(--primary);
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: 800;
+    display: block;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    opacity: 0.75;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ── SECTION SHARED ── */
+.section {
+    padding: 70px 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 36px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.section-title {
+    font-size: clamp(1.4rem, 3vw, 1.9rem);
+    font-weight: 800;
+    color: var(--text);
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+.section-title span { color: var(--accent); }
+
+.section-link {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--accent-dark);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.section-link:hover { text-decoration: underline; color: var(--accent-dark); }
+
+/* ── CATEGORIES PILLS ── */
+.categories-strip {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 50px;
+}
+
+.cat-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 9px 18px;
+    border-radius: 100px;
+    text-decoration: none;
+    transition: all 0.15s;
+    box-shadow: var(--shadow-sm);
+}
+
+.cat-pill:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--primary);
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.cat-pill-icon { font-size: 1rem; }
+
+/* ── PRODUCT GRID ── */
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+.product-card {
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.18s, box-shadow 0.18s;
+    text-decoration: none;
+    color: inherit;
+}
+
+.product-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    text-decoration: none;
+    color: inherit;
+}
+
+.product-card-img {
+    width: 100%;
+    height: 190px;
+    object-fit: cover;
+    display: block;
+    background: var(--surface-3);
+}
+
+.product-card-placeholder {
+    width: 100%;
+    height: 190px;
+    background: linear-gradient(135deg, var(--surface-3), var(--border));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: var(--text-light);
+}
+
+.product-card-body {
+    padding: 16px 18px 20px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.product-card-brand {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+}
+
+.product-card-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 8px;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.product-card-desc {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    flex-grow: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 14px;
+}
+
+.product-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+}
+
+.product-card-price {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #047857;
+}
+
+.product-card-unit {
+    font-size: 0.72rem;
+    color: var(--text-light);
+    font-weight: 400;
+}
+
+.product-card-cta {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--primary);
+    background: var(--accent-light);
+    padding: 6px 12px;
+    border-radius: 6px;
+    white-space: nowrap;
+}
+
+/* ── SUPPLIERS ── */
+.suppliers-bg {
+    background: var(--primary);
+    padding: 70px 0;
+}
+
+.suppliers-bg .section { padding-top: 0; padding-bottom: 0; }
+.suppliers-bg .section-title { color: #fff; }
+.suppliers-bg .section-link { color: var(--accent); }
+
+.suppliers-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+.supplier-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: var(--radius-md);
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+    text-decoration: none;
+    transition: background 0.18s, transform 0.18s;
+}
+
+.supplier-card:hover {
+    background: rgba(255,255,255,0.11);
+    transform: translateY(-3px);
+    text-decoration: none;
+}
+
+.supplier-logo {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: rgba(255,255,255,0.1);
+}
+
+.supplier-logo-placeholder {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(245,158,11,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--accent);
+}
+
+.supplier-name {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #f1f5f9;
+}
+
+.supplier-verified {
+    font-size: 0.7rem;
+    background: rgba(245,158,11,0.2);
+    color: var(--accent);
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-weight: 600;
+}
+
+.supplier-desc {
+    font-size: 0.78rem;
+    color: #94a3b8;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* ── BRANDS ── */
+.brands-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+}
+
+.brand-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-decoration: none;
+    transition: box-shadow 0.18s, transform 0.18s;
+    min-height: 100px;
+}
+
+.brand-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    text-decoration: none;
+}
+
+.brand-logo {
+    max-width: 90px;
+    max-height: 44px;
+    object-fit: contain;
+    filter: grayscale(40%);
+    transition: filter 0.2s;
+}
+
+.brand-card:hover .brand-logo { filter: grayscale(0%); }
+
+.brand-name {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+/* ── CTA BANNER ── */
+.cta-banner {
+    background: linear-gradient(135deg, var(--primary) 0%, #1e293b 100%);
+    border-radius: var(--radius-lg);
+    padding: 60px 48px;
+    margin: 0 24px 70px;
+    max-width: 1152px;
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 32px;
+    flex-wrap: wrap;
+    position: relative;
+    overflow: hidden;
+}
+
+.cta-banner::after {
+    content: '';
+    position: absolute;
+    right: -60px; bottom: -60px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(245,158,11,0.15) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.cta-banner-text h2 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #fff;
+    margin: 0 0 10px;
+    letter-spacing: -0.02em;
+}
+
+.cta-banner-text p {
+    color: #94a3b8;
+    font-size: 1rem;
+    margin: 0;
+    max-width: 480px;
+    line-height: 1.6;
+}
+
+/* ── FLOATING CHAT BUTTON ── */
+.chat-fab {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--accent);
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 14px 22px;
+    border-radius: 100px;
+    text-decoration: none;
+    box-shadow: 0 8px 30px rgba(245,158,11,0.45);
+    transition: transform 0.2s, box-shadow 0.2s;
+    animation: fab-pulse 3s ease-in-out infinite;
+}
+
+.chat-fab:hover {
+    transform: scale(1.05);
+    box-shadow: 0 12px 40px rgba(245,158,11,0.6);
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.chat-fab-icon { font-size: 1.1rem; }
+
+@keyframes fab-pulse {
+    0%, 100% { box-shadow: 0 8px 30px rgba(245,158,11,0.45); }
+    50% { box-shadow: 0 8px 40px rgba(245,158,11,0.7); }
+}
+
+/* ── EMPTY STATES ── */
+.empty-grid {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-muted);
+    grid-column: 1 / -1;
+    font-size: 0.95rem;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1024px) {
+    .product-grid { grid-template-columns: repeat(3, 1fr); }
+    .suppliers-grid { grid-template-columns: repeat(3, 1fr); }
+    .brands-grid { grid-template-columns: repeat(4, 1fr); }
+    .hero-inner { grid-template-columns: 1fr; gap: 30px; }
+    .hero-strip { display: none; }
+}
+
+@media (max-width: 768px) {
+    .product-grid { grid-template-columns: repeat(2, 1fr); }
+    .suppliers-grid { grid-template-columns: repeat(2, 1fr); }
+    .brands-grid { grid-template-columns: repeat(3, 1fr); }
+    .cta-banner { padding: 40px 28px; }
+}
+
+@media (max-width: 480px) {
+    .product-grid { grid-template-columns: 1fr; }
+    .brands-grid { grid-template-columns: repeat(2, 1fr); }
+    .stats-inner { justify-content: center; gap: 24px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+    <div class="hero-inner">
+        <div class="hero-text">
+            <div class="hero-eyebrow">Marketplace B2B de Construcción</div>
+            <h1>Los mejores materiales,<br><span>al mejor precio</span></h1>
+            <p class="hero-sub">
+                Conectamos tu obra con proveedores verificados. Precios competitivos,
+                volumen sin límites y cotización en minutos.
+            </p>
+            <div class="hero-actions">
+                <a href="{% url 'home:productos' %}" class="btn-primary">
+                    Ver catálogo completo →
+                </a>
+                <a href="{% url 'home:chat' %}" class="btn-ghost">
+                    💬 Cotizar ahora
+                </a>
+            </div>
+        </div>
+
+        <!-- Mini-strip de productos destacados -->
+        <div class="hero-strip">
+            {% for product in featured_products|slice:":5" %}
+            <a href="{% url 'home:producto_detalle' product.slug %}" class="hero-strip-card">
+                {% if product.main_image %}
+                <img src="{{ product.main_image.url }}" alt="{{ product.name }}">
+                {% else %}
+                <div class="hero-strip-card-placeholder">📦</div>
+                {% endif %}
+                <div class="hero-strip-card-body">
+                    <div class="hero-strip-card-name">{{ product.name }}</div>
+                    <div class="hero-strip-card-price">
+                        {% if product.base_price %}${{ product.base_price }}{% else %}Consultar{% endif %}
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ═══ STATS BAR ═══ -->
+<div class="stats-bar">
+    <div class="stats-inner">
+        <div class="stat-item">
+            <span class="stat-number">{{ featured_products.count }}+</span>
+            <span class="stat-label">Productos</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">{{ suppliers.count }}+</span>
+            <span class="stat-label">Proveedores</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">{{ brands.count }}+</span>
+            <span class="stat-label">Marcas</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">{{ root_categories.count }}+</span>
+            <span class="stat-label">Categorías</span>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ CATEGORÍAS ═══ -->
+<div class="section">
+    {% if root_categories %}
+    <div class="categories-strip">
+        {% for cat in root_categories %}
+        <a href="{% url 'home:categoria' cat.slug %}" class="cat-pill">
+            {% if cat.icon %}<span class="cat-pill-icon">{{ cat.icon }}</span>{% endif %}
+            {{ cat.name }}
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ═══ PRODUCTOS DESTACADOS ═══ -->
+    <div class="section-header">
+        <h2 class="section-title">Productos <span>destacados</span></h2>
+        <a href="{% url 'home:productos' %}" class="section-link">Ver todos →</a>
+    </div>
+
+    <div class="product-grid">
+        {% for product in featured_products %}
+        <a href="{% url 'home:producto_detalle' product.slug %}" class="product-card">
+            {% if product.main_image %}
+            <img src="{{ product.main_image.url }}" alt="{{ product.name }}" class="product-card-img">
+            {% else %}
+            <div class="product-card-placeholder">📦</div>
+            {% endif %}
+            <div class="product-card-body">
+                {% with brand=product.brands.first %}
+                {% if brand %}
+                <div class="product-card-brand">{{ brand.name }}</div>
+                {% endif %}
+                {% endwith %}
+                <div class="product-card-name">{{ product.name }}</div>
+                {% if product.description %}
+                <div class="product-card-desc">{{ product.description }}</div>
+                {% endif %}
+                <div class="product-card-footer">
+                    <div>
+                        {% if product.base_price %}
+                        <div class="product-card-price">${{ product.base_price }}</div>
+                        <div class="product-card-unit">/ {{ product.unit }}</div>
+                        {% else %}
+                        <div class="product-card-price" style="color: var(--text-muted); font-size:0.85rem;">Precio a consultar</div>
+                        {% endif %}
+                    </div>
+                    <span class="product-card-cta">Ver →</span>
+                </div>
+            </div>
+        </a>
+        {% empty %}
+        <div class="empty-grid">No hay productos destacados aún. Márcalos desde el admin.</div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- ═══ PROVEEDORES ═══ -->
+<div class="suppliers-bg">
+    <div class="section">
+        <div class="section-header" style="margin-bottom: 36px;">
+            <h2 class="section-title">Nuestros <span>proveedores</span></h2>
+        </div>
+        <div class="suppliers-grid">
+            {% for supplier in suppliers %}
+            <a href="{% url 'home:chat' %}" class="supplier-card">
+                {% if supplier.logo %}
+                <img src="{{ supplier.logo.url }}" alt="{{ supplier }}" class="supplier-logo">
+                {% else %}
+                <div class="supplier-logo-placeholder">
+                    {{ supplier.user.userprofile.company|default:supplier.user.username|first|upper }}
+                </div>
+                {% endif %}
+                <div class="supplier-name">
+                    {{ supplier.user.userprofile.company|default:supplier.user.username }}
+                </div>
+                {% if supplier.is_verified %}
+                <span class="supplier-verified">✓ Verificado</span>
+                {% endif %}
+                {% if supplier.description %}
+                <div class="supplier-desc">{{ supplier.description }}</div>
+                {% endif %}
+            </a>
+            {% empty %}
+            <div class="empty-grid" style="color:#94a3b8;">No hay proveedores activos aún.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- ═══ MARCAS ═══ -->
+<div class="section">
+    <div class="section-header">
+        <h2 class="section-title">Marcas <span>disponibles</span></h2>
+    </div>
+    <div class="brands-grid">
+        {% for brand in brands %}
+        <a href="{% url 'home:productos' %}" class="brand-card">
+            {% if brand.logo %}
+            <img src="{{ brand.logo.url }}" alt="{{ brand.name }}" class="brand-logo">
+            {% endif %}
+            <span class="brand-name">{{ brand.name }}</span>
+        </a>
+        {% empty %}
+        <div class="empty-grid">No hay marcas activas aún.</div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- ═══ CTA BANNER ═══ -->
+<div class="cta-banner">
+    <div class="cta-banner-text">
+        <h2>¿Listo para cotizar tu próximo proyecto?</h2>
+        <p>
+            Habla directamente con nuestros proveedores y obtén precios
+            ajustados al volumen de tu obra. Respuesta en minutos.
+        </p>
+    </div>
+    <a href="{% url 'home:chat' %}" class="btn-primary" style="font-size:1rem; padding: 16px 36px; flex-shrink:0;">
+        💬 Iniciar cotización
+    </a>
+</div>
+
+<!-- ═══ FLOATING CHAT BUTTON ═══ -->
+<a href="{% url 'home:chat' %}" class="chat-fab">
+    <span class="chat-fab-icon">💬</span>
+    Cotizar ahora
+</a>
+
+{% endblock %}
