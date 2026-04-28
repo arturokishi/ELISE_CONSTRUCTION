@@ -106,3 +106,18 @@ def password_change(request):
         form = PasswordChangeForm(request.user)
     
     return render(request, 'home/password_change.html', {'form': form})
+
+
+
+
+    # urls.py — temporary, remove after diagnosis
+from django.http import JsonResponse
+import sys, locale
+
+def encoding_debug(request):
+    return JsonResponse({
+        'sys.getdefaultencoding': sys.getdefaultencoding(),
+        'sys.stdout.encoding': sys.stdout.encoding,
+        'sys.getfilesystemencoding': sys.getfilesystemencoding(),
+        'locale.getpreferredencoding': locale.getpreferredencoding(),
+    })

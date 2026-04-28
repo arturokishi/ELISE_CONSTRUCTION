@@ -11,6 +11,9 @@ from .views.chat_views import (
     get_supplier_catalog
 )
 from .views.order_views import create_order
+
+#Prueba
+from .views.auth_views import encoding_debug
  
 app_name = 'home'
  
@@ -42,4 +45,10 @@ urlpatterns = [
     path("chat/conversation/by-id/<int:conversation_id>/", get_conversation_by_id, name="get_conversation_by_id"),
     path("chat/quote-form/<int:supplier_id>/", get_quote_form, name="quote_form"),
     path('chat/supplier-catalog/<int:supplier_id>/', get_supplier_catalog, name='supplier_catalog'),
+
+
+    #Prueba
+
+        path("encoding-debug/", encoding_debug),
+
 ]
