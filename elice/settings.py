@@ -103,13 +103,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #Media
 
 # Media files (uploads)
-MEDIA_URL = '/media/'
+MEDIA_URL = ''  
 
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
     'RESOURCE_TYPE': 'auto',
+    #'MEDIA_URL': '',   
+
 }
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

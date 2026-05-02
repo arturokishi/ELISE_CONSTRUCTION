@@ -331,10 +331,16 @@ class Product(models.Model):
     unit = models.CharField(max_length=50, default="unidad", help_text="ej: litro, kg, pieza, m²")
  
     # Archivos
+    from cloudinary_storage.storage import RawMediaCloudinaryStorage
+    
     main_image = models.ImageField(upload_to='products/images/', blank=True, null=True)
     technical_sheet = models.FileField(
-        upload_to='products/docs/', blank=True, null=True,
+        upload_to='products/docs/',
+        blank=True,
+        null=True,
+        storage=RawMediaCloudinaryStorage(),
         help_text="Ficha técnica en PDF"
+
     )
  
     # Control
