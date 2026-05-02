@@ -339,6 +339,7 @@ class Product(models.Model):
         blank=True,
         null=True,
         storage=RawMediaCloudinaryStorage(),
+        max_length=500,
         help_text="Ficha técnica en PDF"
 
     )
