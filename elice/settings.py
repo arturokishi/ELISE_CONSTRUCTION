@@ -123,7 +123,7 @@ LOGGING = {
 #Media
 
 # Media files (uploads)
-MEDIA_URL = '/media/'  
+MEDIA_URL = ''   
 
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
