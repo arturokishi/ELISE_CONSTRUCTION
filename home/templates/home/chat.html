@@ -1134,8 +1134,13 @@ body {
             </div>
         </div>
 
-        <div class="sidebar-section-label">Tus proveedores</div>
-
+<div class="sidebar-section-label" id="sidebarSectionLabel">
+    {% if request.user.userprofile.role == 'supplier' %}
+        Tus clientes
+    {% else %}
+        Tus proveedores
+    {% endif %}
+</div>
         <!-- Search -->
         <div class="sidebar-search">
             <div class="sidebar-search-wrap">
@@ -1167,16 +1172,22 @@ body {
                 </div>
             </div>
             <div class="chat-header-actions">
-                <button class="header-btn" id="catalogBtn" disabled style="display:none;">
-                    📄 Catálogo
-                </button>
-                <button class="header-btn" id="whatsappBtn" disabled>
-                    💬 WhatsApp
-                </button>
-                <button class="header-btn accent" id="quoteBtn" disabled>
-                    📋 Cotizar
-                </button>
-            </div>
+    <button class="header-btn" id="catalogBtn" disabled style="display:none;">
+        📄 Catálogo
+    </button>
+    <button class="header-btn" id="whatsappBtn" disabled>
+        💬 WhatsApp
+    </button>
+    {% if request.user.userprofile.role == 'supplier' %}
+    <button class="header-btn accent" id="replyPriceBtn" disabled style="display:none;">
+        💰 Responder precio
+    </button>
+    {% else %}
+    <button class="header-btn accent" id="quoteBtn" disabled>
+        📋 Cotizar
+    </button>
+    {% endif %}
+</div>
         </div>
 
         <!-- Messages -->
@@ -1208,11 +1219,14 @@ body {
                 <span id="typingLabel">EliceBot está escribiendo…</span>
             </div>
             <div class="input-row">
-                <button class="file-btn" id="fileBtn" title="Adjuntar archivo">📎</button>
-                <textarea class="message-input" id="messageInput"
-                       placeholder="Escribe tu mensaje…"
-                       rows="1"></textarea>
-                <button class="send-btn" id="sendBtn" title="Enviar">
+    <button class="file-btn" id="fileBtn" title="Adjuntar archivo">📎</button>
+    <textarea class="message-input" id="messageInput"
+           placeholder="Escribe tu mensaje…"
+           rows="1"></textarea>
+    <button id="payPillBtn" title="Pagar cotización" style="display:none;align-items:center;gap:5px;padding:6px 14px;background:#d1fae5;color:#065f46;border:1.5px solid #10b981;border-radius:100px;font-size:0.78rem;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:'DM Sans',sans-serif;">
+        💳 Pagar
+    </button>
+    <button class="send-btn" id="sendBtn" title="Enviar">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="22" y1="2" x2="11" y2="13"></line>
                         <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
@@ -1294,15 +1308,43 @@ body {
         </div>
     </div>
 </div>
+<!-- ═══ REPLY PRICE MODAL ═══ -->
+<div class="modal" id="replyPriceModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="modal-title">💰 Responder cotización</span>
+            <button class="modal-close" onclick="closeReplyPriceModal()">✕</button>
+        </div>
+        <div id="reply-price-client-name" style="font-size:0.8rem;color:var(--text-muted);margin-bottom:16px;"></div>
 
+        <div class="form-group">
+            <label class="form-label">Precio cotizado *</label>
+            <input type="number" id="reply-price-amount" class="form-control"
+                   min="0" step="0.01" placeholder="ej: 1500.00" required>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Notas para el cliente</label>
+            <textarea id="reply-price-notes" class="form-control" rows="3"
+                      placeholder="Condiciones, tiempos de entrega, detalles..."></textarea>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Válido hasta</label>
+            <input type="date" id="reply-price-valid-until" class="form-control">
+        </div>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeReplyPriceModal()">Cancelar</button>
+            <button class="btn-submit" onclick="submitReplyPrice()">Enviar precio →</button>
+        </div>
+    </div>
+</div>
 {% load static %}
 <script src="{% static 'js/chat.js' %}"></script>
+
 <script>
-// Fix chat height to account for any top navbar from base template
+// Fix chat height
 function fixChatHeight() {
     const layout = document.getElementById('chatLayout');
     if (!layout) return;
-    // Find the top offset of the chat layout (i.e. navbar height)
     const top = layout.getBoundingClientRect().top;
     const availableHeight = window.innerHeight - top;
     layout.style.height = availableHeight + 'px';
@@ -1311,5 +1353,171 @@ function fixChatHeight() {
 fixChatHeight();
 window.addEventListener('resize', fixChatHeight);
 </script>
+
+<script>
+// ═══ SUPPLIER: REPLY PRICE MODAL ═══
+const USER_ROLE = "{{ request.user.userprofile.role }}";
+
+function openReplyPriceModal() {
+    if (!currentChatUser || conversationBlocked) return;
+    const modal = document.getElementById('replyPriceModal');
+    const clientName = document.getElementById('reply-price-client-name');
+    if (clientName) {
+        const name = (currentChatUser.first_name && currentChatUser.last_name)
+            ? `${currentChatUser.first_name} ${currentChatUser.last_name}`
+            : currentChatUser.username;
+        clientName.textContent = `Cliente: ${name}`;
+    }
+    document.getElementById('reply-price-amount').value = '';
+    document.getElementById('reply-price-notes').value = '';
+    document.getElementById('reply-price-valid-until').value = '';
+    modal.style.display = 'flex';
+}
+
+function closeReplyPriceModal() {
+    const modal = document.getElementById('replyPriceModal');
+    if (modal) modal.style.display = 'none';
+}
+
+async function submitReplyPrice() {
+    const price = document.getElementById('reply-price-amount').value;
+    const notes = document.getElementById('reply-price-notes').value;
+    const validUntil = document.getElementById('reply-price-valid-until').value;
+
+    if (!price || parseFloat(price) <= 0) {
+        alert('Por favor ingresa un precio válido.');
+        return;
+    }
+
+    const quoteId = document.getElementById('replyPriceBtn')?.dataset.quoteId;
+    if (!quoteId) {
+        alert('No se encontró la cotización. Intenta de nuevo.');
+        return;
+    }
+
+    const submitBtn = document.querySelector('#replyPriceModal .btn-submit');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Enviando...';
+
+    try {
+        const res = await fetch(`/chat/reply-quote/${quoteId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+            },
+            body: JSON.stringify({
+                price: parseFloat(price),
+                notes: notes,
+                valid_until: validUntil || null,
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            closeReplyPriceModal();
+            refreshMessages();
+        } else {
+            alert(data.error || 'Error al enviar el precio.');
+        }
+    } catch (err) {
+        alert('Error de conexión. Intenta de nuevo.');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Enviar precio →';
+    }
+}
+
+function updateReplyPriceButton(quoteData) {
+    const btn = document.getElementById('replyPriceBtn');
+    if (!btn) return;
+    if (!quoteData) {
+        btn.style.display = 'none';
+        return;
+    }
+    if (quoteData.status === 'pending') {
+        btn.style.display = 'inline-flex';
+        btn.disabled = false;
+        btn.dataset.quoteId = quoteData.id;
+        btn.textContent = '💰 Responder precio';
+    } else if (quoteData.status === 'quoted') {
+        btn.style.display = 'inline-flex';
+        btn.disabled = false;
+        btn.dataset.quoteId = quoteData.id;
+        btn.textContent = '💰 Actualizar precio';
+    } else {
+        btn.style.display = 'none';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('replyPriceBtn')?.addEventListener('click', openReplyPriceModal);
+});
+</script>
+
+<script>
+const STRIPE_PUBLISHABLE_KEY = "{{ stripe_publishable_key }}";
+
+const payPillBtn = document.getElementById('payPillBtn');
+
+function updatePayButton(quoteData) {
+    // Only show pay button for clients
+    if (USER_ROLE !== 'client') {
+        payPillBtn.style.display = 'none';
+        return;
+    }
+    if (!quoteData) {
+        payPillBtn.style.display = 'none';
+        return;
+    }
+    if (quoteData.status === 'quoted' && quoteData.payment_status === 'unpaid') {
+        payPillBtn.style.display = 'inline-flex';
+        payPillBtn.disabled = false;
+        payPillBtn.dataset.quoteId = quoteData.id;
+        payPillBtn.textContent = '💳 Pagar';
+        payPillBtn.style.background = '#d1fae5';
+        payPillBtn.style.color = '#065f46';
+        payPillBtn.style.borderColor = '#10b981';
+    } else if (quoteData.payment_status === 'paid') {
+        payPillBtn.style.display = 'inline-flex';
+        payPillBtn.disabled = true;
+        payPillBtn.textContent = '✅ Pagado';
+        payPillBtn.style.background = '#f1f5f9';
+        payPillBtn.style.color = '#64748b';
+        payPillBtn.style.borderColor = '#cbd5e1';
+    } else {
+        payPillBtn.style.display = 'none';
+    }
+}
+
+payPillBtn.addEventListener('click', async function() {
+    const quoteId = payPillBtn.dataset.quoteId;
+    if (!quoteId) return;
+    payPillBtn.disabled = true;
+    payPillBtn.textContent = 'Procesando...';
+    try {
+        const response = await fetch('/api/create-checkout-session/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            },
+            body: JSON.stringify({ quote_id: parseInt(quoteId) }),
+        });
+        const data = await response.json();
+        if (data.checkout_url) {
+            window.location.href = data.checkout_url;
+        } else {
+            alert(data.error || 'Error al procesar el pago.');
+            payPillBtn.disabled = false;
+            payPillBtn.textContent = '💳 Pagar';
+        }
+    } catch (err) {
+        alert('Error de conexión. Intenta de nuevo.');
+        payPillBtn.disabled = false;
+        payPillBtn.textContent = '💳 Pagar';
+    }
+});
+</script>
+
 </body>
 {% endblock %}

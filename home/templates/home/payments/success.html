@@ -1,0 +1,26 @@
+{% extends "home/base.html" %}
+
+{% block title %}Pago exitoso | ELISE Construction{% endblock %}
+
+{% block content %}
+<div style="max-width:480px;margin:80px auto;padding:40px;background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.08);text-align:center;font-family:'DM Sans',sans-serif;">
+
+    <div style="font-size:3rem;margin-bottom:16px;">🎉</div>
+    <h2 style="font-size:1.4rem;font-weight:800;color:#0f172a;margin-bottom:10px;">
+        ¡Pago realizado exitosamente!
+    </h2>
+    <p style="color:#64748b;font-size:0.95rem;line-height:1.6;margin-bottom:28px;">
+        Tu pago está siendo procesado. El proveedor recibirá una notificación
+        y podrás continuar la conversación en el chat.
+    </p>
+    <p style="color:#94a3b8;font-size:0.8rem;margin-bottom:28px;">
+        ⚠️ La confirmación final puede tardar unos segundos en reflejarse.
+    </p>
+
+    <a href="{% url 'home:chat' %}"
+       style="display:inline-block;padding:12px 28px;background:#0f172a;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;font-size:0.9rem;">
+        Volver al chat →
+    </a>
+
+</div>
+{% endblock %}

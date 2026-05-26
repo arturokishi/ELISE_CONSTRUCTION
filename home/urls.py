@@ -8,10 +8,15 @@ from .views.chat_views import (
     get_users,
     get_conversation_by_id,
     get_quote_form,
-    get_supplier_catalog
+    get_supplier_catalog,
+    reply_quote_price
 )
 from .views.order_views import create_order
- 
+from .views.payments.checkout import create_checkout_session
+from .views.payments.webhook import stripe_webhook
+from .views.payments.onboarding import supplier_onboarding, supplier_onboarding_return
+from .views.payments.checkout import create_checkout_session, payment_success
+
 app_name = 'home'
  
 urlpatterns = [
@@ -26,6 +31,10 @@ urlpatterns = [
  
     # Orders / API
     path("api/create-order/", create_order, name="create_order"),
+    path("api/create-checkout-session/", create_checkout_session, name="create_checkout_session"),
+    path("api/stripe-webhook/", stripe_webhook, name="stripe_webhook"),
+    path("supplier/connect/onboarding/", supplier_onboarding, name="supplier_onboarding"),
+    path("supplier/connect/return/", supplier_onboarding_return, name="supplier_onboarding_return"),
  
     # Auth
     path("login/", custom_login, name="login"),
@@ -36,11 +45,14 @@ urlpatterns = [
  
     # Chat
     path("chat/", chat, name="chat"),
-    path("chat/conversation/<int:user_id>/", get_conversation, name="get_conversation"),
     path("chat/send/", send_message, name="send_message"),
     path("chat/users/", get_users, name="get_users"),
     path("chat/conversation/by-id/<int:conversation_id>/", get_conversation_by_id, name="get_conversation_by_id"),
+    path("chat/conversation/<int:user_id>/", get_conversation, name="get_conversation"),
     path("chat/quote-form/<int:supplier_id>/", get_quote_form, name="quote_form"),
     path('chat/supplier-catalog/<int:supplier_id>/', get_supplier_catalog, name='supplier_catalog'),
+    path('chat/reply-quote/<int:quote_id>/', reply_quote_price, name='reply_quote_price'),
+
+    path("payments/success/", payment_success, name="payment_success"),
 
 ]

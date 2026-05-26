@@ -400,15 +400,13 @@ body {
             {% endif %}
 
             <div class="item-body">
-                <span class="item-badge">{{ product.unit }}</span>
                 <div class="item-name">{{ product.name }}</div>
                 {% if product.description %}
                 <div class="item-desc">{{ product.description }}</div>
                 {% endif %}
 
                 {% if product.base_price %}
-                <div class="item-price">${{ product.base_price }} <span style="font-weight:500;font-size:0.75rem;color:var(--text-light);">/ {{ product.unit }}</span></div>
-                {% else %}
+                <div class="item-price">${{ product.base_price }}</div>                {% else %}
                 <div class="item-price-consult">Precio a consultar</div>
                 {% endif %}
 

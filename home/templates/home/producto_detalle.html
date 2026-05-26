@@ -24,7 +24,7 @@
     --radius-lg:     20px;
     --shadow-sm:     0 1px 3px rgba(0,0,0,0.07);
     --shadow-md:     0 4px 16px rgba(0,0,0,0.08);
-    --shadow-lg:     0 20px 40px rgba(0,0,0,0.12);
+    --shadow-lg:     0 24px 48px rgba(0,0,0,0.14);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -36,75 +36,100 @@ body {
 }
 
 .detail-wrap {
-    max-width: 960px;
+    max-width: 1160px;
     margin: 0 auto;
-    padding: 40px 24px 80px;
-    animation: fadeUp 0.4s ease both;
+    padding: 0 0 100px;
+    animation: fadeIn 0.5s ease both;
 }
 
-@keyframes fadeUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
 }
 
 /* ── BREADCRUMB ── */
-.breadcrumb {
+.breadcrumb-bar {
+    padding: 18px 40px;
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     gap: 6px;
-    margin-bottom: 28px;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     color: var(--text-light);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
 }
 
-.breadcrumb a {
+.breadcrumb-bar a {
     color: var(--accent-dark);
     text-decoration: none;
     font-weight: 500;
     transition: color 0.15s;
 }
 
-.breadcrumb a:hover { color: var(--accent); }
-.breadcrumb .sep { color: var(--border); }
-.breadcrumb strong { color: var(--text-muted); font-weight: 600; }
+.breadcrumb-bar a:hover { color: var(--accent); }
+.breadcrumb-bar .sep { color: var(--border); }
+.breadcrumb-bar strong { color: var(--text-muted); font-weight: 600; }
 
-/* ── HERO IMAGE ── */
-.hero-img-wrap {
-    width: 100%;
-    height: 380px;
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    margin-bottom: 32px;
-    box-shadow: var(--shadow-lg);
-    position: relative;
+/* ── HERO GRID: tall image left | scrollable content right ── */
+.hero-strip {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    align-items: start;
+    background: var(--surface);
 }
 
-.hero-img {
+/* ── TALL PORTRAIT IMAGE ── */
+.image-panel {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    max-height: 700px;
+    background: var(--primary);
+    overflow: hidden;
+}
+
+.image-panel img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
-    transition: transform 0.4s ease;
+    opacity: 0.9;
+    transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s;
 }
 
-.hero-img-wrap:hover .hero-img { transform: scale(1.02); }
-
-/* ── MAIN LAYOUT ── */
-.detail-layout {
-    display: grid;
-    grid-template-columns: 1fr 320px;
-    gap: 28px;
-    align-items: start;
+.image-panel:hover img {
+    transform: scale(1.04);
+    opacity: 1;
 }
 
-/* ── LEFT: info panel ── */
-.info-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 32px;
-    box-shadow: var(--shadow-sm);
+/* Amber accent line on right edge */
+.image-panel::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--accent);
+}
+
+.image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 5rem;
+    opacity: 0.15;
+    color: #fff;
+}
+
+/* ── CONTENT PANEL ── */
+.content-panel {
+    padding: 52px 52px 52px 56px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
 }
 
 .product-eyebrow {
@@ -113,75 +138,101 @@ body {
     gap: 6px;
     background: var(--accent-light);
     color: var(--accent-dark);
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     font-weight: 700;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    padding: 5px 12px;
+    padding: 5px 14px;
     border-radius: 100px;
-    border: 1px solid rgba(245,158,11,0.25);
-    margin-bottom: 16px;
+    border: 1px solid rgba(245,158,11,0.3);
+    width: fit-content;
+    margin-bottom: 20px;
 }
 
 .product-name {
-    font-size: clamp(1.4rem, 3vw, 2rem);
+    font-size: clamp(1.7rem, 3vw, 2.5rem);
     font-weight: 800;
     color: var(--primary);
-    letter-spacing: -0.025em;
-    line-height: 1.2;
-    margin-bottom: 14px;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: 16px;
+}
+
+.divider {
+    width: 40px;
+    height: 3px;
+    background: var(--accent);
+    border-radius: 2px;
+    margin-bottom: 22px;
 }
 
 .product-desc {
     color: var(--text-muted);
-    font-size: 0.95rem;
-    line-height: 1.7;
-    margin-bottom: 24px;
+    font-size: 0.96rem;
+    line-height: 1.8;
+    margin-bottom: 36px;
+    max-width: 520px;
 }
 
 /* Price */
 .price-block {
     display: flex;
-    align-items: baseline;
-    gap: 6px;
-    margin-bottom: 24px;
-    padding: 16px 20px;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 36px;
+    padding: 20px 24px;
     background: #f0fdf4;
     border: 1px solid #bbf7d0;
+    border-left: 4px solid #10b981;
     border-radius: var(--radius-md);
 }
 
-.price-amount {
-    font-size: 1.6rem;
-    font-weight: 800;
-    color: #047857;
-    letter-spacing: -0.02em;
-}
-
-.price-unit {
-    font-size: 0.85rem;
-    color: #6b7280;
-    font-weight: 500;
-}
-
-.price-consult {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    padding: 14px 20px;
-    background: var(--surface-3);
-    border-radius: var(--radius-md);
-    margin-bottom: 24px;
-}
-
-/* Tags */
-.tag-section { margin-bottom: 20px; }
-
-.tag-section-label {
+.price-label {
     font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
+    color: #6b7280;
+    margin-bottom: 3px;
+}
+
+.price-amount {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #047857;
+    letter-spacing: -0.03em;
+    line-height: 1;
+}
+
+.price-unit {
+    font-size: 0.83rem;
+    color: #6b7280;
+    font-weight: 500;
+    margin-top: 3px;
+}
+
+.price-consult {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.93rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    padding: 18px 22px;
+    background: var(--surface-3);
+    border-radius: var(--radius-md);
+    border-left: 4px solid var(--text-light);
+    margin-bottom: 36px;
+}
+
+/* Tags */
+.tag-group { margin-bottom: 24px; }
+
+.tag-group-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
     color: var(--text-light);
     margin-bottom: 8px;
 }
@@ -190,29 +241,33 @@ body {
 
 .tag {
     font-size: 0.78rem;
-    padding: 5px 12px;
+    padding: 5px 13px;
     border-radius: 100px;
     background: var(--surface-3);
     color: var(--text-muted);
     border: 1px solid var(--border);
     font-weight: 500;
+    transition: border-color 0.15s, color 0.15s;
 }
 
-/* Technical sheet */
+.tag:hover { border-color: var(--accent); color: var(--accent-dark); }
+
+/* Tech button */
 .tech-btn {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 20px;
-    background: var(--surface-3);
+    padding: 10px 22px;
+    background: transparent;
     color: var(--text);
     border: 1.5px solid var(--border);
     border-radius: var(--radius-sm);
-    font-size: 0.85rem;
+    font-size: 0.84rem;
     font-weight: 600;
     text-decoration: none;
-    transition: all 0.15s;
-    margin-top: 4px;
+    transition: all 0.18s;
+    margin-bottom: 36px;
+    width: fit-content;
 }
 
 .tech-btn:hover {
@@ -220,29 +275,23 @@ body {
     color: #fff;
     border-color: var(--primary);
     text-decoration: none;
+    transform: translateY(-1px);
 }
 
-/* ── RIGHT: specs + CTA ── */
-.sidebar-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-/* Specs card */
-.specs-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
+/* Specs */
+.specs-section {
+    margin-bottom: 36px;
+    padding: 28px;
+    background: var(--surface-2);
     border-radius: var(--radius-lg);
-    padding: 24px;
-    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
 }
 
-.specs-title {
-    font-size: 0.82rem;
+.specs-heading {
+    font-size: 0.68rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     color: var(--text-light);
     margin-bottom: 16px;
     padding-bottom: 12px;
@@ -256,92 +305,126 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    gap: 12px;
+    gap: 16px;
     padding: 10px 0;
-    border-bottom: 1px solid var(--surface-3);
-    font-size: 0.85rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.86rem;
 }
 
 .spec-row:last-child { border-bottom: none; }
+.spec-label { color: var(--text-muted); }
+.spec-value { font-weight: 700; color: var(--text); text-align: right; }
 
-.spec-label { color: var(--text-muted); flex-shrink: 0; }
-.spec-value { color: var(--text); font-weight: 600; text-align: right; }
-
-/* CTA card */
-.cta-card {
+/* CTA */
+.cta-block {
     background: var(--primary);
     border-radius: var(--radius-lg);
-    padding: 28px 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
+    padding: 32px;
     position: relative;
     overflow: hidden;
 }
 
-.cta-card::before {
+.cta-block::before {
     content: '';
     position: absolute;
-    top: -40px; right: -40px;
-    width: 140px; height: 140px;
+    top: -60px; right: -60px;
+    width: 200px; height: 200px;
     border-radius: 50%;
-    background: rgba(245,158,11,0.1);
+    background: rgba(245,158,11,0.08);
     pointer-events: none;
 }
 
-.cta-card-title {
-    font-size: 1rem;
-    font-weight: 800;
-    color: #fff;
-    letter-spacing: -0.01em;
+.cta-block::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: -40px;
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    background: rgba(245,158,11,0.05);
+    pointer-events: none;
 }
 
-.cta-card-sub {
-    font-size: 0.82rem;
+.cta-block-title {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 1;
+}
+
+.cta-block-sub {
+    font-size: 0.85rem;
     color: #94a3b8;
-    line-height: 1.5;
+    line-height: 1.6;
+    margin-bottom: 22px;
+    position: relative;
+    z-index: 1;
 }
 
 .cta-btn-primary {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 13px 20px;
+    gap: 10px;
+    padding: 15px 28px;
     background: var(--accent);
     color: var(--primary);
     border-radius: var(--radius-sm);
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     font-weight: 700;
     text-decoration: none;
     transition: background 0.15s, transform 0.15s;
+    width: 100%;
+    position: relative;
+    z-index: 1;
 }
 
 .cta-btn-primary:hover {
     background: var(--accent-dark);
     color: var(--primary);
-    transform: translateY(-1px);
+    transform: translateY(-2px);
     text-decoration: none;
 }
 
 /* ── GALLERY ── */
-.gallery {
-    margin-top: 28px;
+.gallery-section {
+    padding: 32px 40px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+}
+
+.gallery-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-light);
+    margin-bottom: 14px;
+}
+
+.gallery-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
 }
 
 .gallery-item {
+    aspect-ratio: 1 / 1;
     border-radius: var(--radius-md);
     overflow: hidden;
-    height: 160px;
-    box-shadow: var(--shadow-sm);
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
+    border: 2px solid transparent;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    box-shadow: var(--shadow-sm);
 }
 
-.gallery-item:hover { transform: scale(1.02); box-shadow: var(--shadow-md); }
+.gallery-item:hover {
+    transform: scale(1.04);
+    box-shadow: var(--shadow-md);
+    border-color: var(--accent);
+}
 
 .gallery-item img {
     width: 100%;
@@ -351,10 +434,21 @@ body {
 }
 
 /* ── RESPONSIVE ── */
-@media (max-width: 760px) {
-    .detail-layout { grid-template-columns: 1fr; }
-    .hero-img-wrap { height: 260px; }
-    .detail-wrap { padding: 24px 16px 60px; }
+@media (max-width: 820px) {
+    .hero-strip { grid-template-columns: 1fr; }
+
+    .image-panel {
+        position: relative;
+        height: auto;
+        max-height: none;
+        aspect-ratio: 3 / 4;
+    }
+
+    .image-panel::after { display: none; }
+
+    .content-panel { padding: 32px 24px; }
+    .breadcrumb-bar { padding: 14px 20px; }
+    .gallery-section { padding: 24px 20px; }
 }
 </style>
 {% endblock %}
@@ -363,7 +457,7 @@ body {
 <div class="detail-wrap">
 
     <!-- BREADCRUMB -->
-    <nav class="breadcrumb">
+    <nav class="breadcrumb-bar">
         <a href="{% url 'home:productos' %}">Catálogo</a>
         {% for crumb in breadcrumb %}
             <span class="sep">›</span>
@@ -373,20 +467,23 @@ body {
         <strong>{{ product.name }}</strong>
     </nav>
 
-    <!-- HERO IMAGE -->
-    {% if product.main_image %}
-    <div class="hero-img-wrap">
-        <img class="hero-img" src="{{ product.main_image.url }}" alt="{{ product.name }}">
-    </div>
-    {% endif %}
+    <!-- HERO: tall sticky image left | scrollable content right -->
+    <div class="hero-strip">
 
-    <!-- MAIN LAYOUT -->
-    <div class="detail-layout">
+        <!-- PORTRAIT IMAGE PANEL -->
+        <div class="image-panel">
+            {% if product.main_image %}
+                <img src="{{ product.main_image.url }}" alt="{{ product.name }}">
+            {% else %}
+                <div class="image-placeholder">📦</div>
+            {% endif %}
+        </div>
 
-        <!-- LEFT: info -->
-        <div class="info-card">
-            <div class="product-eyebrow">📦 {{ product.unit }}</div>
+        <!-- ALL PRODUCT INFO -->
+        <div class="content-panel">
+
             <h1 class="product-name">{{ product.name }}</h1>
+            <div class="divider"></div>
 
             {% if product.description %}
             <p class="product-desc">{{ product.description }}</p>
@@ -394,29 +491,33 @@ body {
 
             {% if product.base_price %}
             <div class="price-block">
-                <span class="price-amount">${{ product.base_price }}</span>
-                <span class="price-unit">/ {{ product.unit }}</span>
+                <div>
+                    <div class="price-label">Precio</div>
+                    <div class="price-amount">${{ product.base_price }}</div>
+                </div>
             </div>
             {% else %}
-            <div class="price-consult">💬 Precio a consultar — contáctanos para obtener tu cotización</div>
+            <div class="price-consult">💬 Precio a consultar — contáctanos para tu cotización</div>
             {% endif %}
 
-            <!-- Suppliers -->
             {% with suppliers=product.suppliers.all %}{% if suppliers %}
-            <div class="tag-section">
-                <div class="tag-section-label">Proveedores</div>
+            <div class="tag-group">
+                <div class="tag-group-label">Proveedores</div>
                 <div class="tag-row">
-                    {% for s in suppliers %}<span class="tag">🏭 {{ s.user.userprofile.company|default:s.user.username }}</span>{% endfor %}
+                    {% for s in suppliers %}
+                    <span class="tag">🏭 {{ s.user.userprofile.company|default:s.user.username }}</span>
+                    {% endfor %}
                 </div>
             </div>
             {% endif %}{% endwith %}
 
-            <!-- Brands -->
             {% with brands=product.brands.all %}{% if brands %}
-            <div class="tag-section">
-                <div class="tag-section-label">Marcas</div>
+            <div class="tag-group">
+                <div class="tag-group-label">Marcas</div>
                 <div class="tag-row">
-                    {% for b in brands %}<span class="tag">🏷️ {{ b.name }}</span>{% endfor %}
+                    {% for b in brands %}
+                    <span class="tag">🏷️ {{ b.name }}</span>
+                    {% endfor %}
                 </div>
             </div>
             {% endif %}{% endwith %}
@@ -426,26 +527,22 @@ body {
                 📄 Ver ficha técnica
             </a>
             {% endif %}
-        </div>
-
-        <!-- RIGHT: specs + CTA -->
-        <div class="sidebar-stack">
 
             {% if specs %}
-            <div class="specs-card">
-                <div class="specs-title">📐 Especificaciones</div>
+            <div class="specs-section">
+                <div class="specs-heading">📐 Especificaciones</div>
                 {% for spec in specs %}
                 <div class="spec-row">
-                    <span class="spec-label">{{ spec.field.name }}{% if spec.field.unit %} ({{ spec.field.unit }}){% endif %}</span>
+                    <span class="spec-label">{{ spec.field.name }}</span>
                     <span class="spec-value">{{ spec.value }}</span>
                 </div>
                 {% endfor %}
             </div>
             {% endif %}
 
-            <div class="cta-card">
-                <div class="cta-card-title">¿Te interesa este producto?</div>
-                <div class="cta-card-sub">Habla con nuestro asistente y te conectamos con los mejores proveedores al mejor precio.</div>
+            <div class="cta-block">
+                <div class="cta-block-title">¿Te interesa este producto?</div>
+                <div class="cta-block-sub">Habla con nuestro asistente y te conectamos con los mejores proveedores al mejor precio.</div>
                 <a href="{% url 'home:chat' %}" class="cta-btn-primary">
                     💬 Solicitar cotización
                 </a>
@@ -457,12 +554,15 @@ body {
     <!-- ADDITIONAL GALLERY -->
     {% with images=product.images.all %}
     {% if images %}
-    <div class="gallery">
-        {% for img in images %}
-        <div class="gallery-item">
-            <img src="{{ img.image.url }}" alt="{{ img.caption|default:product.name }}">
+    <div class="gallery-section">
+        <div class="gallery-label">Más imágenes</div>
+        <div class="gallery-grid">
+            {% for img in images %}
+            <div class="gallery-item">
+                <img src="{{ img.image.url }}" alt="{{ img.caption|default:product.name }}">
+            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
     </div>
     {% endif %}
     {% endwith %}

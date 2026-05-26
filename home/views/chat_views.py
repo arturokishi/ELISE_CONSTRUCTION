@@ -190,7 +190,7 @@ def get_conversation(request, user_id):
             allowed = QuoteRequest.objects.filter(
                 client=request.user,
                 supplier=other_user,
-                status__in=["pending", "accepted"]
+                status__in=["pending", "accepted", "quoted"]
             ).exists()
             if not allowed:
                 return JsonResponse(
@@ -207,7 +207,31 @@ def get_conversation(request, user_id):
  
     messages = conversation.messages.all().order_by("-timestamp")[:15]
     messages = list(reversed(messages))
- 
+
+    # Get active quote — from client's or supplier's perspective
+    active_quote = None
+    if request.user.userprofile.role == 'client':
+        quote = QuoteRequest.objects.filter(
+            client=request.user,
+            supplier=other_user,
+        ).order_by('-created_at').first()
+    elif request.user.userprofile.role == 'supplier':
+        quote = QuoteRequest.objects.filter(
+            supplier=request.user,
+            client=other_user,
+        ).order_by('-created_at').first()
+    else:
+        quote = None
+
+    if quote:
+        active_quote = {
+            'id': quote.id,
+            'status': quote.status,
+            'payment_status': quote.payment_status,
+            'quoted_price': float(quote.quoted_price) if quote.quoted_price else None,
+            'product_name': quote.product_name,
+        }
+
     return JsonResponse({
         "conversation_id": conversation.id,
         "messages": [serialize_message(msg, request.user) for msg in messages],
@@ -220,8 +244,10 @@ def get_conversation(request, user_id):
             "company": other_profile.company if other_profile else "",
             "whatsapp": other_profile.whatsapp_number if other_profile else "",
             "has_catalog": bool(other_profile.catalog_pdf) if other_profile else False,
-        }
+        },
+        "active_quote": active_quote,
     })
+ 
  
  
 @login_required
@@ -290,19 +316,30 @@ def get_users(request):
     current_profile = current_user.userprofile
  
     users = User.objects.exclude(id=current_user.id)
- 
+
     if current_profile.role == 'client':
         supplier_ids = UserProfile.objects.filter(
             role='supplier'
         ).values_list('user_id', flat=True)
- 
+
         bot_user = User.objects.filter(username='elicebot').first()
         user_filter = Q(id__in=supplier_ids)
- 
+
         if bot_user:
             user_filter = user_filter | Q(id=bot_user.id)
- 
+
         users = users.filter(user_filter)
+
+    elif current_profile.role == 'supplier':
+        # Suppliers only see clients they have an active quote with
+        client_ids = QuoteRequest.objects.filter(
+            supplier=current_user
+        ).values_list('client_id', flat=True).distinct()
+
+        users = users.filter(
+            id__in=client_ids,
+            userprofile__role='client'
+        )
  
     users_data = []
  
@@ -374,7 +411,31 @@ def get_conversation_by_id(request, conversation_id):
     messages_data = [serialize_message(msg, request.user) for msg in messages]
  
     profile = UserProfile.objects.filter(user=other_user).first()
- 
+
+    # Get active quote — from client's or supplier's perspective
+    active_quote = None
+    if request.user.userprofile.role == 'client':
+        quote = QuoteRequest.objects.filter(
+            client=request.user,
+            supplier=other_user,
+        ).order_by('-created_at').first()
+    elif request.user.userprofile.role == 'supplier':
+        quote = QuoteRequest.objects.filter(
+            supplier=request.user,
+            client=other_user,
+        ).order_by('-created_at').first()
+    else:
+        quote = None
+
+    if quote:
+        active_quote = {
+            'id': quote.id,
+            'status': quote.status,
+            'payment_status': quote.payment_status,
+            'quoted_price': float(quote.quoted_price) if quote.quoted_price else None,
+            'product_name': quote.product_name,
+        }
+
     return JsonResponse({
         "conversation_id": conversation.id,
         "other_user": {
@@ -386,10 +447,69 @@ def get_conversation_by_id(request, conversation_id):
             "company": profile.company if profile else "",
         },
         "messages": messages_data,
+        "active_quote": active_quote,
     })
  
  
+ 
 @login_required
+def reply_quote_price(request, quote_id):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid method'}, status=405)
+
+    if request.user.userprofile.role != 'supplier':
+        return JsonResponse({'error': 'Only suppliers can reply with a price'}, status=403)
+
+    data = json.loads(request.body)
+    price = data.get('price')
+    notes = data.get('notes', '')
+    valid_until = data.get('valid_until')
+
+    if not price:
+        return JsonResponse({'error': 'Price is required'}, status=400)
+
+    try:
+        quote = QuoteRequest.objects.get(
+            id=quote_id,
+            supplier=request.user
+        )
+    except QuoteRequest.DoesNotExist:
+        return JsonResponse({'error': 'Quote not found'}, status=404)
+
+    # Update the quote with the supplier's price
+    quote.quoted_price = price
+    quote.supplier_notes = notes
+    quote.status = 'quoted'
+    if valid_until:
+        from datetime import date
+        quote.valid_until = valid_until
+    quote.save(update_fields=['quoted_price', 'supplier_notes', 'status', 'valid_until'])
+
+    # Send a message in the conversation so the client sees it
+    conversation = quote.conversation
+    if conversation:
+        price_message = (
+            f"💰 PRECIO COTIZADO\n"
+            f"━━━━━━━━━━━━━━━━━━━\n"
+            f"Producto: {quote.product_name}\n"
+            f"Precio: ${float(quote.quoted_price):,.2f}\n"
+            f"{f'Válido hasta: {quote.valid_until}' if quote.valid_until else ''}\n"
+            f"Notas: {notes or 'Ninguna'}\n"
+            f"━━━━━━━━━━━━━━━━━━━\n"
+            f"✅ Puedes proceder al pago desde tu chat."
+        )
+        Message.objects.create(
+            conversation=conversation,
+            sender=request.user,
+            content=price_message,
+            timestamp=timezone.now()
+        )
+
+    return JsonResponse({
+        'success': True,
+        'quote_id': quote.id,
+        'quoted_price': float(quote.quoted_price),
+    })
 def get_quote_form(request, supplier_id):
     supplier_user = get_object_or_404(User, id=supplier_id)
  

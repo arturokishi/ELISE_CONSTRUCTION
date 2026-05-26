@@ -223,6 +223,17 @@ class Supplier(models.Model):
     brands = models.ManyToManyField(
         Brand, blank=True, related_name='suppliers'
     )
+
+
+    stripe_account_id = models.CharField(
+        max_length=255, blank=True,
+        help_text="Stripe Connect account ID (acct_xxxxx)"
+    )
+    platform_fee_percent = models.DecimalField(
+        max_digits=5, decimal_places=2, default=5.00,
+        help_text="Platform fee percentage for this supplier"
+    )
+   
  
     is_active = models.BooleanField(default=True)
     is_verified = models.BooleanField(default=False)
@@ -419,13 +430,70 @@ class QuoteRequest(models.Model):
     valid_until = models.DateField(null=True, blank=True)
  
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    payment_status = models.CharField(
+        max_length=20,
+        choices=[
+            ('unpaid', 'Unpaid'),
+            ('pending', 'Pending'),
+            ('paid', 'Paid'),
+            ('refunded', 'Refunded'),
+        ],
+        default='unpaid'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
+
     updated_at = models.DateTimeField(auto_now=True)
  
     def __str__(self):
         return f"Quote #{self.id} - {self.client.username} → {self.supplier.username}"
  
  
+# ─────────────────────────────────────────────
+# PAYMENTS
+# ─────────────────────────────────────────────
+
+class Payment(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+        ('failed', 'Failed'),
+        ('refunded', 'Refunded'),
+    ]
+
+    quote = models.OneToOneField(
+        QuoteRequest, on_delete=models.PROTECT, related_name='payment'
+    )
+    buyer = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name='payments_made'
+    )
+    supplier = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name='payments_received'
+    )
+    conversation = models.ForeignKey(
+        Conversation, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='payments'
+    )
+
+    amount_total = models.PositiveIntegerField(help_text="Total charged to buyer in cents")
+    application_fee = models.PositiveIntegerField(help_text="Platform fee in cents")
+    supplier_payout = models.PositiveIntegerField(help_text="Amount supplier receives in cents")
+
+    stripe_checkout_session_id = models.CharField(max_length=255, unique=True)
+    stripe_payment_intent_id = models.CharField(max_length=255, blank=True)
+    stripe_transfer_id = models.CharField(max_length=255, blank=True)
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Payment #{self.id} | {self.buyer.username} → {self.supplier.username} | {self.status}"
+
+
 # ─────────────────────────────────────────────
 # SIGNALS
 # ─────────────────────────────────────────────

@@ -47,17 +47,13 @@ document.addEventListener('DOMContentLoaded', () => {
     wireEvents();
     loadUsers();
 
-    // Mostrar input desde la pantalla de bienvenida para que el usuario pueda escribir directamente
-    // El primer mensaje abrirá automáticamente la conversación con EliceBot
     const conversationId = getQueryParam('conversation');
     if (conversationId) {
         selectConversationById(conversationId);
     } else {
-        // Pre-mostrar el input en modo "bienvenida": al escribir se abre el bot
         if (messageInputContainer) messageInputContainer.style.display = 'flex';
         if (messageInput) {
             messageInput.placeholder = 'Escríbeme un material o haz una pregunta…';
-            // Interceptar primer mensaje para abrir bot automáticamente
             messageInput._welcomeMode = true;
         }
     }
@@ -115,7 +111,6 @@ function displayUsers(users) {
     const isClient = document.body.dataset.userRole === 'client';
 
     if (isClient) {
-        // Filter out bot — it's shown separately in the pinned card
         const suppliers = users.filter(u => !u.is_bot);
         const uniqueSuppliers = [...new Map(suppliers.map(u => [u.id, u])).values()];
 
@@ -124,7 +119,6 @@ function displayUsers(users) {
                 Habla con EliceBot para conectarte con proveedores de materiales.
             </div>`;
         } else {
-            // Group by category
             const byCategory = {};
             const seenInCat = {};
 
@@ -152,7 +146,6 @@ function displayUsers(users) {
             });
         }
     } else {
-        // Supplier/admin view — show all clients grouped by role
         const groups = { client: 'Clientes', supplier: 'Proveedores', admin: 'Administradores' };
         const grouped = {};
         const seen = new Set();
@@ -175,7 +168,6 @@ function displayUsers(users) {
         });
     }
 
-    // Wire click events
     usersList.querySelectorAll('.user-item').forEach(item => {
         item.addEventListener('click', function() {
             usersList.querySelectorAll('.user-item').forEach(i => i.classList.remove('active'));
@@ -231,7 +223,6 @@ function selectBotFromCard() {
     document.getElementById('botCard')?.classList.add('active');
     usersList.querySelectorAll('.user-item').forEach(i => i.classList.remove('active'));
 
-    // Find bot user id from users list data
     fetch('/chat/users/')
         .then(r => r.json())
         .then(data => {
@@ -249,11 +240,9 @@ async function selectUser(userId) {
     currentChatUser = null;
     currentConversationId = null;
 
-    // Hide bot welcome
     const welcome = document.getElementById('botWelcome');
     if (welcome) welcome.style.display = 'none';
 
-    // Clear messages (keep welcome hidden)
     messagesContainer.innerHTML = '';
     setConversationState(true);
 
@@ -284,7 +273,6 @@ async function selectUser(userId) {
         updateChatHeader(data.other_user);
         displayMessages(data.messages || []);
 
-        // Bot welcome message if no history
         const isBot = data.other_user.username === 'elicebot';
         if (isBot && (!data.messages || !data.messages.length)) {
             setTimeout(() => {
@@ -319,6 +307,14 @@ async function selectUser(userId) {
             const hasCatalog = isSupplier && data.other_user.has_catalog;
             catalogBtn.style.display = hasCatalog ? 'inline-flex' : 'none';
             catalogBtn.disabled = !hasCatalog;
+        }
+
+        // Pay button (client) or Reply price button (supplier)
+        if (typeof updatePayButton === 'function') {
+            updatePayButton(data.active_quote || null);
+        }
+        if (typeof updateReplyPriceButton === 'function') {
+            updateReplyPriceButton(data.active_quote || null);
         }
 
         // Load product panel if supplier
@@ -378,6 +374,11 @@ async function selectConversationById(conversationId) {
         const welcome = document.getElementById('botWelcome');
         if (welcome) welcome.style.display = 'none';
 
+        // Pay button on load via conversation ID
+        if (typeof updatePayButton === 'function') {
+            updatePayButton(data.active_quote || null);
+        }
+
         startMessageRefresh();
     } catch (error) {
         console.error("Conversation load error:", error);
@@ -435,7 +436,6 @@ function displayMessages(messages) {
 function appendMessage(message, shouldScroll = true) {
     if (!messagesContainer) return;
 
-    // Dedup by ID
     if (message.id) {
         const existing = messagesContainer.querySelector(`[data-message-id="${message.id}"]`);
         if (existing) return;
@@ -465,7 +465,6 @@ function appendMessage(message, shouldScroll = true) {
 }
 
 function renderQuoteCard(content) {
-    // Parse the formatted quote message into a visual card
     const lines = content.split('\n').filter(l => l.trim() && !l.includes('━'));
     const rows = lines.slice(1).filter(l => l.includes(':'));
 
@@ -487,14 +486,12 @@ function renderQuoteCard(content) {
    MATERIAL CHIPS (bot welcome)
 ================================ */
 function sendMaterialChip(material) {
-    // Find bot and open conversation, then send the message
     fetch('/chat/users/')
         .then(r => r.json())
         .then(data => {
             const bot = data.users.find(u => u.is_bot);
             if (!bot) return;
 
-            // Select bot conversation first
             document.getElementById('botCard')?.classList.add('active');
 
             fetch(`/chat/conversation/${bot.id}/`)
@@ -512,7 +509,6 @@ function sendMaterialChip(material) {
                     setConversationState(false);
                     startMessageRefresh();
 
-                    // Send the chip message
                     if (messageInput) {
                         messageInput.value = material;
                         sendMessage();
@@ -597,7 +593,6 @@ function closeProductPanel() {
 }
 
 function prefillQuote(product) {
-    // Open quote modal pre-filled with this product
     openQuoteModal();
     setTimeout(() => {
         const select = document.getElementById('quote-product');
@@ -631,6 +626,15 @@ async function refreshMessages() {
             data.messages.forEach(msg => appendMessage(msg, false));
             if (wasAtBottom) messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
+
+        // Refresh pay button state in case supplier just set a price
+        if (typeof updatePayButton === 'function') {
+            updatePayButton(data.active_quote || null);
+        }
+        if (typeof updateReplyPriceButton === 'function') {
+            updateReplyPriceButton(data.active_quote || null);
+        }
+        
     } catch (error) {
         console.error("Refresh error:", error);
     }
@@ -644,12 +648,10 @@ async function sendMessage() {
     const content = messageInput.value.trim();
     if (!content) return;
 
-    // Si no hay conversación activa (welcome mode), abrir bot primero
     if (!currentChatUser) {
         if (messageInput._welcomeMode) {
             messageInput._welcomeMode = false;
             messageInput.placeholder = 'Escribe tu mensaje…';
-            // Abrir bot y luego enviar el mensaje
             fetch('/chat/users/')
                 .then(r => r.json())
                 .then(data => {
@@ -667,7 +669,6 @@ async function sendMessage() {
                             displayMessages(convData.messages || []);
                             setConversationState(false);
                             startMessageRefresh();
-                            // Ahora sí enviamos
                             messageInput.value = content;
                             sendBtn?.classList.add('active');
                             sendMessage();
@@ -681,12 +682,10 @@ async function sendMessage() {
     appendMessage({ id: tempId, content, is_sent: true, timestamp: formatTime() });
     const tempEl = messagesContainer.querySelector(`[data-message-id="${tempId}"]`);
 
-    // Reset textarea
     messageInput.value = '';
     messageInput.style.height = 'auto';
     sendBtn?.classList.remove('active');
 
-    // Show typing indicator if bot
     const isBot = currentChatUser?.username === 'elicebot';
     if (isBot) showTypingIndicator();
 
@@ -715,7 +714,6 @@ async function sendMessage() {
                     is_bot: true,
                     timestamp: formatTime()
                 });
-                // Reload users after bot connects to new suppliers
                 setTimeout(loadUsers, 1000);
             }, 600);
         } else {
@@ -935,11 +933,9 @@ function wireEvents() {
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
     });
 
-    // Auto-resize textarea
     messageInput?.addEventListener('input', () => {
         messageInput.style.height = 'auto';
         messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + 'px';
-        // Toggle send button active state
         const hasText = messageInput.value.trim().length > 0;
         sendBtn?.classList.toggle('active', hasText);
     });
@@ -964,7 +960,6 @@ function wireEvents() {
 
     document.getElementById('catalogBtn')?.addEventListener('click', openCatalogModal);
 
-    // Sidebar search
     document.getElementById('sidebarSearch')?.addEventListener('input', function() {
         const q = this.value.toLowerCase().trim();
         usersList?.querySelectorAll('.user-item').forEach(item => {
@@ -973,7 +968,6 @@ function wireEvents() {
             item.style.display = (!q || name.includes(q) || role.includes(q)) ? '' : 'none';
         });
         usersList?.querySelectorAll('.cat-label').forEach(label => {
-            // Show label if any sibling user-item after it is visible
             let next = label.nextElementSibling;
             let anyVisible = false;
             while (next && !next.classList.contains('cat-label')) {
