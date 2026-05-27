@@ -5,8 +5,15 @@
 {% block content %}
 <div style="max-width:480px;margin:80px auto;padding:40px;background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.08);text-align:center;font-family:'DM Sans',sans-serif;">
 
-    {% if charges_enabled %}
-        <div style="font-size:3rem;margin-bottom:16px;">✅</div>
+{% if error %}
+        <div style="font-size:3rem;margin-bottom:16px;">⚠️</div>
+        <h2 style="font-size:1.4rem;font-weight:800;color:#0f172a;margin-bottom:10px;">Falta información</h2>
+        <p style="color:#64748b;font-size:0.95rem;line-height:1.6;margin-bottom:28px;">{{ error }}</p>
+        <a href="{% url 'home:profile' %}"
+           style="display:inline-block;padding:12px 28px;background:#f59e0b;color:#0f172a;border-radius:8px;text-decoration:none;font-weight:700;font-size:0.9rem;">
+            Ir a mi perfil →
+        </a>
+    {% elif charges_enabled %}        <div style="font-size:3rem;margin-bottom:16px;">✅</div>
         <h2 style="font-size:1.4rem;font-weight:800;color:#0f172a;margin-bottom:10px;">
             ¡Cuenta conectada exitosamente!
         </h2>

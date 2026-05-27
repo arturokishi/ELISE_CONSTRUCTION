@@ -27,7 +27,14 @@ def supplier_onboarding(request):
     # If they already have a Stripe account, generate a new link
     # in case they didn't finish onboarding the first time
     if not supplier.stripe_account_id:
-        # Create a new Express account for this supplier
+        # Require email before creating Stripe account
+        if not request.user.email:
+            return render(request, 'home/payments/onboarding_return.html', {
+                'charges_enabled': False,
+                'details_submitted': False,
+                'error': 'Necesitas agregar un email a tu perfil antes de conectar tu cuenta de Stripe.',
+            })
+
         account = stripe.Account.create(
             type='express',
             email=request.user.email,
