@@ -526,15 +526,11 @@
                     Conecta tu cuenta bancaria para recibir pagos de clientes directamente a través de ELISE.
                     Tu dinero llega automáticamente después de cada transacción.
                 </div>
-                {% try %}
                 {% if profile.user.supplier_profile.stripe_account_id %}
                 <div class="stripe-card-status ok">✅ Cuenta conectada — lista para recibir pagos</div>
                 {% else %}
                 <div class="stripe-card-status pending">⚠️ Sin conectar — los clientes no pueden pagarte aún</div>
                 {% endif %}
-                {% except %}
-                <div class="stripe-card-status pending">⚠️ Sin conectar — los clientes no pueden pagarte aún</div>
-                {% endtry %}
             </div>
             <a href="{% url 'home:supplier_onboarding' %}" class="btn-stripe">
                 💳 Conectar con Stripe →
