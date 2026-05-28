@@ -3,234 +3,589 @@
 {% block title %}Mi Perfil - Elice Construcción{% endblock %}
 
 {% block content %}
-<div class="profile-container">
-    <div class="profile-sidebar">
-        <div class="profile-avatar">
-            <div class="avatar-circle">
-                {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
-            </div>
-            <h3>{{ user.get_full_name|default:user.username }}</h3>
-            <p>{{ profile.get_role_display }}</p>
-            {% if profile.company %}
-            <p class="company">{{ profile.company }}</p>
-            {% endif %}
-        </div>
-        
-        <div class="profile-menu">
-            <a href="{% url 'home:profile' %}" class="menu-item active">
-                <span>📋</span> Información Personal
-            </a>
-            <a href="{% url 'home:password_change' %}" class="menu-item">
-                <span>🔒</span> Cambiar Contraseña
-            </a>
-            <a href="{% url 'home:chat' %}" class="menu-item">
-                <span>💬</span> Mis Conversaciones
-            </a>
-            <a href="{% url 'home:home' %}" class="menu-item">
-                <span>🏠</span> Volver al Inicio
-            </a>
-            <a href="{% url 'home:logout' %}" class="menu-item logout">
-                <span>🚪</span> Cerrar Sesión
-            </a>
-        </div>
-    </div>
-    
-    <div class="profile-content">
-        <h2 class="profile-title">Información Personal</h2>
-        
-        {% if messages %}
-        <div class="auth-messages">
-            {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}">
-                {{ message }}
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-        
-        <form method="POST" class="profile-form">
-            {% csrf_token %}
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Nombre *</label>
-                    <input type="text" name="first_name" value="{{ form.first_name.value }}" 
-                           class="form-control" required>
-                </div>
-                
-                <div class="form-group">
-                    <label>Apellido *</label>
-                    <input type="text" name="last_name" value="{{ form.last_name.value }}" 
-                           class="form-control" required>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label>Email *</label>
-                <input type="email" name="email" value="{{ form.email.value }}" 
-                       class="form-control" required>
-            </div>
-            
-            <div class="form-group">
-                <label>Tipo de Usuario *</label>
-                {{ form.role }}
-            </div>
-            
-            <div class="form-group">
-                <label>Empresa</label>
-                {{ form.company }}
-            </div>
-            
-            <div class="form-group">
-                <label>Teléfono</label>
-                {{ form.phone }}
-            </div>
-            
-            <div class="form-actions">
-                <button type="submit" class="btn-primary">Guardar Cambios</button>
-                <a href="{% url 'home:home' %}" class="btn-secondary">Cancelar</a>
-            </div>
-        </form>
-    </div>
-</div>
-
 <style>
-.profile-container {
-    max-width: 1200px;
-    margin: 30px auto;
-    display: flex;
-    gap: 30px;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-    overflow: hidden;
+:root {
+    --primary: #0f172a;
+    --accent: #f59e0b;
+    --accent-dark: #d97706;
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --surface: #ffffff;
+    --surface-2: #f8fafc;
+    --surface-3: #f1f5f9;
+    --border: #e2e8f0;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.07);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+    --shadow-lg: 0 20px 40px rgba(0,0,0,0.12);
 }
 
+* { box-sizing: border-box; }
+
+.profile-page {
+    min-height: 100vh;
+    background: var(--surface-2);
+    padding: 40px 24px;
+    font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
+}
+
+.profile-wrap {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+/* ── SIDEBAR ── */
 .profile-sidebar {
-    width: 300px;
-    background: #1f2933;
-    color: white;
-    padding: 30px;
+    background: var(--primary);
+    border-radius: var(--radius-lg);
+    padding: 28px 20px;
+    position: sticky;
+    top: 24px;
 }
 
-.profile-avatar {
+.profile-avatar-wrap {
     text-align: center;
-    margin-bottom: 40px;
+    margin-bottom: 28px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
 .avatar-circle {
     width: 80px;
     height: 80px;
     border-radius: 50%;
-    background: #fbbf24;
-    color: #1f2933;
+    background: var(--accent);
+    color: var(--primary);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 32px;
-    font-weight: bold;
-    margin: 0 auto 20px;
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin: 0 auto 14px;
+    box-shadow: 0 4px 16px rgba(245,158,11,0.3);
 }
 
-.profile-avatar h3 {
-    margin-bottom: 5px;
-    font-size: 20px;
+.avatar-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin-bottom: 4px;
 }
 
-.profile-avatar p {
-    color: #d1d5db;
-    margin-bottom: 5px;
+.avatar-role {
+    font-size: 0.75rem;
+    color: var(--accent);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
 }
 
-.profile-avatar .company {
-    color: #fbbf24;
-    font-weight: 500;
+.avatar-company {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-top: 4px;
 }
 
-.profile-menu {
+/* Stripe status badge */
+.stripe-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.stripe-status.connected {
+    background: rgba(16,185,129,0.15);
+    color: #10b981;
+    border: 1px solid rgba(16,185,129,0.3);
+}
+
+.stripe-status.disconnected {
+    background: rgba(245,158,11,0.12);
+    color: #f59e0b;
+    border: 1px solid rgba(245,158,11,0.25);
+}
+
+.profile-nav {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 4px;
+}
+
+.nav-section-label {
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: #334155;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 12px 10px 4px;
 }
 
 .menu-item {
-    color: #d1d5db;
-    text-decoration: none;
-    padding: 12px 15px;
-    border-radius: 6px;
     display: flex;
     align-items: center;
     gap: 10px;
-    transition: all 0.3s;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.15s;
 }
 
 .menu-item:hover {
-    background: rgba(255,255,255,0.1);
-    color: white;
+    background: rgba(255,255,255,0.06);
+    color: #e2e8f0;
 }
 
 .menu-item.active {
-    background: #fbbf24;
-    color: #1f2933;
-    font-weight: 500;
+    background: rgba(245,158,11,0.12);
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.menu-item.stripe-connect {
+    background: linear-gradient(135deg, rgba(99,91,255,0.2), rgba(99,91,255,0.08));
+    color: #a5b4fc;
+    border: 1px solid rgba(99,91,255,0.25);
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+.menu-item.stripe-connect:hover {
+    background: linear-gradient(135deg, rgba(99,91,255,0.35), rgba(99,91,255,0.15));
+    color: #c7d2fe;
 }
 
 .menu-item.logout {
     color: #fca5a5;
-    margin-top: 20px;
+    margin-top: 8px;
 }
 
-.profile-content {
-    flex: 1;
-    padding: 40px;
+.menu-item.logout:hover {
+    background: rgba(239,68,68,0.08);
+    color: #fca5a5;
 }
 
-.profile-title {
-    color: #1f2933;
-    margin-bottom: 30px;
-    font-size: 24px;
+.menu-item span.icon { font-size: 1rem; flex-shrink: 0; }
+
+/* ── MAIN CONTENT ── */
+.profile-main { display: flex; flex-direction: column; gap: 20px; }
+
+.profile-card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 28px 32px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
 }
 
-.profile-form {
-    max-width: 600px;
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.card-subtitle {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+/* Alerts */
+.alert {
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+    font-weight: 500;
+}
+
+.alert-success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+.alert-error, .alert-danger { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+.alert-info { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.alert-warning { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+
+/* Form */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group.full { grid-column: 1 / -1; }
+
+.form-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.form-label .required { color: #ef4444; margin-left: 2px; }
+
+.form-control {
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.88rem;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--surface-2);
+    outline: none;
+    transition: border-color 0.15s, background 0.15s;
+    width: 100%;
+}
+
+.form-control:focus {
+    border-color: var(--accent);
+    background: var(--surface);
+    box-shadow: 0 0 0 3px rgba(245,158,11,0.1);
 }
 
 .form-actions {
     display: flex;
-    gap: 15px;
-    margin-top: 30px;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
 }
 
 .btn-primary {
-    padding: 12px 24px;
-    background: #1f2933;
+    padding: 10px 24px;
+    background: var(--primary);
     color: white;
     border: none;
-    border-radius: 6px;
-    font-weight: 600;
+    border-radius: var(--radius-sm);
+    font-size: 0.88rem;
+    font-weight: 700;
     cursor: pointer;
-    transition: background 0.3s;
+    font-family: inherit;
+    transition: background 0.15s;
 }
 
-.btn-primary:hover {
-    background: #374151;
-}
+.btn-primary:hover { background: #1e293b; }
 
 .btn-secondary {
-    padding: 12px 24px;
-    background: #e5e7eb;
-    color: #4b5563;
-    border: none;
-    border-radius: 6px;
+    padding: 10px 20px;
+    background: none;
+    color: var(--text-muted);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.88rem;
     font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
     text-decoration: none;
-    display: inline-block;
-    text-align: center;
-    transition: background 0.3s;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.15s;
 }
 
 .btn-secondary:hover {
-    background: #d1d5db;
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+/* Stripe connect card */
+.stripe-card {
+    background: linear-gradient(135deg, #1e1b4b, #312e81);
+    border: 1px solid rgba(99,91,255,0.3);
+    border-radius: var(--radius-lg);
+    padding: 24px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.stripe-card-info { flex: 1; }
+
+.stripe-card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #e0e7ff;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stripe-card-desc {
+    font-size: 0.82rem;
+    color: #a5b4fc;
+    line-height: 1.5;
+}
+
+.stripe-card-status {
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.stripe-card-status.ok { color: #6ee7b7; }
+.stripe-card-status.pending { color: #fcd34d; }
+
+.btn-stripe {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 22px;
+    background: linear-gradient(135deg, #635bff, #7c73ff);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: all 0.15s;
+    font-family: inherit;
+}
+
+.btn-stripe:hover {
+    background: linear-gradient(135deg, #5147e6, #6b63e6);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(99,91,255,0.4);
+}
+
+/* Info rows */
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.info-item { display: flex; flex-direction: column; gap: 4px; }
+.info-label { font-size: 0.72rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.info-value { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+.info-value.empty { color: var(--text-muted); font-style: italic; font-weight: 400; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .profile-wrap { grid-template-columns: 1fr; }
+    .profile-sidebar { position: static; }
+    .form-grid { grid-template-columns: 1fr; }
+    .info-grid { grid-template-columns: 1fr; }
+    .stripe-card { flex-direction: column; align-items: flex-start; }
 }
 </style>
+
+<div class="profile-page">
+<div class="profile-wrap">
+
+    <!-- ═══ SIDEBAR ═══ -->
+    <aside class="profile-sidebar">
+        <div class="profile-avatar-wrap">
+            <div class="avatar-circle">
+                {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+            </div>
+            <div class="avatar-name">{{ user.get_full_name|default:user.username }}</div>
+            <div class="avatar-role">{{ profile.get_role_display }}</div>
+            {% if profile.company %}
+            <div class="avatar-company">{{ profile.company }}</div>
+            {% endif %}
+            {% if profile.role == 'supplier' %}
+                {% if profile.user.supplier_profile.stripe_account_id %}
+                <div class="stripe-status connected">✅ Stripe conectado</div>
+                {% else %}
+                <div class="stripe-status disconnected">⚠️ Stripe no conectado</div>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        <nav class="profile-nav">
+            <div class="nav-section-label">Cuenta</div>
+            <a href="{% url 'home:profile' %}" class="menu-item active">
+                <span class="icon">📋</span> Información Personal
+            </a>
+            <a href="{% url 'home:password_change' %}" class="menu-item">
+                <span class="icon">🔒</span> Cambiar Contraseña
+            </a>
+
+            <div class="nav-section-label">Navegación</div>
+            <a href="{% url 'home:chat' %}" class="menu-item">
+                <span class="icon">💬</span> Mis Conversaciones
+            </a>
+            <a href="{% url 'home:productos' %}" class="menu-item">
+                <span class="icon">📦</span> Productos
+            </a>
+            <a href="{% url 'home:home' %}" class="menu-item">
+                <span class="icon">🏠</span> Volver al Inicio
+            </a>
+
+            {% if profile.role == 'supplier' %}
+            <div class="nav-section-label">Proveedor</div>
+            <a href="{% url 'home:supplier_onboarding' %}" class="menu-item stripe-connect">
+                <span class="icon">💳</span> Conectar Stripe
+            </a>
+            {% endif %}
+
+            <a href="{% url 'home:logout' %}" class="menu-item logout">
+                <span class="icon">🚪</span> Cerrar Sesión
+            </a>
+        </nav>
+    </aside>
+
+    <!-- ═══ MAIN ═══ -->
+    <main class="profile-main">
+
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+
+        <!-- Resumen -->
+        <div class="profile-card">
+            <div class="card-header">
+                <div>
+                    <div class="card-title">👤 Resumen de cuenta</div>
+                    <div class="card-subtitle">Tu información actual registrada en ELISE</div>
+                </div>
+            </div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Nombre completo</span>
+                    <span class="info-value {% if not user.get_full_name %}empty{% endif %}">
+                        {{ user.get_full_name|default:"No especificado" }}
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Username</span>
+                    <span class="info-value">{{ user.username }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Email</span>
+                    <span class="info-value {% if not user.email %}empty{% endif %}">
+                        {{ user.email|default:"No especificado" }}
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Rol</span>
+                    <span class="info-value">{{ profile.get_role_display }}</span>
+                </div>
+                {% if profile.company %}
+                <div class="info-item">
+                    <span class="info-label">Empresa</span>
+                    <span class="info-value">{{ profile.company }}</span>
+                </div>
+                {% endif %}
+                {% if profile.phone %}
+                <div class="info-item">
+                    <span class="info-label">Teléfono</span>
+                    <span class="info-value">{{ profile.phone }}</span>
+                </div>
+                {% endif %}
+                <div class="info-item">
+                    <span class="info-label">Miembro desde</span>
+                    <span class="info-value">{{ user.date_joined|date:"d M Y" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stripe Connect (solo proveedores) -->
+        {% if profile.role == 'supplier' %}
+        <div class="stripe-card">
+            <div class="stripe-card-info">
+                <div class="stripe-card-title">💳 Stripe Connect</div>
+                <div class="stripe-card-desc">
+                    Conecta tu cuenta bancaria para recibir pagos de clientes directamente a través de ELISE.
+                    Tu dinero llega automáticamente después de cada transacción.
+                </div>
+                {% try %}
+                {% if profile.user.supplier_profile.stripe_account_id %}
+                <div class="stripe-card-status ok">✅ Cuenta conectada — lista para recibir pagos</div>
+                {% else %}
+                <div class="stripe-card-status pending">⚠️ Sin conectar — los clientes no pueden pagarte aún</div>
+                {% endif %}
+                {% except %}
+                <div class="stripe-card-status pending">⚠️ Sin conectar — los clientes no pueden pagarte aún</div>
+                {% endtry %}
+            </div>
+            <a href="{% url 'home:supplier_onboarding' %}" class="btn-stripe">
+                💳 Conectar con Stripe →
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Editar información -->
+        <div class="profile-card">
+            <div class="card-header">
+                <div>
+                    <div class="card-title">✏️ Editar Información</div>
+                    <div class="card-subtitle">Actualiza tus datos personales y de contacto</div>
+                </div>
+            </div>
+
+            <form method="POST" class="profile-form">
+                {% csrf_token %}
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Nombre <span class="required">*</span></label>
+                        <input type="text" name="first_name" value="{{ form.first_name.value|default:'' }}"
+                               class="form-control" required placeholder="Tu nombre">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Apellido <span class="required">*</span></label>
+                        <input type="text" name="last_name" value="{{ form.last_name.value|default:'' }}"
+                               class="form-control" required placeholder="Tu apellido">
+                    </div>
+                    <div class="form-group full">
+                        <label class="form-label">Email <span class="required">*</span></label>
+                        <input type="email" name="email" value="{{ form.email.value|default:'' }}"
+                               class="form-control" required placeholder="tu@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Empresa</label>
+                        {{ form.company }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Teléfono</label>
+                        {{ form.phone }}
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <a href="{% url 'home:home' %}" class="btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn-primary">Guardar cambios</button>
+                </div>
+            </form>
+        </div>
+
+    </main>
+</div>
+</div>
 {% endblock %}

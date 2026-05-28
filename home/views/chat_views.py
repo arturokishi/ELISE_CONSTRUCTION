@@ -55,6 +55,7 @@ MATERIAL_CONFIG = {
     "cemento":   {"slug": "cemento",                    "emoji": "🏗️", "keywords": ["cemento", "cement"],          "productos": "cemento, mortero y más"},
     "aluminio":  {"slug": "vidrio-y-aluminio",          "emoji": "🪟", "keywords": ["aluminio", "aluminum"],       "productos": "perfiles, láminas y más"},
     "vidrio":    {"slug": "vidrio-y-aluminio",          "emoji": "🪞", "keywords": ["vidrio", "glass", "cristal"], "productos": "vidrio, cristal y más"},
+    
 }
  
  
