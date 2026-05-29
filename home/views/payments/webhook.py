@@ -42,8 +42,8 @@ def stripe_webhook(request):
 
 
 def _handle_checkout_completed(session):
-    session_id = session.get('id')
-    payment_intent_id = session.get('payment_intent', '')
+    session_id = session.id
+    payment_intent_id = session.payment_intent or ''
 
     try:
         payment = Payment.objects.select_related('quote').get(
@@ -67,7 +67,7 @@ def _handle_checkout_completed(session):
 
 
 def _handle_checkout_expired(session):
-    session_id = session.get('id')
+    session_id = session.id
 
     try:
         payment = Payment.objects.select_related('quote').get(

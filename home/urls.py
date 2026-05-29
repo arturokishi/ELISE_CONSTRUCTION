@@ -9,7 +9,8 @@ from .views.chat_views import (
     get_conversation_by_id,
     get_quote_form,
     get_supplier_catalog,
-    reply_quote_price
+    reply_quote_price,
+    update_quote,
 )
 from .views.order_views import create_order
 from .views.payments.checkout import create_checkout_session
@@ -52,7 +53,7 @@ urlpatterns = [
     path("chat/quote-form/<int:supplier_id>/", get_quote_form, name="quote_form"),
     path('chat/supplier-catalog/<int:supplier_id>/', get_supplier_catalog, name='supplier_catalog'),
     path('chat/reply-quote/<int:quote_id>/', reply_quote_price, name='reply_quote_price'),
-
+    path('chat/update-quote/<int:quote_id>/', update_quote, name='update_quote'),
     path("payments/success/", payment_success, name="payment_success"),
 
 ]

@@ -105,12 +105,18 @@ def connect_client_to_suppliers(client, material):
  
     for supplier in supplier_users:
         try:
+            supplier_convo = get_or_create_conversation(client, supplier)
             quote, created = QuoteRequest.objects.get_or_create(
                 client=client,
                 supplier=supplier,
-                defaults={"status": "pending"}
+                defaults={
+                    "status": "pending",
+                    "conversation": supplier_convo,
+                }
             )
-            supplier_convo = get_or_create_conversation(client, supplier)
+            if not created and not quote.conversation:
+                quote.conversation = supplier_convo
+                quote.save(update_fields=["conversation"])
             Message.objects.create(
                 conversation=supplier_convo,
                 sender=supplier,
@@ -563,6 +569,52 @@ def get_quote_form(request, supplier_id):
     return JsonResponse(form_data)
  
  
+@login_required
+def update_quote(request, quote_id):
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid method"}, status=405)
+
+    if request.user.userprofile.role != "client":
+        return JsonResponse({"error": "Only clients can update quotes"}, status=403)
+
+    data = json.loads(request.body)
+    product_name = data.get("product_name", "").strip()
+    quantity     = data.get("quantity", 1)
+    notes        = data.get("notes", "").strip()
+    product_id   = data.get("product_id")
+
+    if not product_name:
+        return JsonResponse({"error": "product_name is required"}, status=400)
+
+    try:
+        quote = QuoteRequest.objects.get(id=quote_id, client=request.user)
+    except QuoteRequest.DoesNotExist:
+        return JsonResponse({"error": "Quote not found"}, status=404)
+
+    product_details = {"quantity": quantity}
+    if product_id:
+        try:
+            product = Product.objects.get(id=product_id)
+            product_details.update({
+                "product_id": product.id,
+                "unit": product.unit,
+                "base_price": float(product.base_price) if product.base_price else None,
+            })
+        except Product.DoesNotExist:
+            pass
+
+    quote.product_name    = product_name
+    quote.client_notes    = notes
+    quote.product_details = product_details
+    quote.save(update_fields=["product_name", "client_notes", "product_details"])
+
+    return JsonResponse({
+        "success": True,
+        "quote_id": quote.id,
+        "product_name": quote.product_name,
+    })
+
+
 @login_required
 def get_supplier_catalog(request, supplier_id):
     supplier = get_object_or_404(User, id=supplier_id)

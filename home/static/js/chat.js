@@ -851,9 +851,9 @@ async function submitDynamicQuote() {
     const productSelect = document.getElementById('quote-product');
     if (!productSelect.value) { alert('Selecciona un producto'); return; }
 
-    const product = JSON.parse(productSelect.value);
-    const quantity = document.getElementById('quote-quantity').value;
-    const notes = document.getElementById('quote-notes').value;
+    const product  = JSON.parse(productSelect.value);
+    const quantity = parseInt(document.getElementById('quote-quantity').value) || 1;
+    const notes    = document.getElementById('quote-notes').value.trim();
 
     const options = {};
     (product.options || []).forEach(opt => {
@@ -861,21 +861,77 @@ async function submitDynamicQuote() {
         if (el && el.value) options[opt.name] = el.value;
     });
 
-    const quoteData = { product_id: product.id, product_name: product.name, quantity: parseInt(quantity), options, notes, estimated_total: (product.price || 0) * quantity };
+    // Obtener quote_id del active_quote (ya cargado en el DOM por selectUser)
+    let quoteId = document.getElementById('payPillBtn')?.dataset.quoteId
+               || document.getElementById('replyPriceBtn')?.dataset.quoteId;
+
+    // Si no está en el DOM todavía, lo pedimos al servidor
+    if (!quoteId) {
+        try {
+            const convRes = await fetch(`/chat/conversation/${currentChatUser.id}/`);
+            if (!convRes.ok) throw new Error();
+            const convData = await convRes.json();
+            quoteId = convData.active_quote?.id;
+        } catch (e) {
+            alert('No se pudo obtener la cotización activa. Recarga la página.');
+            return;
+        }
+    }
+
+    if (!quoteId) {
+        alert('No hay una cotización activa con este proveedor. Habla con EliceBot primero.');
+        return;
+    }
+
+    // 1. Persistir en la base de datos
+    try {
+        const patchRes = await fetch(`/chat/update-quote/${quoteId}/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+            body: JSON.stringify({
+                product_id:   product.id,
+                product_name: product.name,
+                quantity,
+                notes,
+            })
+        });
+        if (!patchRes.ok) {
+            const err = await patchRes.json().catch(() => ({}));
+            alert(err.error || 'No se pudo guardar la cotización.');
+            return;
+        }
+    } catch (e) {
+        alert('Error de conexión al guardar la cotización.');
+        return;
+    }
+
+    // 2. Enviar mensaje al chat
+    const quoteData = {
+        product_id:      product.id,
+        product_name:    product.name,
+        quantity,
+        options,
+        notes,
+        estimated_total: (product.price || 0) * quantity,
+    };
     const message = formatQuoteMessage(quoteData, currentChatUser);
 
     try {
         const res = await fetch('/chat/send/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
-            body: JSON.stringify({ user_id: currentChatUser.id, content: message, conversation_id: currentConversationId })
+            body: JSON.stringify({
+                user_id:         currentChatUser.id,
+                content:         message,
+                conversation_id: currentConversationId,
+            })
         });
         if (res.ok) {
             closeQuoteModal();
             refreshMessages();
         } else throw new Error('Error al enviar');
     } catch (err) {
-        alert('❌ Error al enviar la cotización');
+        alert('❌ La cotización fue guardada pero no se pudo enviar el mensaje.');
     }
 }
 
